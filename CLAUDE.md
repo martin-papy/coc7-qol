@@ -16,9 +16,7 @@ Each feature is a self-contained ES module in `scripts/` that registers FoundryV
 
 ## Compatibility
 
-Must support both FoundryVTT v12 and v13. Key differences to handle:
-- **v12:** Hook `html` parameter is jQuery; `ImagePopout` is a global class (ApplicationV1)
-- **v13:** Hook `html` parameter is HTMLElement; `ImagePopout` is at `foundry.applications.apps.ImagePopout` (ApplicationV2)
+Targets FoundryVTT v13+ only. The `html` parameter in render hooks is an HTMLElement, and `ImagePopout` is at `foundry.applications.apps.ImagePopout` (ApplicationV2).
 
 ## Releasing
 

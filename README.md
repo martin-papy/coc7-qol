@@ -27,7 +27,7 @@ Players can click on any item image (weapons, spells, books, skills, etc.) to vi
 
 ## Compatibility
 
-- **FoundryVTT:** v12+ (verified on v13)
+- **FoundryVTT:** v13+
 - **System:** Call of Cthulhu 7th Edition (CoC7)
 
 ## License

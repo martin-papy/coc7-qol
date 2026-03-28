@@ -32,4 +32,4 @@ Players can click on any item image (weapons, spells, books, skills, etc.) to vi
 
 ## License
 
-MIT
+[MIT](LICENSE)

@@ -1,0 +1,26 @@
+{
+  "id": "coc7-qol",
+  "title": "CoC7 QoL Improvements",
+  "description": "Quality of life improvements for the Call of Cthulhu 7th Edition system. Adds image popout on item sheets for players.",
+  "version": "0.1.0",
+  "authors": [
+    {
+      "name": "Martin Papy"
+    }
+  ],
+  "compatibility": {
+    "minimum": "12",
+    "verified": "13"
+  },
+  "relationships": {
+    "systems": [
+      {
+        "id": "CoC7",
+        "type": "system"
+      }
+    ]
+  },
+  "esmodules": [
+    "scripts/item-image-popout.js"
+  ]
+}

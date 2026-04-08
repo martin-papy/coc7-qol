@@ -32,7 +32,7 @@ Players and GMs can click on the small item icon in the Gear & Cash tab of the c
 ## Compatibility
 
 - **FoundryVTT:** v13+
-- **System:** Call of Cthulhu 7th Edition (CoC7)
+- **System:** Call of Cthulhu 7th Edition (CoC7) - v8.x
 
 ## License
 

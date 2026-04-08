@@ -12,7 +12,7 @@ This is a no-build-step vanilla JS module. FoundryVTT loads `scripts/*.js` files
 
 Each feature is a self-contained ES module in `scripts/` that registers FoundryVTT hooks. The module.json `esmodules` array is the entry point list — add new feature files there.
 
-**Key pattern:** Features hook into FoundryVTT's render lifecycle (e.g., `Hooks.on('renderItemSheet', ...)`) to modify sheet HTML after the system renders it. This avoids modifying CoC7 source code.
+**Key pattern:** Features hook into FoundryVTT's render lifecycle (e.g., `Hooks.on('renderItemSheetV2', ...)` for item sheets, `Hooks.on('renderActorSheetV2', ...)` for actor sheets) to modify sheet HTML after the system renders it. This avoids modifying CoC7 source code.
 
 ## Compatibility
 
@@ -35,7 +35,7 @@ No automated tests. All features require manual testing in a running FoundryVTT 
 
 ## Reference
 
-- CoC7 system source: `../CoC7-FoundryVTT/` (workspace sibling)
+- CoC7 system source: `../CoC7-FoundryVTT-8.x/` (workspace sibling, targets CoC7 8.1+)
 - FoundryVTT API docs: https://foundryvtt.com/api/
 - Design specs: `docs/superpowers/specs/`
 - Implementation plans: `docs/superpowers/plans/`

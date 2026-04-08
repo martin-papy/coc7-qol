@@ -8,6 +8,10 @@ A companion module for the [Call of Cthulhu 7th Edition](https://github.com/Misk
 
 Players can click on any item image (weapons, spells, books, skills, etc.) to view the full-size illustration in a draggable, resizable popout window. GMs retain the default file picker behavior.
 
+### Possession Tab Item Image Popout
+
+Players and GMs can click on the small item icon in the Gear & Cash tab of the character sheet to view the full-size illustration in a popout window. Works for all item types shown in that tab: items, weapons, books, spells, armor, talents, and statuses.
+
 ## Installation
 
 ### From FoundryVTT

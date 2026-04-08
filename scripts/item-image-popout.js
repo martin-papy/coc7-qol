@@ -1,11 +1,12 @@
-Hooks.on('renderItemSheet', (sheet, html, data) => {
+Hooks.on('renderItemSheetV2', (application, element, context, options) => {
+  if (!(application instanceof foundry.applications.sheets.ItemSheetV2)) return;
   if (game.user.isGM) return;
 
-  const img = html.querySelector('img[data-edit="img"]');
+  const img = element.querySelector('img[data-action="editImage"]');
   if (!img) return;
 
-  // Remove data-edit so Foundry's file picker doesn't intercept clicks
-  img.removeAttribute('data-edit');
+  // Remove data-action so AppV2's root action dispatcher doesn't intercept clicks
+  img.removeAttribute('data-action');
   img.style.cursor = 'pointer';
 
   img.addEventListener('click', (event) => {
@@ -14,7 +15,7 @@ Hooks.on('renderItemSheet', (sheet, html, data) => {
 
     new foundry.applications.apps.ImagePopout({
       src: img.getAttribute('src'),
-      window: { title: sheet.object.name }
+      window: { title: application.document.name }
     }).render(true);
   });
 });

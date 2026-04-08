@@ -31,7 +31,7 @@ CoC7 system 8.x migrated all item sheets from ApplicationV1 to ApplicationV2 (Fo
 ### `module.json`
 
 - `version`: `0.1.0` → `0.2.0`
-- CoC7 system `minimum`: `7.24` → `8.0`
+- CoC7 system `minimum`: `7.24` → `8.1`
 - CoC7 system `verified`: `7.24` → `8.1`
 - `download` URL: update tag from `v0.1.0` → `v0.2.0`
 

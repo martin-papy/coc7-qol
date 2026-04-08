@@ -2,7 +2,7 @@
   "id": "coc7-qol",
   "title": "CoC7 QoL Improvements",
   "description": "Quality of life improvements for the Call of Cthulhu 7th Edition system. Adds image popout on item and possession tab icons for players and GMs.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "authors": [
     {
       "name": "Martin Papy"
@@ -26,7 +26,7 @@
   },
   "url": "https://github.com/martin-papy/coc7-qol",
   "manifest": "https://github.com/martin-papy/coc7-qol/releases/latest/download/module.json",
-  "download": "https://github.com/martin-papy/coc7-qol/releases/download/v0.2.0/coc7-qol.zip",
+  "download": "https://github.com/martin-papy/coc7-qol/releases/download/v0.3.0/coc7-qol.zip",
   "esmodules": [
     "scripts/item-image-popout.js",
     "scripts/possession-item-image-popout.js"

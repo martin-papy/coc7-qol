@@ -15,7 +15,7 @@ Hooks.on('renderItemSheetV2', (application, element, context, options) => {
 
     new foundry.applications.apps.ImagePopout({
       src: img.getAttribute('src'),
-      window: { title: application.document.name }
+      window: { title: application.document?.name ?? '' }
     }).render(true);
   });
 });

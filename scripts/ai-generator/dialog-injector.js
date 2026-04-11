@@ -102,10 +102,14 @@ function _transformToPromptView (dialog, html, nameInput, aiBtn) {
 async function _runGeneration (dialog, html, formArea, buttonRow, originalFormHTML, originalButtonHTML, aiBtn) {
   const textarea = formArea.querySelector('[name="ai-prompt"]')
   const userPrompt = textarea?.value?.trim()
-  if (!userPrompt) return
-
   const errorDiv = formArea.querySelector('.coc7-ai-error')
   const generateBtn = buttonRow.querySelector('.coc7-btn-generate')
+
+  if (!userPrompt) {
+    errorDiv.textContent = 'Please describe the weapon before generating.'
+    errorDiv.style.display = 'block'
+    return
+  }
 
   // Guard: require API key before calling out
   const apiKey = game.settings.get(MODULE, 'ai-api-key')

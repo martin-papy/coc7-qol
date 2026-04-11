@@ -104,5 +104,72 @@ export default {
       skillsRaw: data.skills,
       llmData: data
     }
+  },
+
+  async resolveSkills (skillsRaw) {
+    const pack = game.packs.get('CoC7.skills')
+    let compendiumIndex = null
+    if (pack) {
+      // Load the full index so we can search by name
+      compendiumIndex = await pack.getIndex()
+    }
+
+    const resolved = []
+    for (const { name, value } of skillsRaw) {
+      const normalized = name.trim().replace(/\s+/g, ' ')
+      const skillData = await this._resolveOneSkill(normalized, value, pack, compendiumIndex)
+      if (skillData) resolved.push(skillData)
+    }
+    return resolved
+  },
+
+  async _resolveOneSkill (skillName, targetValue, pack, compendiumIndex) {
+    // Attempt compendium lookup
+    if (compendiumIndex) {
+      const match = compendiumIndex.find(
+        entry => entry.name.toLowerCase() === skillName.toLowerCase()
+      )
+      if (match && pack) {
+        const doc = await pack.getDocument(match._id)
+        if (doc) {
+          const data = doc.toObject()
+          // Set adjustments.personal to the target value so total equals targetValue
+          // regardless of how the base formula resolves
+          data.system.adjustments = data.system.adjustments ?? {}
+          data.system.adjustments.personal = targetValue
+          // Zero out other adjustment fields so the total is deterministic
+          data.system.adjustments.occupation = 0
+          data.system.adjustments.experience = 0
+          data.system.adjustments.archetype = 0
+          data.system.adjustments.experiencePackage = 0
+          // Remove _id so Foundry creates a new embedded document
+          delete data._id
+          return data
+        }
+      }
+    }
+
+    // Fallback: create a fresh skill item using CoC7's name parser
+    const nameParts = CONFIG.Item.dataModels.skill.guessNameParts(skillName)
+    return {
+      name: nameParts.name,
+      type: 'skill',
+      system: {
+        skillName: nameParts.system.skillName,
+        specialization: nameParts.system.specialization,
+        properties: {
+          ...nameParts.system.properties,
+          push: !(nameParts.system.properties.fighting || nameParts.system.properties.firearm || nameParts.system.properties.ranged)
+        },
+        adjustments: {
+          personal: targetValue,
+          base: 0,
+          occupation: 0,
+          archetype: 0,
+          experiencePackage: 0,
+          experience: 0
+        }
+      }
+    }
   }
 }

@@ -133,11 +133,11 @@ export default {
         const doc = await pack.getDocument(match._id)
         if (doc) {
           const data = doc.toObject()
-          // Set adjustments.personal to the target value so total equals targetValue
-          // regardless of how the base formula resolves
+          // Set adjustments.personal to the target value so personal alone determines the skill value
           data.system.adjustments = data.system.adjustments ?? {}
           data.system.adjustments.personal = targetValue
           // Zero out other adjustment fields so the total is deterministic
+          data.system.adjustments.base = 0
           data.system.adjustments.occupation = 0
           data.system.adjustments.experience = 0
           data.system.adjustments.archetype = 0

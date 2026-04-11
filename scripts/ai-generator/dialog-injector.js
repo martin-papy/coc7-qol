@@ -12,6 +12,10 @@ const SPARKLE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
   <path d="M5 15 5.5 16.5 7 17 5.5 17.5 5 19 4.5 17.5 3 17 4.5 16.5Z"/>
 </svg>`
 
+// CoC7 item types — used to distinguish the Create Item dialog from Create Actor
+const COC7_ITEM_TYPES = ['weapon', 'skill', 'book', 'spell', 'chase', 'archetype', 'armor',
+  'experiencePackage', 'item', 'occupation', 'setup', 'status', 'talent']
+
 /**
  * Called on every renderDialogV2 hook. Checks whether the dialog is the
  * "Create Item" dialog before doing any DOM work.
@@ -24,6 +28,10 @@ export function injectAIButton (dialog, html) {
   const nameInput = html.querySelector('[name="name"]')
   const typeSelect = html.querySelector('[name="type"]')
   if (!nameInput || !typeSelect) return // not the Create Item dialog
+
+  // Only inject on the Create Item dialog — not Create Actor
+  const typeValues = [...typeSelect.options].map(o => o.value)
+  if (!typeValues.some(v => COC7_ITEM_TYPES.includes(v))) return
 
   // Find the button row — may live inside the form or directly in the window-content
   const form = html.querySelector('form') ?? html.querySelector('.dialog-content')

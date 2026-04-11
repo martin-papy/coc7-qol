@@ -15,6 +15,23 @@ export const PROVIDER_DEFAULTS = {
   }
 }
 
+export function registerSettingsHooks () {
+  Hooks.on('renderSettingsConfig', (_app, html) => {
+    const providerSelect = html.querySelector(`[name="${MODULE}.ai-provider"]`)
+    if (!providerSelect) return
+
+    providerSelect.addEventListener('change', (e) => {
+      const defaults = PROVIDER_DEFAULTS[e.target.value]
+      if (!defaults) return
+
+      const endpointInput = html.querySelector(`[name="${MODULE}.ai-endpoint"]`)
+      const modelInput = html.querySelector(`[name="${MODULE}.ai-model"]`)
+      if (endpointInput) endpointInput.value = defaults.endpoint
+      if (modelInput) modelInput.value = defaults.model
+    })
+  })
+}
+
 export function registerSettings () {
   game.settings.register(MODULE, 'ai-provider', {
     name: 'AI Generator: Provider',

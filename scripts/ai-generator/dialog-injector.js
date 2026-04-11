@@ -13,7 +13,7 @@ const SPARKLE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
 </svg>`
 
 /**
- * Called on every renderDialog hook. Checks whether the dialog is the
+ * Called on every renderDialogV2 hook. Checks whether the dialog is the
  * "Create Item" dialog before doing any DOM work.
  * @param {Dialog} dialog
  * @param {HTMLElement} html
@@ -25,8 +25,9 @@ export function injectAIButton (dialog, html) {
   const typeSelect = html.querySelector('[name="type"]')
   if (!nameInput || !typeSelect) return // not the Create Item dialog
 
-  // Find the button row (Foundry renders it as .dialog-buttons or a footer)
-  const buttonRow = html.querySelector('.dialog-buttons') ?? html.querySelector('footer')
+  // Find the button row — may live inside the form or directly in the window-content
+  const form = html.querySelector('form') ?? html.querySelector('.dialog-content')
+  const buttonRow = _findButtonRow(form, html)
   if (!buttonRow) return
 
   const aiBtn = document.createElement('button')
@@ -43,71 +44,105 @@ export function injectAIButton (dialog, html) {
 }
 
 /**
+ * Finds the button row element. Searches inside the form first (DialogV2
+ * renders the footer inside the form), then falls back to the outer html.
+ */
+function _findButtonRow (form, html) {
+  return (form?.querySelector('.dialog-buttons') ?? form?.querySelector('footer'))
+    ?? (html.querySelector('.dialog-buttons') ?? html.querySelector('footer'))
+}
+
+/**
  * Replaces Name + Type form fields with a prompt textarea in-place.
+ * Keeps the button row attached to the DOM by only removing the field nodes —
+ * replacing the entire form.innerHTML would detach the footer and make any
+ * subsequent buttonRow.innerHTML assignment invisible.
  */
 function _transformToPromptView (dialog, html, nameInput, aiBtn) {
   const capturedName = nameInput.value.trim()
 
-  // Find the area that contains the form fields
-  const formArea = html.querySelector('form') ?? html.querySelector('.dialog-content') ?? nameInput.closest('div')
-  const buttonRow = html.querySelector('.dialog-buttons') ?? html.querySelector('footer')
+  const form = html.querySelector('form') ?? html.querySelector('.dialog-content') ?? nameInput.closest('div')
+  const buttonRow = _findButtonRow(form, html)
+  if (!form || !buttonRow) return
 
-  const originalFormHTML = formArea.innerHTML
+  // Snapshot the original button row HTML and form field nodes for restoration
   const originalButtonHTML = buttonRow.innerHTML
+  const originalFieldNodes = [...form.children]
+    .filter(child => child !== buttonRow)
+    .map(child => child.cloneNode(true))
 
-  // Swap form fields for prompt textarea
-  formArea.innerHTML = `
-    <div class="form-group" style="display:flex;flex-direction:column;gap:0.25rem">
-      <label for="coc7-ai-prompt">Describe your weapon</label>
-      <textarea
-        id="coc7-ai-prompt"
-        name="ai-prompt"
-        rows="4"
-        placeholder='e.g. "A worn 1920s revolver, .38 calibre, 6-shot cylinder, wood grip"'
-        style="width:100%;resize:vertical"
-      ></textarea>
-    </div>
+  // Remove only the form field nodes — leave buttonRow in the DOM so it stays attached
+  for (const child of [...form.children]) {
+    if (child !== buttonRow) child.remove()
+  }
+
+  // Build the prompt area and insert it before the still-attached button row
+  const promptArea = document.createElement('div')
+  promptArea.style.cssText = 'display:flex;flex-direction:column;gap:0.25rem;padding:0.5rem 0'
+  // Safe static HTML — no user content interpolated here
+  promptArea.innerHTML = `
+    <label for="coc7-ai-prompt" style="font-weight:bold">Describe your weapon</label>
+    <textarea
+      id="coc7-ai-prompt"
+      name="ai-prompt"
+      rows="4"
+      placeholder='e.g. "A worn 1920s revolver, .38 calibre, 6-shot cylinder, wood grip"'
+      style="width:100%;resize:vertical;box-sizing:border-box"
+    ></textarea>
     <div class="coc7-ai-error" style="display:none;color:var(--color-text-dark-error,red);margin-top:0.25rem;font-size:0.875em"></div>
   `
+  form.insertBefore(promptArea, buttonRow)
+
   // Set textarea value safely via DOM property (not innerHTML) to avoid XSS
-  const promptTextarea = formArea.querySelector('[name="ai-prompt"]')
+  const promptTextarea = form.querySelector('[name="ai-prompt"]')
   if (capturedName) promptTextarea.value = `A weapon called "${capturedName}". `
 
   aiBtn.style.display = 'none'
 
-  // Swap buttons
+  // Inject Generate / Cancel into the still-attached button row
   buttonRow.innerHTML = `
     <button type="button" class="coc7-btn-generate" style="flex:1">Generate</button>
     <button type="button" class="coc7-btn-back">Cancel</button>
   `
 
-  // Cancel: restore original form
+  // Cancel: restore original form fields and buttons
   buttonRow.querySelector('.coc7-btn-back').addEventListener('click', () => {
-    formArea.innerHTML = originalFormHTML
-    buttonRow.innerHTML = originalButtonHTML
-    aiBtn.style.display = ''
-    // Re-attach the AI button click (the restored button is a new element)
-    const restoredBtn = buttonRow.querySelector('.coc7-ai-generate-btn')
-    if (restoredBtn) {
-      const newNameInput = formArea.querySelector('[name="name"]')
-      restoredBtn.addEventListener('click', () => {
-        _transformToPromptView(dialog, html, newNameInput, restoredBtn)
-      })
-    }
+    _restoreOriginalForm(form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn, dialog, html)
   })
 
   buttonRow.querySelector('.coc7-btn-generate').addEventListener('click', () => {
-    _runGeneration(dialog, html, formArea, buttonRow, originalFormHTML, originalButtonHTML, aiBtn)
+    _runGeneration(dialog, html, form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn)
   })
+}
+
+/**
+ * Restores the form to its original Name + Type state.
+ */
+function _restoreOriginalForm (form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn, dialog, html) {
+  promptArea.remove()
+  for (const node of originalFieldNodes) {
+    form.insertBefore(node, buttonRow)
+  }
+  buttonRow.innerHTML = originalButtonHTML
+  aiBtn.style.display = ''
+
+  // Re-attach the sparkle click listener (the restored button is a fresh DOM node)
+  const restoredBtn = buttonRow.querySelector('.coc7-ai-generate-btn')
+  if (restoredBtn) {
+    const newNameInput = form.querySelector('[name="name"]')
+    restoredBtn.addEventListener('click', () => {
+      _transformToPromptView(dialog, html, newNameInput, restoredBtn)
+    })
+  }
 }
 
 /**
  * Calls the LLM provider and opens the confirmation dialog on success.
  */
-async function _runGeneration (dialog, html, formArea, buttonRow, originalFormHTML, originalButtonHTML, aiBtn) {
-  const textarea = formArea.querySelector('[name="ai-prompt"]')
+async function _runGeneration (dialog, html, form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn) {
+  const textarea = form.querySelector('[name="ai-prompt"]')
   const userPrompt = textarea?.value?.trim()
-  const errorDiv = formArea.querySelector('.coc7-ai-error')
+  const errorDiv = form.querySelector('.coc7-ai-error')
   const generateBtn = buttonRow.querySelector('.coc7-btn-generate')
 
   if (!userPrompt) {
@@ -165,17 +200,7 @@ async function _runGeneration (dialog, html, formArea, buttonRow, originalFormHT
       },
 
       onCancel: () => {
-        // Restore original Name + Type form
-        formArea.innerHTML = originalFormHTML
-        buttonRow.innerHTML = originalButtonHTML
-        aiBtn.style.display = ''
-        const restoredBtn = buttonRow.querySelector('.coc7-ai-generate-btn')
-        if (restoredBtn) {
-          const newNameInput = formArea.querySelector('[name="name"]')
-          restoredBtn.addEventListener('click', () => {
-            _transformToPromptView(dialog, html, newNameInput, restoredBtn)
-          })
-        }
+        _restoreOriginalForm(form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn, dialog, html)
       }
     }).render({ force: true })
 

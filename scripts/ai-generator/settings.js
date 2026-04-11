@@ -17,6 +17,9 @@ export const PROVIDER_DEFAULTS = {
 
 export function registerSettingsHooks () {
   Hooks.on('renderSettingsConfig', (_app, html) => {
+    const apiKeyInput = html.querySelector(`[name="${MODULE}.ai-api-key"]`)
+    if (apiKeyInput) apiKeyInput.type = 'password'
+
     const providerSelect = html.querySelector(`[name="${MODULE}.ai-provider"]`)
     if (!providerSelect) return
 

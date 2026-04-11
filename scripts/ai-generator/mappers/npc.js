@@ -30,6 +30,14 @@ Optional fields (include when relevant, omit if not applicable):
 
 const REQUIRED_CHARACTERISTICS = ['str', 'con', 'siz', 'dex', 'app', 'int', 'pow', 'edu']
 
+function escapeHtml (str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
 export default {
   buildSystemPrompt () {
     return SYSTEM_PROMPT
@@ -58,10 +66,10 @@ export default {
 
   toFoundryData (data) {
     const personalityHtml = data.personalityTraits
-      ? `<p><strong>Personality:</strong> ${data.personalityTraits}</p>`
+      ? `<p><strong>Personality:</strong> ${escapeHtml(data.personalityTraits)}</p>`
       : ''
     const backgroundHtml = data.background
-      ? `<p><strong>Background:</strong> ${data.background}</p>`
+      ? `<p><strong>Background:</strong> ${escapeHtml(data.background)}</p>`
       : ''
 
     return {
@@ -86,7 +94,7 @@ export default {
             organization: ''
           },
           biography: {
-            personalDescription: { value: data.physicalDescription ?? '' }
+            personalDescription: { value: escapeHtml(data.physicalDescription) }
           },
           description: {
             keeper: personalityHtml + backgroundHtml

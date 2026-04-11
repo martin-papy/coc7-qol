@@ -29,6 +29,7 @@
   "download": "https://github.com/martin-papy/coc7-qol/releases/download/v0.3.0/coc7-qol.zip",
   "esmodules": [
     "scripts/item-image-popout.js",
-    "scripts/possession-item-image-popout.js"
+    "scripts/possession-item-image-popout.js",
+    "scripts/ai-generator/index.js"
   ]
 }

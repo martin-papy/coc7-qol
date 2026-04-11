@@ -20,6 +20,10 @@ const COC7_ITEM_TYPES = ['weapon', 'skill', 'book', 'spell', 'chase', 'archetype
 // CoC7 actor types — used to detect the Create Actor dialog
 const COC7_ACTOR_TYPES = ['character', 'npc', 'creature', 'vehicle', 'container']
 
+// Types that currently have AI generation support
+const SUPPORTED_ITEM_TYPES = ['weapon']
+const SUPPORTED_ACTOR_TYPES = ['npc']
+
 /**
  * Called on every renderDialogV2 hook. Checks whether the dialog is the
  * "Create Item" dialog before doing any DOM work.
@@ -49,6 +53,12 @@ export function injectAIButton (dialog, html) {
   aiBtn.innerHTML = SPARKLE_SVG
   aiBtn.style.cssText = 'flex:0 0 auto; min-width:2rem; padding:0.25rem 0.5rem'
   buttonRow.appendChild(aiBtn)
+
+  // Only show the button when a supported item type is selected
+  aiBtn.style.display = SUPPORTED_ITEM_TYPES.includes(typeSelect.value) ? '' : 'none'
+  typeSelect.addEventListener('change', () => {
+    aiBtn.style.display = SUPPORTED_ITEM_TYPES.includes(typeSelect.value) ? '' : 'none'
+  })
 
   aiBtn.addEventListener('click', () => {
     _transformToPromptView(dialog, html, nameInput, aiBtn)
@@ -83,6 +93,12 @@ export function injectNPCButton (dialog, html) {
   aiBtn.innerHTML = SPARKLE_SVG
   aiBtn.style.cssText = 'flex:0 0 auto; min-width:2rem; padding:0.25rem 0.5rem'
   buttonRow.appendChild(aiBtn)
+
+  // Only show the button when a supported actor type is selected
+  aiBtn.style.display = SUPPORTED_ACTOR_TYPES.includes(typeSelect.value) ? '' : 'none'
+  typeSelect.addEventListener('change', () => {
+    aiBtn.style.display = SUPPORTED_ACTOR_TYPES.includes(typeSelect.value) ? '' : 'none'
+  })
 
   aiBtn.addEventListener('click', () => {
     _transformToNPCPromptView(dialog, html, nameInput, aiBtn)

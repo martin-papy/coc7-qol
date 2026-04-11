@@ -29,12 +29,12 @@ export default class OpenAIProvider {
 
     const data = await response.json()
     const text = data.choices?.[0]?.message?.content
-    if (!text) throw new Error('OpenAI returned an empty response')
+    if (!text?.trim()) throw new Error('OpenAI returned an empty response')
 
     try {
       return JSON.parse(text)
-    } catch {
-      throw new Error(`OpenAI response is not valid JSON: ${text.slice(0, 200)}`)
+    } catch (e) {
+      throw new Error(`OpenAI response is not valid JSON: ${text.slice(0, 200)}`, { cause: e })
     }
   }
 }

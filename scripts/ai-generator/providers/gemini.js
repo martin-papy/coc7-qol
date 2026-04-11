@@ -24,12 +24,12 @@ export default class GeminiProvider {
 
     const data = await response.json()
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text
-    if (!text) throw new Error('Gemini returned an empty response')
+    if (!text?.trim()) throw new Error('Gemini returned an empty response')
 
     try {
       return JSON.parse(text)
-    } catch {
-      throw new Error(`Gemini response is not valid JSON: ${text.slice(0, 200)}`)
+    } catch (e) {
+      throw new Error(`Gemini response is not valid JSON: ${text.slice(0, 200)}`, { cause: e })
     }
   }
 }

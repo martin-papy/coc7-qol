@@ -23,4 +23,4 @@ Hooks.once('init', registerSettings)
 
 // Inject the AI button whenever any dialog renders — injectAIButton checks internally
 // whether the dialog is the "Create Item" dialog before doing anything.
-Hooks.on('renderDialog', injectAIButton)
+Hooks.on('renderDialogV2', injectAIButton)

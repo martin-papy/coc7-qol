@@ -1,6 +1,5 @@
 export default class CoC7AIGenerationDialog extends foundry.applications.api.ApplicationV2 {
   static DEFAULT_OPTIONS = {
-    id: 'coc7-ai-generation-dialog',
     tag: 'div',
     window: { title: 'CoC7 AI Generator — Review Weapon' },
     position: { width: 480, height: 'auto' },

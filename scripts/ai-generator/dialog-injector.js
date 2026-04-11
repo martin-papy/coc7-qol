@@ -19,6 +19,8 @@ const SPARKLE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
  * @param {HTMLElement} html
  */
 export function injectAIButton (dialog, html) {
+  if (!game.user.isGM) return  // only GMs may trigger LLM generation
+
   const nameInput = html.querySelector('[name="name"]')
   const typeSelect = html.querySelector('[name="type"]')
   if (!nameInput || !typeSelect) return // not the Create Item dialog
@@ -63,10 +65,13 @@ function _transformToPromptView (dialog, html, nameInput, aiBtn) {
         rows="4"
         placeholder='e.g. "A worn 1920s revolver, .38 calibre, 6-shot cylinder, wood grip"'
         style="width:100%;resize:vertical"
-      >${capturedName ? `A weapon called "${capturedName}". ` : ''}</textarea>
+      ></textarea>
     </div>
     <div class="coc7-ai-error" style="display:none;color:var(--color-text-dark-error,red);margin-top:0.25rem;font-size:0.875em"></div>
   `
+  // Set textarea value safely via DOM property (not innerHTML) to avoid XSS
+  const promptTextarea = formArea.querySelector('[name="ai-prompt"]')
+  if (capturedName) promptTextarea.value = `A weapon called "${capturedName}". `
 
   aiBtn.style.display = 'none'
 
@@ -172,7 +177,7 @@ async function _runGeneration (dialog, html, formArea, buttonRow, originalFormHT
           })
         }
       }
-    }).render(true)
+    }).render({ force: true })
 
   } catch (err) {
     errorDiv.textContent = err.message

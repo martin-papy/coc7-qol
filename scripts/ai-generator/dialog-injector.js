@@ -305,6 +305,10 @@ async function _runNPCGeneration (dialog, html, form, buttonRow, promptArea, ori
 
           // Create actor
           const actor = await Actor.create(data.actorData)
+          if (!actor) {
+            ui.notifications.error('CoC7 AI Generator: Actor creation was cancelled.')
+            return
+          }
 
           // Attach skills
           if (resolvedSkills.length > 0) {

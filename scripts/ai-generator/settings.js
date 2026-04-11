@@ -18,7 +18,14 @@ export const PROVIDER_DEFAULTS = {
 export function registerSettingsHooks () {
   Hooks.on('renderSettingsConfig', (_app, html) => {
     const apiKeyInput = html.querySelector(`[name="${MODULE}.ai-api-key"]`)
-    if (apiKeyInput) apiKeyInput.type = 'password'
+    if (apiKeyInput) {
+      if (!game.user.isGM) {
+        // Non-GMs have no use for the API key field — hide the whole row
+        apiKeyInput.closest('.form-group')?.remove()
+      } else {
+        apiKeyInput.type = 'password'
+      }
+    }
 
     const providerSelect = html.querySelector(`[name="${MODULE}.ai-provider"]`)
     if (!providerSelect) return
@@ -58,8 +65,8 @@ export function registerSettings () {
 
   game.settings.register(MODULE, 'ai-api-key', {
     name: 'AI Generator: API Key',
-    hint: 'Your API key for the selected provider. Only visible to GMs.',
-    scope: 'world',
+    hint: 'Your API key for the selected provider. Stored only in your browser (localStorage) — never sent to other players.',
+    scope: 'client',
     config: true,
     type: String,
     default: ''

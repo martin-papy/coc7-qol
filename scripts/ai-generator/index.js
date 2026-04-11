@@ -11,7 +11,7 @@ import GeminiProvider from './providers/gemini.js'
 import * as mappers from './mappers/registry.js'
 import WeaponMapper from './mappers/weapon.js'
 import NPCMapper from './mappers/npc.js'
-import { injectAIButton } from './dialog-injector.js'
+import { injectAIButton, injectNPCButton } from './dialog-injector.js'
 
 // Register providers and mappers at module load time (pure in-memory, no Foundry API needed)
 providers.register('anthropic', AnthropicProvider)
@@ -30,3 +30,4 @@ Hooks.once('init', registerSettingsHooks)
 // Inject the AI button whenever any dialog renders — injectAIButton checks internally
 // whether the dialog is the "Create Item" dialog before doing anything.
 Hooks.on('renderDialogV2', injectAIButton)
+Hooks.on('renderDialogV2', injectNPCButton)

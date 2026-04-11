@@ -2,6 +2,7 @@
 import * as providers from './providers/registry.js'
 import * as mappers from './mappers/registry.js'
 import CoC7AIGenerationDialog from './generation-dialog.js'
+import CoC7NPCConfirmationDialog from './npc-confirmation-dialog.js'
 
 const MODULE = 'coc7-qol'
 
@@ -15,6 +16,9 @@ const SPARKLE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
 // CoC7 item types — used to distinguish the Create Item dialog from Create Actor
 const COC7_ITEM_TYPES = ['weapon', 'skill', 'book', 'spell', 'chase', 'archetype', 'armor',
   'experiencePackage', 'item', 'occupation', 'setup', 'status', 'talent']
+
+// CoC7 actor types — used to detect the Create Actor dialog
+const COC7_ACTOR_TYPES = ['character', 'npc', 'creature', 'vehicle', 'container']
 
 /**
  * Called on every renderDialogV2 hook. Checks whether the dialog is the
@@ -48,6 +52,40 @@ export function injectAIButton (dialog, html) {
 
   aiBtn.addEventListener('click', () => {
     _transformToPromptView(dialog, html, nameInput, aiBtn)
+  })
+}
+
+/**
+ * Called on every renderDialogV2 hook. Checks whether the dialog is the
+ * "Create Actor" dialog before doing any DOM work.
+ * @param {Dialog} dialog
+ * @param {HTMLElement} html
+ */
+export function injectNPCButton (dialog, html) {
+  if (!game.user.isGM) return
+
+  const nameInput = html.querySelector('[name="name"]')
+  const typeSelect = html.querySelector('[name="type"]')
+  if (!nameInput || !typeSelect) return
+
+  // Only inject on the Create Actor dialog — not Create Item
+  const typeValues = [...typeSelect.options].map(o => o.value)
+  if (!typeValues.some(v => COC7_ACTOR_TYPES.includes(v))) return
+
+  const form = html.querySelector('form') ?? html.querySelector('.dialog-content')
+  const buttonRow = _findButtonRow(form, html)
+  if (!buttonRow) return
+
+  const aiBtn = document.createElement('button')
+  aiBtn.type = 'button'
+  aiBtn.className = 'coc7-ai-generate-btn'
+  aiBtn.title = 'Generate NPC with AI'
+  aiBtn.innerHTML = SPARKLE_SVG
+  aiBtn.style.cssText = 'flex:0 0 auto; min-width:2rem; padding:0.25rem 0.5rem'
+  buttonRow.appendChild(aiBtn)
+
+  aiBtn.addEventListener('click', () => {
+    _transformToNPCPromptView(dialog, html, nameInput, aiBtn)
   })
 }
 
@@ -141,6 +179,165 @@ function _restoreOriginalForm (form, buttonRow, promptArea, originalFieldNodes, 
     restoredBtn.addEventListener('click', () => {
       _transformToPromptView(dialog, html, newNameInput, restoredBtn)
     })
+  }
+}
+
+/**
+ * Replaces Name + Type form fields with a prompt textarea for NPC generation.
+ */
+function _transformToNPCPromptView (dialog, html, nameInput, aiBtn) {
+  const capturedName = nameInput.value.trim()
+
+  const form = html.querySelector('form') ?? html.querySelector('.dialog-content') ?? nameInput.closest('div')
+  const buttonRow = _findButtonRow(form, html)
+  if (!form || !buttonRow) return
+
+  const originalButtonHTML = buttonRow.innerHTML
+  const originalFieldNodes = [...form.children]
+    .filter(child => child !== buttonRow)
+    .map(child => child.cloneNode(true))
+
+  for (const child of [...form.children]) {
+    if (child !== buttonRow) child.remove()
+  }
+
+  const promptArea = document.createElement('div')
+  promptArea.style.cssText = 'display:flex;flex-direction:column;gap:0.25rem;padding:0.5rem 0'
+  promptArea.innerHTML = `
+    <label for="coc7-ai-npc-prompt" style="font-weight:bold">Describe your NPC</label>
+    <textarea
+      id="coc7-ai-npc-prompt"
+      name="ai-npc-prompt"
+      rows="4"
+      placeholder='e.g. "A nervous pharmacist in 1920s Arkham, middle-aged, hides a secret"'
+      style="width:100%;resize:vertical;box-sizing:border-box"
+    ></textarea>
+    <div class="coc7-ai-error" style="display:none;color:var(--color-text-dark-error,red);margin-top:0.25rem;font-size:0.875em"></div>
+  `
+  form.insertBefore(promptArea, buttonRow)
+
+  const promptTextarea = form.querySelector('[name="ai-npc-prompt"]')
+  if (capturedName) promptTextarea.value = `An NPC named "${capturedName}". `
+
+  aiBtn.style.display = 'none'
+
+  buttonRow.innerHTML = `
+    <button type="button" class="coc7-btn-generate" style="flex:1">Generate</button>
+    <button type="button" class="coc7-btn-back">Cancel</button>
+  `
+
+  buttonRow.querySelector('.coc7-btn-back').addEventListener('click', () => {
+    _restoreOriginalNPCForm(form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn, dialog, html)
+  })
+
+  buttonRow.querySelector('.coc7-btn-generate').addEventListener('click', () => {
+    _runNPCGeneration(dialog, html, form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn)
+  })
+}
+
+/**
+ * Restores the Create Actor form to its original Name + Type state.
+ */
+function _restoreOriginalNPCForm (form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn, dialog, html) {
+  promptArea.remove()
+  for (const node of originalFieldNodes) {
+    form.insertBefore(node, buttonRow)
+  }
+  buttonRow.innerHTML = originalButtonHTML
+  aiBtn.style.display = ''
+
+  const restoredBtn = buttonRow.querySelector('.coc7-ai-generate-btn')
+  if (restoredBtn) {
+    const newNameInput = form.querySelector('[name="name"]')
+    restoredBtn.addEventListener('click', () => {
+      _transformToNPCPromptView(dialog, html, newNameInput, restoredBtn)
+    })
+  }
+}
+
+/**
+ * Calls the LLM provider with the NPC mapper and opens the NPC confirmation dialog.
+ */
+async function _runNPCGeneration (dialog, html, form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn) {
+  const textarea = form.querySelector('[name="ai-npc-prompt"]')
+  const userPrompt = textarea?.value?.trim()
+  const errorDiv = form.querySelector('.coc7-ai-error')
+  const generateBtn = buttonRow.querySelector('.coc7-btn-generate')
+
+  if (!userPrompt) {
+    errorDiv.textContent = 'Please describe the NPC before generating.'
+    errorDiv.style.display = 'block'
+    return
+  }
+
+  const apiKey = game.settings.get(MODULE, 'ai-api-key')
+  if (!apiKey) {
+    errorDiv.textContent = 'No API key configured — set it in Module Settings → CoC7 QoL Improvements.'
+    errorDiv.style.display = 'block'
+    return
+  }
+
+  generateBtn.disabled = true
+  generateBtn.textContent = 'Generating…'
+  errorDiv.style.display = 'none'
+
+  try {
+    const providerId = game.settings.get(MODULE, 'ai-provider')
+    const ProviderClass = providers.get(providerId)
+    if (!ProviderClass) throw new Error(`Unknown provider: ${providerId}`)
+
+    const mapper = mappers.get('npc')
+    const systemPrompt = mapper.buildSystemPrompt()
+
+    const provider = new ProviderClass()
+    const llmData = await provider.generate(systemPrompt, userPrompt)
+
+    mapper.validate(llmData)
+    const npcData = mapper.toFoundryData(llmData)
+
+    new CoC7NPCConfirmationDialog({
+      npcData,
+
+      onAccept: async (data) => {
+        try {
+          // Resolve skills against compendium
+          const resolvedSkills = await mapper.resolveSkills(data.skillsRaw)
+
+          // Create actor
+          const actor = await Actor.create(data.actorData)
+
+          // Attach skills
+          if (resolvedSkills.length > 0) {
+            try {
+              await actor.createEmbeddedDocuments('Item', resolvedSkills)
+            } catch (skillErr) {
+              ui.notifications.warn(`CoC7 AI Generator: NPC created but some skills failed — ${skillErr.message}`)
+            }
+          }
+
+          actor?.sheet?.render(true)
+          dialog.close()
+        } catch (err) {
+          ui.notifications.error(`CoC7 AI Generator: Failed to create NPC — ${err.message}`)
+        }
+      },
+
+      onRegenerate: () => {
+        generateBtn.disabled = false
+        generateBtn.textContent = 'Generate'
+        textarea.focus()
+      },
+
+      onCancel: () => {
+        _restoreOriginalNPCForm(form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn, dialog, html)
+      }
+    }).render({ force: true })
+
+  } catch (err) {
+    errorDiv.textContent = err.message
+    errorDiv.style.display = 'block'
+    generateBtn.disabled = false
+    generateBtn.textContent = 'Retry'
   }
 }
 

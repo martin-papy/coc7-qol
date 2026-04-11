@@ -30,6 +30,10 @@ export default class AnthropicProvider {
     const data = await response.json()
     const text = data.content?.[0]?.text
     if (!text) throw new Error('Anthropic returned an empty response')
-    return JSON.parse(text)
+    try {
+      return JSON.parse(text)
+    } catch {
+      throw new Error(`Anthropic response is not valid JSON: ${text.slice(0, 200)}`)
+    }
   }
 }

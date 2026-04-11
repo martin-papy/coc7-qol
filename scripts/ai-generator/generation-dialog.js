@@ -18,10 +18,10 @@ export default class CoC7AIGenerationDialog extends foundry.applications.api.App
 
   constructor ({ itemData, onAccept, onRegenerate, onCancel } = {}, options = {}) {
     super(options)
-    this.#itemData = itemData
-    this.#acceptCallback = onAccept
-    this.#regenerateCallback = onRegenerate
-    this.#cancelCallback = onCancel
+    this.#itemData = itemData ?? {}
+    this.#acceptCallback = onAccept ?? (() => {})
+    this.#regenerateCallback = onRegenerate ?? (() => {})
+    this.#cancelCallback = onCancel ?? (() => {})
   }
 
   async _renderHTML (context, options) {
@@ -38,8 +38,8 @@ export default class CoC7AIGenerationDialog extends foundry.applications.api.App
         <div><dt>Skill</dt><dd>${this.#escapeHtml(s.skill.main.name)}</dd></div>
         <div><dt>Range</dt><dd>${this.#escapeHtml(s.range.normal.value || '—')}</dd></div>
         <div><dt>Uses/Round</dt><dd>${this.#escapeHtml(s.usesPerRound.normal)}</dd></div>
-        <div><dt>Bullets</dt><dd>${s.bullets ?? '—'}</dd></div>
-        <div><dt>Malfunction</dt><dd>${s.malfunction ?? '—'}</dd></div>
+        <div><dt>Bullets</dt><dd>${this.#escapeHtml(String(s.bullets ?? '—'))}</dd></div>
+        <div><dt>Malfunction</dt><dd>${this.#escapeHtml(String(s.malfunction ?? '—'))}</dd></div>
       </dl>
       <div class="ai-item-description">
         <p>${this.#escapeHtml(s.description.value)}</p>

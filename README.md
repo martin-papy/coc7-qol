@@ -4,6 +4,18 @@ A companion module for the [Call of Cthulhu 7th Edition](https://github.com/Misk
 
 ## Features
 
+### AI Weapon Generator (GM only)
+
+GMs can generate fully-formed CoC7 weapon items from a natural-language description, directly inside FoundryVTT.
+
+1. Click the sparkle icon next to **Create Item** in the Items sidebar
+2. Describe your weapon in plain language (e.g. *"A worn 1920s revolver, .38 calibre, 6-shot cylinder, wood grip"*)
+3. Click **Generate** — the module calls your configured LLM and fills in all CoC7 weapon fields
+4. Review the stats (name, damage, skill, range, ammo…), edit the name if needed, then click **Accept**
+5. The item is created in your world and its sheet opens immediately
+
+Supports **Anthropic (Claude)**, **OpenAI (GPT)**, and **Google Gemini**. Configure your provider, API key, endpoint, and model under **Settings → Module Settings → CoC7 QoL Improvements**.
+
 ### Item Image Popout
 
 Players can click on any item image (weapons, spells, books, skills, etc.) to view the full-size illustration in a draggable, resizable popout window. GMs retain the default file picker behavior.

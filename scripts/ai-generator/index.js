@@ -3,7 +3,7 @@
 // All other files in this directory are imported from here.
 // Only this file is listed in module.json esmodules.
 
-import { registerSettings } from './settings.js'
+import { registerSettings, registerSettingsHooks } from './settings.js'
 import * as providers from './providers/registry.js'
 import AnthropicProvider from './providers/anthropic.js'
 import OpenAIProvider from './providers/openai.js'
@@ -21,6 +21,10 @@ mappers.register('weapon', WeaponMapper)
 // Settings must be registered during the 'init' hook
 Hooks.once('init', registerSettings)
 
+// Attach live-update listener so changing provider in the settings UI immediately
+// updates the endpoint and model inputs without requiring a save/reopen.
+Hooks.once('init', registerSettingsHooks)
+
 // Inject the AI button whenever any dialog renders — injectAIButton checks internally
 // whether the dialog is the "Create Item" dialog before doing anything.
-Hooks.on('renderDialog', injectAIButton)
+Hooks.on('renderDialogV2', injectAIButton)

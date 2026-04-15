@@ -331,6 +331,7 @@ async function _runNPCGeneration (dialog, html, form, buttonRow, promptArea, ori
             try {
               await actor.createEmbeddedDocuments('Item', resolvedSkills)
             } catch (skillErr) {
+              console.warn('[coc7-qol] Skill attachment failed:', skillErr)
               ui.notifications.warn(`CoC7 AI Generator: NPC created but some skills failed — ${skillErr.message}`)
             }
           }
@@ -338,6 +339,7 @@ async function _runNPCGeneration (dialog, html, form, buttonRow, promptArea, ori
           actor?.sheet?.render(true)
           dialog.close()
         } catch (err) {
+          console.error('[coc7-qol] NPC actor creation failed:', err)
           ui.notifications.error(`CoC7 AI Generator: Failed to create NPC — ${err.message}`)
         }
       },
@@ -354,6 +356,7 @@ async function _runNPCGeneration (dialog, html, form, buttonRow, promptArea, ori
     }).render({ force: true })
 
   } catch (err) {
+    console.error('[coc7-qol] NPC generation failed:', err)
     errorDiv.textContent = err.message
     errorDiv.style.display = 'block'
     generateBtn.disabled = false
@@ -413,6 +416,7 @@ async function _runGeneration (dialog, html, form, buttonRow, promptArea, origin
           item?.sheet?.render(true)
           dialog.close()
         } catch (err) {
+          console.error('[coc7-qol] Weapon item creation failed:', err)
           ui.notifications.error(`CoC7 AI Generator: Failed to create item — ${err.message}`)
         }
       },
@@ -430,6 +434,7 @@ async function _runGeneration (dialog, html, form, buttonRow, promptArea, origin
     }).render({ force: true })
 
   } catch (err) {
+    console.error('[coc7-qol] Weapon generation failed:', err)
     errorDiv.textContent = err.message
     errorDiv.style.display = 'block'
     generateBtn.disabled = false

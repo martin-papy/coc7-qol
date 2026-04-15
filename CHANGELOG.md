@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-04-15
+
+### Fixed
+
+- Improved error logging for AI generation failures: invalid JSON responses from LLM providers now log the full raw response to the browser console, and all FoundryVTT operation errors (actor/item creation, skill attachment) are consistently logged with their full stack trace.
+
 ## [0.4.0] - 2026-04-15
 
 ### Added
@@ -43,7 +49,8 @@ All notable changes to this project will be documented in this file.
 
 - **Item Image Popout** — Players can click on any item image to view the full-size illustration in a draggable, resizable popout window. GMs retain the default file picker behavior.
 
-[Unreleased]: https://github.com/martin-papy/coc7-qol/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/martin-papy/coc7-qol/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/martin-papy/coc7-qol/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/martin-papy/coc7-qol/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/martin-papy/coc7-qol/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/martin-papy/coc7-qol/compare/v0.1.0...v0.2.0

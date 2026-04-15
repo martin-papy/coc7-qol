@@ -29,6 +29,7 @@ export default class GeminiProvider {
     try {
       return JSON.parse(text)
     } catch (e) {
+      console.error('[coc7-qol] Gemini returned invalid JSON.\nParse error:', e, '\nFull response text:\n', text)
       throw new Error(`Gemini response is not valid JSON: ${text.slice(0, 200)}`, { cause: e })
     }
   }

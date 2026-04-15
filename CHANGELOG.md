@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-04-15
+
 ### Added
 
 - **AI Weapon Generator** — GMs can generate CoC7 weapon items from a natural-language description inside FoundryVTT.
@@ -41,7 +43,8 @@ All notable changes to this project will be documented in this file.
 
 - **Item Image Popout** — Players can click on any item image to view the full-size illustration in a draggable, resizable popout window. GMs retain the default file picker behavior.
 
-[Unreleased]: https://github.com/martin-papy/coc7-qol/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/martin-papy/coc7-qol/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/martin-papy/coc7-qol/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/martin-papy/coc7-qol/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/martin-papy/coc7-qol/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/martin-papy/coc7-qol/releases/tag/v0.1.0

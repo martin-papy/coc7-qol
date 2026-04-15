@@ -30,6 +30,7 @@
   "esmodules": [
     "scripts/item-image-popout.js",
     "scripts/possession-item-image-popout.js",
-    "scripts/ai-generator/index.js"
+    "scripts/ai-generator/index.js",
+    "scripts/close-all-cards.js"
   ]
 }

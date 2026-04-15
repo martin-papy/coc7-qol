@@ -30,6 +30,7 @@ function getOpenCards () {
 
 class CloseAllCardsDialog extends foundry.applications.api.ApplicationV2 {
   static DEFAULT_OPTIONS = {
+    id: 'coc7-close-all-cards',
     tag: 'div',
     window: { title: 'Close All Cards' },
     position: { width: 420, height: 'auto' },

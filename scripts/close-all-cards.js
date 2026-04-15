@@ -48,6 +48,14 @@ class CloseAllCardsDialog extends foundry.applications.api.ApplicationV2 {
     this.#cards = cards;
   }
 
+  #escapeHtml (str) {
+    return String(str ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
   async _renderHTML (context, options) {
     const container = document.createElement('div');
     container.className = 'coc7-qol-close-all-cards';
@@ -70,10 +78,10 @@ class CloseAllCardsDialog extends foundry.applications.api.ApplicationV2 {
       const row = document.createElement('label');
       row.className = 'close-cards-row';
       row.innerHTML = `
-        <input type="checkbox" data-action="toggleCard" data-message-id="${card.messageId}" checked>
-        <span class="close-cards-type">${card.type}</span>
-        <span class="close-cards-actor">${card.actor}</span>
-        <span class="close-cards-time">${card.timestamp}</span>
+        <input type="checkbox" data-action="toggleCard" data-message-id="${this.#escapeHtml(card.messageId)}" checked>
+        <span class="close-cards-type">${this.#escapeHtml(card.type)}</span>
+        <span class="close-cards-actor">${this.#escapeHtml(card.actor)}</span>
+        <span class="close-cards-time">${this.#escapeHtml(card.timestamp)}</span>
       `;
       list.appendChild(row);
     }

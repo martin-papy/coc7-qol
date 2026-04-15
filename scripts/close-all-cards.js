@@ -187,18 +187,29 @@ class CloseAllCardsDialog extends foundry.applications.api.ApplicationV2 {
 
     let closed = 0;
     for (const id of ids) {
-      // Try clicking the system's Close Card button for a full HTML re-render.
-      const msgEl = document.querySelector(`li.chat-message[data-message-id="${id}"]`);
-      const closeBtn = msgEl?.querySelector('button[data-action="toggleValue"][data-set="cardOpen"]');
-      if (closeBtn) {
-        closeBtn.click();
-      }
-      // Always update the flag directly as a safety net.
       const message = game.messages.get(id);
-      if (message) {
-        await message.update({ 'flags.CoC7.load.cardOpen': false });
-        closed++;
-      }
+      if (!message) continue;
+
+      // Strip the Close Card button from the stored HTML so the
+      // re-rendered message reflects the closed state visually.
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(message.content, 'text/html');
+      doc.querySelectorAll('button[data-action="toggleValue"][data-set="cardOpen"]').forEach(btn => {
+        // Remove the parent .coc7-card-buttons container if it only held this button.
+        const container = btn.closest('.coc7-card-buttons');
+        if (container && container.querySelectorAll('button').length === 1) {
+          container.remove();
+        } else {
+          btn.remove();
+        }
+      });
+      const newContent = doc.body.innerHTML;
+
+      await message.update({
+        content: newContent,
+        'flags.CoC7.load.cardOpen': false
+      });
+      closed++;
     }
 
     ui.notifications.info(`Closed ${closed} card${closed === 1 ? '' : 's'}.`);

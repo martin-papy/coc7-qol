@@ -12,7 +12,7 @@ This is a no-build-step vanilla JS module. FoundryVTT loads `scripts/*.js` files
 
 Each feature is a self-contained ES module in `scripts/` that registers FoundryVTT hooks. The module.json `esmodules` array is the entry point list — add new feature files there.
 
-**Key pattern:** Features hook into FoundryVTT's render lifecycle (e.g., `Hooks.on('renderItemSheetV2', ...)` for item sheets, `Hooks.on('renderActorSheetV2', ...)` for actor sheets) to modify sheet HTML after the system renders it. This avoids modifying CoC7 source code.
+**Key pattern:** Features hook into FoundryVTT's lifecycle via `Hooks.on(...)`. Most use render hooks (e.g., `renderItemSheetV2` for item sheets, `renderActorSheetV2` for actor sheets) to modify sheet HTML after the system renders it. Some use non-render hooks (e.g., `getSceneControlButtons` to inject buttons into the scene controls toolbar). This avoids modifying CoC7 source code.
 
 ## Compatibility
 

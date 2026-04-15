@@ -1,7 +1,7 @@
 {
   "id": "coc7-qol",
   "title": "CoC7 QoL Improvements",
-  "description": "Quality of life improvements for the Call of Cthulhu 7th Edition system. Adds image popouts and AI-powered weapon generation for GMs.",
+  "description": "Quality of life improvements for the Call of Cthulhu 7th Edition system. Adds image popouts, AI-powered weapon generation, and bulk card management for GMs.",
   "version": "0.4.0",
   "authors": [
     {
@@ -30,6 +30,7 @@
   "esmodules": [
     "scripts/item-image-popout.js",
     "scripts/possession-item-image-popout.js",
-    "scripts/ai-generator/index.js"
+    "scripts/ai-generator/index.js",
+    "scripts/close-all-cards.js"
   ]
 }

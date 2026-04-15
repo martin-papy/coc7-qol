@@ -2,33 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
 ## [Unreleased]
 
 ### Added
 
-- **AI Weapon Generator** — GMs can generate fully-formed CoC7 weapon items from a natural-language description directly inside FoundryVTT.
-- **AI NPC Generator** — GMs can generate fully-formed CoC7 NPC actors from a natural-language prompt, with full stat block (8 characteristics), AI-curated skills, and narrative prose (appearance, personality, background).
+- **AI Weapon Generator** — GMs can generate CoC7 weapon items from a natural-language description inside FoundryVTT.
+- **AI NPC Generator** — GMs can generate CoC7 NPC actors with full stat block, AI-curated skills, and narrative prose (appearance, personality, background).
+- **Close All Cards** — GMs can bulk-close all open chat message cards from the Keeper toolbar, with a card selection dialog.
 - Three LLM providers: Anthropic (Claude), OpenAI (GPT), Google Gemini.
-- Module settings for provider selection, API key, endpoint URL, and model.
-- In-place transformation of the native Create Item and Create Actor dialogs with prompt textarea.
-- Lightweight confirmation dialog for weapons with editable name and read-only stats preview.
-- Rich read-only confirmation dialog for NPC previews, showing characteristics grid, skills list, and narrative sections before creation.
-- NPC skills are resolved against the official CoC7 skills compendium when available, preserving proper skill flags and identifiers. Unknown skills are created with specialization parsing via the CoC7 system.
-- AI sparkle button only appears when a supported type is selected in the creation dialog (weapon for items, NPC for actors).
-- Live endpoint/model update when switching providers in settings.
+- Module settings for provider, API key, endpoint, and model. API key stored client-side only.
+- AI button appears only when a supported type is selected in creation dialogs.
 
 ### Fixed
 
-- API key stored client-side (localStorage) to prevent exposure to players.
-- API key input obfuscated as password field in settings.
-- Buttons missing after AI transform due to detached footer element.
-- Confirmation dialog buttons laid out in a row instead of stacked.
-- AI generation button no longer appears on the Create Actor dialog when only weapon generation was supported.
-- Guard against `Actor.create()` returning null (e.g. when a pre-create hook cancels creation).
-- HTML escaping for LLM-generated narrative content to prevent XSS.
+- NPC skills resolved against the CoC7 compendium when available, with specialization fallback.
+- HTML escaping for all LLM-generated content to prevent XSS.
 
 ## [0.3.0] - 2026-04-08
 

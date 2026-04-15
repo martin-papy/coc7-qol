@@ -60,15 +60,30 @@ The `flags.CoC7.load.as` field identifies the card class. Mapping to human-reada
 
 ### Closing Mechanism
 
-For each selected message, update the flag:
+For each selected message, parse the stored HTML content, strip the Close Card button (and its `.coc7-card-buttons` container if it's the only button), then update both the content and the flag in a single call:
 
 ```js
-message.update({ 'flags.CoC7.load.cardOpen': false })
+const parser = new DOMParser();
+const doc = parser.parseFromString(message.content, 'text/html');
+doc.querySelectorAll('button[data-action="toggleValue"][data-set="cardOpen"]').forEach(btn => {
+  const container = btn.closest('.coc7-card-buttons');
+  if (container && container.querySelectorAll('button').length === 1) {
+    container.remove();
+  } else {
+    btn.remove();
+  }
+});
+await message.update({
+  content: doc.body.innerHTML,
+  'flags.CoC7.load.cardOpen': false
+});
 ```
 
-This is the same mechanism the system's own "Close Card" button uses — toggling `cardOpen` to `false` triggers a message re-render via FoundryVTT's `renderChatMessage` hook, which removes the action buttons from the card.
+This approach is necessary because the CoC7 system's own close flow uses internal classes with private fields (inaccessible from a companion module) and re-renders the full Handlebars template. Simply updating the flag without updating the HTML `content` leaves the card visually unchanged. Updating both ensures the chat message re-renders correctly via FoundryVTT's document update lifecycle.
 
-Updates are issued in parallel via `Promise.all()` for performance.
+**Note:** Programmatically clicking the system's Close Card DOM button was considered but rejected — the CoC7 event handlers are `async` and read `event.currentTarget` after an `await`, which becomes `null` when triggered programmatically.
+
+Updates are issued sequentially (not in parallel) to avoid race conditions with DOM updates.
 
 ### Edge Cases
 

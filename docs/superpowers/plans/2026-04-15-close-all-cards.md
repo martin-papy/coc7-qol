@@ -4,7 +4,7 @@
 
 **Goal:** Add a Keeper toolbar button that opens a dialog listing all open CoC7 chat cards, letting the GM select and close them in bulk.
 
-**Architecture:** Single ES module hooks into `getSceneControlButtons` to inject a button into the `coc7menu` group. The button opens an `ApplicationV2` dialog that scans `game.messages` for open cards and presents them as a checkbox list. Closing updates each message's `flags.CoC7.load.cardOpen` flag to `false`.
+**Architecture:** Single ES module hooks into `getSceneControlButtons` to inject a button into the `coc7menu` group. The button opens an `ApplicationV2` dialog that scans `game.messages` for open cards and presents them as a checkbox list. Closing parses each message's stored HTML to strip the Close Card button, then updates both `content` and `flags.CoC7.load.cardOpen` in a single `message.update()` call to ensure visual and data consistency.
 
 **Tech Stack:** Vanilla JS ES modules, FoundryVTT v13 ApplicationV2 API, FoundryVTT scene controls hook.
 
@@ -215,16 +215,33 @@ class CloseAllCardsDialog extends foundry.applications.api.ApplicationV2 {
     const ids = this.#getSelectedMessageIds()
     if (ids.length === 0) return
 
-    const updates = ids.map(id => {
+    let closed = 0
+    for (const id of ids) {
       const message = game.messages.get(id)
-      if (message) {
-        return message.update({ 'flags.CoC7.load.cardOpen': false })
-      }
-      return null
-    }).filter(Boolean)
+      if (!message) continue
 
-    await Promise.all(updates)
-    ui.notifications.info(`Closed ${updates.length} card${updates.length === 1 ? '' : 's'}.`)
+      // Strip the Close Card button from the stored HTML so the
+      // re-rendered message reflects the closed state visually.
+      const parser = new DOMParser()
+      const doc = parser.parseFromString(message.content, 'text/html')
+      doc.querySelectorAll('button[data-action="toggleValue"][data-set="cardOpen"]').forEach(btn => {
+        const container = btn.closest('.coc7-card-buttons')
+        if (container && container.querySelectorAll('button').length === 1) {
+          container.remove()
+        } else {
+          btn.remove()
+        }
+      })
+      const newContent = doc.body.innerHTML
+
+      await message.update({
+        content: newContent,
+        'flags.CoC7.load.cardOpen': false
+      })
+      closed++
+    }
+
+    ui.notifications.info(`Closed ${closed} card${closed === 1 ? '' : 's'}.`)
     this.close()
   }
 

@@ -129,7 +129,7 @@ The compendium lookup benefits skills like Dodge, Credit Rating, and Cthulhu Myt
 
 `Hooks.on('renderDialogV2', ...)` fires on every dialog open. The existing handler guards for item dialogs (with the bug fix applied). A new parallel guard detects the Create Actor dialog by checking that `[name="type"]`'s options contain CoC7 actor type values (e.g. `"npc"`, `"character"`, `"creature"`).
 
-A sparkle SVG button is injected next to the "Create Actor" button — same styling as the existing item injection.
+A sparkle SVG button is injected next to the "Create Actor" button — same styling as the existing item injection. The button is only visible when a supported type is selected: for actors, only `"npc"`. A `change` listener on the type select toggles visibility dynamically. This same behavior applies to the item flow (only `"weapon"` is supported).
 
 ### Step 2 — In-place Transformation
 

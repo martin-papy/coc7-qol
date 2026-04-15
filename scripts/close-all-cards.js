@@ -185,16 +185,25 @@ class CloseAllCardsDialog extends foundry.applications.api.ApplicationV2 {
     const ids = this.#getSelectedMessageIds();
     if (ids.length === 0) return;
 
-    const updates = ids.map(id => {
-      const message = game.messages.get(id);
-      if (message) {
-        return message.update({ 'flags.CoC7.load.cardOpen': false });
+    let closed = 0;
+    for (const id of ids) {
+      const msgEl = document.querySelector(`li.chat-message[data-message-id="${id}"]`);
+      const closeBtn = msgEl?.querySelector('button[data-action="toggleValue"][data-set="cardOpen"]');
+      if (closeBtn) {
+        closeBtn.click();
+        closed++;
+      } else {
+        // Fallback for cards without a Close Card button (e.g. san-check):
+        // update the flag directly so the data is consistent.
+        const message = game.messages.get(id);
+        if (message) {
+          await message.update({ 'flags.CoC7.load.cardOpen': false });
+          closed++;
+        }
       }
-      return null;
-    }).filter(Boolean);
+    }
 
-    await Promise.all(updates);
-    ui.notifications.info(`Closed ${updates.length} card${updates.length === 1 ? '' : 's'}.`);
+    ui.notifications.info(`Closed ${closed} card${closed === 1 ? '' : 's'}.`);
     this.close();
   }
 

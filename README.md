@@ -16,6 +16,18 @@ GMs can generate fully-formed CoC7 weapon items from a natural-language descript
 
 Supports **Anthropic (Claude)**, **OpenAI (GPT)**, and **Google Gemini**. Configure your provider, API key, endpoint, and model under **Settings → Module Settings → CoC7 QoL Improvements**.
 
+### Close All Cards (GM only)
+
+GMs can close all open chat cards in one action, directly from the Keeper's toolbar.
+
+1. Click the tentacle-strike icon in the scene controls toolbar to open the Keeper's tools
+2. Click the **Close All Cards** button (the ╳-lines icon)
+3. A dialog lists every open card in the chat log with its type, actor name, and timestamp
+4. Use the select-all checkbox or pick individual cards to close
+5. Click **Close Selected** — the selected cards are resolved and their action buttons removed
+
+This is useful when accumulated open cards block new rolls from being initiated.
+
 ### Item Image Popout
 
 Players can click on any item image (weapons, spells, books, skills, etc.) to view the full-size illustration in a draggable, resizable popout window. GMs retain the default file picker behavior.

@@ -247,8 +247,8 @@ async function _runNPCGeneration (dialog, html, form, buttonRow, promptArea, ori
     mapper.validate(llmData)
     const npcData = mapper.toFoundryData(llmData)
 
-    const randomChars = form.querySelector('[name="ai-random-characteristics"]')?.checked
-    if (randomChars) applyRandomCharacteristics(npcData)
+    const useRandomCharacteristics = form.querySelector('[name="ai-random-characteristics"]')?.checked
+    if (useRandomCharacteristics) applyRandomCharacteristics(npcData)
 
     new CoC7NPCConfirmationDialog({
       npcData,

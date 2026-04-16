@@ -44,8 +44,10 @@ export const CHARACTERISTIC_FORMULAS = {
 }
 
 export function applyRandomCharacteristics (npcData) {
+  const chars = npcData?.actorData?.system?.characteristics
+  if (!chars) return
   for (const [key, formula] of Object.entries(CHARACTERISTIC_FORMULAS)) {
-    npcData.actorData.system.characteristics[key] = { formula, value: 0 }
+    chars[key] = { formula, value: 0 }
   }
   npcData.randomCharacteristics = true
 }

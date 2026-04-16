@@ -54,6 +54,17 @@ If installed and available, use `codebase-memory-mcp` tools **first** for any st
 
 If the project is not yet indexed, run `index_repository` first. Fall back to `Grep`/`Glob`/`Read` only for config values, non-code files, or plain text content.
 
+## External Documentation
+
+If the **Context7 MCP server** is available, when working with FoundryVTT APIs, use it to fetch up-to-date documentation rather than relying on training data:
+
+```
+mcp__plugin_context7_context7__resolve-library-id({ libraryName: "foundryvtt" })
+mcp__plugin_context7_context7__query-docs({ context7CompatibleLibraryID: "...", query: "..." })
+```
+
+Use this for: ApplicationV2, DocumentSheet, Hooks API, canvas/scene APIs, compendium packs, data models, and any other FoundryVTT or CoC7 system APIs.
+
 ## Reference
 
 - CoC7 system source: `../CoC7-FoundryVTT-8.x/` (workspace sibling, targets CoC7 8.1+)

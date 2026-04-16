@@ -40,7 +40,11 @@ const NPC_PROMPT_CONFIG = {
   textareaId: 'coc7-ai-npc-prompt',
   placeholder: 'e.g. "A nervous pharmacist in 1920s Arkham, middle-aged, hides a secret"',
   prefillPrefix: 'An NPC named',
-  runGeneration: _runNPCGeneration
+  runGeneration: _runNPCGeneration,
+  extraHTML: `<label class="coc7-ai-random-chars-label">
+    <input type="checkbox" name="ai-random-characteristics">
+    Random characteristics <span class="coc7-ai-hint">(rulebook formula, rolled on token drop)</span>
+  </label>`
 }
 
 /**
@@ -157,6 +161,7 @@ function _transformToPromptView (dialog, html, nameInput, aiBtn, config) {
       rows="4"
       placeholder='${config.placeholder}'
     ></textarea>
+    ${config.extraHTML ?? ''}
     <div class="coc7-ai-error"></div>
   `
   form.insertBefore(promptArea, buttonRow)

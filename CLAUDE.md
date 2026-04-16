@@ -42,6 +42,18 @@ gh release create vX.Y.Z --title "vX.Y.Z" --notes "Release notes" /tmp/coc7-qol.
 
 No automated tests. All features require manual testing in a running FoundryVTT instance with the CoC7 system. Test as both GM and player — most features behave differently per role.
 
+## Code Exploration
+
+If installed and available, use `codebase-memory-mcp` tools **first** for any structural code exploration:
+
+- `search_graph(name_pattern/label/qn_pattern)` — find functions, classes, modules by name
+- `trace_path(function_name, mode=calls|data_flow)` — follow call chains
+- `get_code_snippet(qualified_name)` — read source for a specific symbol
+- `get_architecture(aspects)` — understand project structure
+- `search_code(pattern)` — graph-augmented text search
+
+If the project is not yet indexed, run `index_repository` first. Fall back to `Grep`/`Glob`/`Read` only for config values, non-code files, or plain text content.
+
 ## Reference
 
 - CoC7 system source: `../CoC7-FoundryVTT-8.x/` (workspace sibling, targets CoC7 8.1+)

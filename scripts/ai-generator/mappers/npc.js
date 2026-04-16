@@ -32,6 +32,23 @@ Optional fields (include when relevant, omit if not applicable):
 
 const REQUIRED_CHARACTERISTICS = ['str', 'con', 'siz', 'dex', 'app', 'int', 'pow', 'edu']
 
+export const CHARACTERISTIC_FORMULAS = {
+  str: '5*(3d6)',
+  con: '5*(3d6)',
+  dex: '5*(3d6)',
+  app: '5*(3d6)',
+  pow: '5*(3d6)',
+  int: '5*(2d6+6)',
+  siz: '5*(2d6+6)',
+  edu: '5*(2d6+6)'
+}
+
+export function applyRandomCharacteristics (npcData) {
+  for (const [key, formula] of Object.entries(CHARACTERISTIC_FORMULAS)) {
+    npcData.actorData.system.characteristics[key] = { formula, value: 0 }
+  }
+  npcData.randomCharacteristics = true
+}
 
 export default {
   buildSystemPrompt () {

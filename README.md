@@ -36,17 +36,18 @@ The AI sparkle button appears automatically when a supported type is selected in
    ![Create Actor dialog with sparkle button](images/Create-NPC-1.png)
 
 3. Click the sparkle, then describe your NPC in plain language (e.g. *"A nervous pharmacist in 1920s Arkham, middle-aged, hides a laudanum habit"*)
-4. Click **Generate** — the LLM creates a complete NPC with characteristics, skills, and backstory
+4. Optionally tick **Random characteristics** — the AI returns rulebook dice formulas (e.g. `5*(3d6)`) instead of fixed values, so each characteristic is rolled fresh when the token is dropped on the canvas
+5. Click **Generate** — the LLM creates a complete NPC with characteristics, skills, and backstory
 
    ![NPC description prompt with Random characteristics option](images/Create-NPC-2.png)
 
-5. Review the full stat block (STR/CON/SIZ/DEX/APP/INT/POW/EDU), skills list, and narrative (appearance, personality, background), then click **Accept**
+6. Review the full stat block (STR/CON/SIZ/DEX/APP/INT/POW/EDU), skills list, and narrative (appearance, personality, background), then click **Accept**
 
    <table><tr>
      <td><img src="images/Create-NPC-3a.png" alt="Review NPC dialog — random characteristics"/></td>
      <td><img src="images/Create-NPC-3b.png" alt="Review NPC dialog — fixed characteristics"/></td>
    </tr></table>
-6. The NPC actor is created with all characteristics set, skills resolved from the CoC7 compendium, and narrative text populated in the biography and keeper notes
+7. The NPC actor is created with all characteristics set, skills resolved from the CoC7 compendium, and narrative text populated in the biography and keeper notes
 
 Skills are matched against the official CoC7 skills compendium when available, preserving proper skill flags and identifiers. Derived attributes (HP, MP, SAN, MOV, Build, Damage Bonus) are computed automatically by the system.
 

@@ -58,7 +58,7 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
     const charCells = charKeys.map((k, i) => {
       const displayValue = isRandom
         ? CHARACTERISTIC_FORMULAS[k]
-        : escapeHtml(String(chars[k] ?? '—'))
+        : String(chars[k] ?? '—')
       return `
       <div class="coc7-npc-char-cell">
         <div class="coc7-npc-char-label">${charLabels[i]}</div>

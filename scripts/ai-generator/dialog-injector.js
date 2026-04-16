@@ -24,24 +24,39 @@ const COC7_ACTOR_TYPES = ['character', 'npc', 'creature', 'vehicle', 'container'
 const SUPPORTED_ITEM_TYPES = ['weapon']
 const SUPPORTED_ACTOR_TYPES = ['npc']
 
+// Type-specific configuration for the shared prompt-view flow
+const WEAPON_PROMPT_CONFIG = {
+  label: 'Describe your weapon',
+  textareaName: 'ai-prompt',
+  textareaId: 'coc7-ai-prompt',
+  placeholder: 'e.g. "A worn 1920s revolver, .38 calibre, 6-shot cylinder, wood grip"',
+  prefillPrefix: 'A weapon called',
+  runGeneration: _runGeneration
+}
+
+const NPC_PROMPT_CONFIG = {
+  label: 'Describe your NPC',
+  textareaName: 'ai-npc-prompt',
+  textareaId: 'coc7-ai-npc-prompt',
+  placeholder: 'e.g. "A nervous pharmacist in 1920s Arkham, middle-aged, hides a secret"',
+  prefillPrefix: 'An NPC named',
+  runGeneration: _runNPCGeneration
+}
+
 /**
  * Called on every renderDialogV2 hook. Checks whether the dialog is the
  * "Create Item" dialog before doing any DOM work.
- * @param {Dialog} dialog
- * @param {HTMLElement} html
  */
 export function injectAIButton (dialog, html) {
-  if (!game.user.isGM) return  // only GMs may trigger LLM generation
+  if (!game.user.isGM) return
 
   const nameInput = html.querySelector('[name="name"]')
   const typeSelect = html.querySelector('[name="type"]')
-  if (!nameInput || !typeSelect) return // not the Create Item dialog
+  if (!nameInput || !typeSelect) return
 
-  // Only inject on the Create Item dialog — not Create Actor
   const typeValues = [...typeSelect.options].map(o => o.value)
   if (!typeValues.some(v => COC7_ITEM_TYPES.includes(v))) return
 
-  // Find the button row — may live inside the form or directly in the window-content
   const form = html.querySelector('form') ?? html.querySelector('.dialog-content')
   const buttonRow = _findButtonRow(form, html)
   if (!buttonRow) return
@@ -54,22 +69,19 @@ export function injectAIButton (dialog, html) {
   aiBtn.style.cssText = 'flex:0 0 auto; min-width:2rem; padding:0.25rem 0.5rem'
   buttonRow.appendChild(aiBtn)
 
-  // Only show the button when a supported item type is selected
   aiBtn.style.display = SUPPORTED_ITEM_TYPES.includes(typeSelect.value) ? '' : 'none'
   typeSelect.addEventListener('change', () => {
     aiBtn.style.display = SUPPORTED_ITEM_TYPES.includes(typeSelect.value) ? '' : 'none'
   })
 
   aiBtn.addEventListener('click', () => {
-    _transformToPromptView(dialog, html, nameInput, aiBtn)
+    _transformToPromptView(dialog, html, nameInput, aiBtn, WEAPON_PROMPT_CONFIG)
   })
 }
 
 /**
  * Called on every renderDialogV2 hook. Checks whether the dialog is the
  * "Create Actor" dialog before doing any DOM work.
- * @param {Dialog} dialog
- * @param {HTMLElement} html
  */
 export function injectNPCButton (dialog, html) {
   if (!game.user.isGM) return
@@ -78,7 +90,6 @@ export function injectNPCButton (dialog, html) {
   const typeSelect = html.querySelector('[name="type"]')
   if (!nameInput || !typeSelect) return
 
-  // Only inject on the Create Actor dialog — not Create Item
   const typeValues = [...typeSelect.options].map(o => o.value)
   if (!typeValues.some(v => COC7_ACTOR_TYPES.includes(v))) return
 
@@ -94,20 +105,18 @@ export function injectNPCButton (dialog, html) {
   aiBtn.style.cssText = 'flex:0 0 auto; min-width:2rem; padding:0.25rem 0.5rem'
   buttonRow.appendChild(aiBtn)
 
-  // Only show the button when a supported actor type is selected
   aiBtn.style.display = SUPPORTED_ACTOR_TYPES.includes(typeSelect.value) ? '' : 'none'
   typeSelect.addEventListener('change', () => {
     aiBtn.style.display = SUPPORTED_ACTOR_TYPES.includes(typeSelect.value) ? '' : 'none'
   })
 
   aiBtn.addEventListener('click', () => {
-    _transformToNPCPromptView(dialog, html, nameInput, aiBtn)
+    _transformToPromptView(dialog, html, nameInput, aiBtn, NPC_PROMPT_CONFIG)
   })
 }
 
 /**
- * Finds the button row element. Searches inside the form first (DialogV2
- * renders the footer inside the form), then falls back to the outer html.
+ * Finds the button row element inside form first, then falls back to outer html.
  */
 function _findButtonRow (form, html) {
   return (form?.querySelector('.dialog-buttons') ?? form?.querySelector('footer'))
@@ -115,146 +124,64 @@ function _findButtonRow (form, html) {
 }
 
 /**
- * Replaces Name + Type form fields with a prompt textarea in-place.
- * Keeps the button row attached to the DOM by only removing the field nodes —
- * replacing the entire form.innerHTML would detach the footer and make any
- * subsequent buttonRow.innerHTML assignment invisible.
+ * Replaces Name + Type form fields with a prompt textarea.
+ * Works for both weapon and NPC flows via the config object.
  */
-function _transformToPromptView (dialog, html, nameInput, aiBtn) {
+function _transformToPromptView (dialog, html, nameInput, aiBtn, config) {
   const capturedName = nameInput.value.trim()
 
   const form = html.querySelector('form') ?? html.querySelector('.dialog-content') ?? nameInput.closest('div')
   const buttonRow = _findButtonRow(form, html)
   if (!form || !buttonRow) return
 
-  // Snapshot the original button row HTML and form field nodes for restoration
   const originalButtonHTML = buttonRow.innerHTML
   const originalFieldNodes = [...form.children]
     .filter(child => child !== buttonRow)
     .map(child => child.cloneNode(true))
 
-  // Remove only the form field nodes — leave buttonRow in the DOM so it stays attached
   for (const child of [...form.children]) {
     if (child !== buttonRow) child.remove()
   }
 
-  // Build the prompt area and insert it before the still-attached button row
   const promptArea = document.createElement('div')
   promptArea.style.cssText = 'display:flex;flex-direction:column;gap:0.25rem;padding:0.5rem 0'
-  // Safe static HTML — no user content interpolated here
+  // Safe static HTML — config values are module-level constants, not user input
   promptArea.innerHTML = `
-    <label for="coc7-ai-prompt" style="font-weight:bold">Describe your weapon</label>
+    <label for="${config.textareaId}" style="font-weight:bold">${config.label}</label>
     <textarea
-      id="coc7-ai-prompt"
-      name="ai-prompt"
+      id="${config.textareaId}"
+      name="${config.textareaName}"
       rows="4"
-      placeholder='e.g. "A worn 1920s revolver, .38 calibre, 6-shot cylinder, wood grip"'
+      placeholder='${config.placeholder}'
       style="width:100%;resize:vertical;box-sizing:border-box"
     ></textarea>
     <div class="coc7-ai-error" style="display:none;color:var(--color-text-dark-error,red);margin-top:0.25rem;font-size:0.875em"></div>
   `
   form.insertBefore(promptArea, buttonRow)
 
-  // Set textarea value safely via DOM property (not innerHTML) to avoid XSS
-  const promptTextarea = form.querySelector('[name="ai-prompt"]')
-  if (capturedName) promptTextarea.value = `A weapon called "${capturedName}". `
+  const promptTextarea = form.querySelector(`[name="${config.textareaName}"]`)
+  if (capturedName) promptTextarea.value = `${config.prefillPrefix} "${capturedName}". `
 
   aiBtn.style.display = 'none'
 
-  // Inject Generate / Cancel into the still-attached button row
   buttonRow.innerHTML = `
     <button type="button" class="coc7-btn-generate" style="flex:1">Generate</button>
     <button type="button" class="coc7-btn-back">Cancel</button>
   `
 
-  // Cancel: restore original form fields and buttons
   buttonRow.querySelector('.coc7-btn-back').addEventListener('click', () => {
-    _restoreOriginalForm(form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn, dialog, html)
+    _restoreOriginalForm(form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn, dialog, html, config)
   })
 
   buttonRow.querySelector('.coc7-btn-generate').addEventListener('click', () => {
-    _runGeneration(dialog, html, form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn)
+    config.runGeneration(dialog, html, form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn)
   })
 }
 
 /**
  * Restores the form to its original Name + Type state.
  */
-function _restoreOriginalForm (form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn, dialog, html) {
-  promptArea.remove()
-  for (const node of originalFieldNodes) {
-    form.insertBefore(node, buttonRow)
-  }
-  buttonRow.innerHTML = originalButtonHTML
-  aiBtn.style.display = ''
-
-  // Re-attach the sparkle click listener (the restored button is a fresh DOM node)
-  const restoredBtn = buttonRow.querySelector('.coc7-ai-generate-btn')
-  if (restoredBtn) {
-    const newNameInput = form.querySelector('[name="name"]')
-    restoredBtn.addEventListener('click', () => {
-      _transformToPromptView(dialog, html, newNameInput, restoredBtn)
-    })
-  }
-}
-
-/**
- * Replaces Name + Type form fields with a prompt textarea for NPC generation.
- */
-function _transformToNPCPromptView (dialog, html, nameInput, aiBtn) {
-  const capturedName = nameInput.value.trim()
-
-  const form = html.querySelector('form') ?? html.querySelector('.dialog-content') ?? nameInput.closest('div')
-  const buttonRow = _findButtonRow(form, html)
-  if (!form || !buttonRow) return
-
-  const originalButtonHTML = buttonRow.innerHTML
-  const originalFieldNodes = [...form.children]
-    .filter(child => child !== buttonRow)
-    .map(child => child.cloneNode(true))
-
-  for (const child of [...form.children]) {
-    if (child !== buttonRow) child.remove()
-  }
-
-  const promptArea = document.createElement('div')
-  promptArea.style.cssText = 'display:flex;flex-direction:column;gap:0.25rem;padding:0.5rem 0'
-  promptArea.innerHTML = `
-    <label for="coc7-ai-npc-prompt" style="font-weight:bold">Describe your NPC</label>
-    <textarea
-      id="coc7-ai-npc-prompt"
-      name="ai-npc-prompt"
-      rows="4"
-      placeholder='e.g. "A nervous pharmacist in 1920s Arkham, middle-aged, hides a secret"'
-      style="width:100%;resize:vertical;box-sizing:border-box"
-    ></textarea>
-    <div class="coc7-ai-error" style="display:none;color:var(--color-text-dark-error,red);margin-top:0.25rem;font-size:0.875em"></div>
-  `
-  form.insertBefore(promptArea, buttonRow)
-
-  const promptTextarea = form.querySelector('[name="ai-npc-prompt"]')
-  if (capturedName) promptTextarea.value = `An NPC named "${capturedName}". `
-
-  aiBtn.style.display = 'none'
-
-  buttonRow.innerHTML = `
-    <button type="button" class="coc7-btn-generate" style="flex:1">Generate</button>
-    <button type="button" class="coc7-btn-back">Cancel</button>
-  `
-
-  buttonRow.querySelector('.coc7-btn-back').addEventListener('click', () => {
-    _restoreOriginalNPCForm(form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn, dialog, html)
-  })
-
-  buttonRow.querySelector('.coc7-btn-generate').addEventListener('click', () => {
-    _runNPCGeneration(dialog, html, form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn)
-  })
-}
-
-/**
- * Restores the Create Actor form to its original Name + Type state.
- */
-function _restoreOriginalNPCForm (form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn, dialog, html) {
+function _restoreOriginalForm (form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn, dialog, html, config) {
   promptArea.remove()
   for (const node of originalFieldNodes) {
     form.insertBefore(node, buttonRow)
@@ -266,7 +193,7 @@ function _restoreOriginalNPCForm (form, buttonRow, promptArea, originalFieldNode
   if (restoredBtn) {
     const newNameInput = form.querySelector('[name="name"]')
     restoredBtn.addEventListener('click', () => {
-      _transformToNPCPromptView(dialog, html, newNameInput, restoredBtn)
+      _transformToPromptView(dialog, html, newNameInput, restoredBtn, config)
     })
   }
 }
@@ -351,7 +278,7 @@ async function _runNPCGeneration (dialog, html, form, buttonRow, promptArea, ori
       },
 
       onCancel: () => {
-        _restoreOriginalNPCForm(form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn, dialog, html)
+        _restoreOriginalForm(form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn, dialog, html, NPC_PROMPT_CONFIG)
       }
     }).render({ force: true })
 
@@ -429,7 +356,7 @@ async function _runGeneration (dialog, html, form, buttonRow, promptArea, origin
       },
 
       onCancel: () => {
-        _restoreOriginalForm(form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn, dialog, html)
+        _restoreOriginalForm(form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn, dialog, html, WEAPON_PROMPT_CONFIG)
       }
     }).render({ force: true })
 

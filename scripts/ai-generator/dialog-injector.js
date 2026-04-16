@@ -3,6 +3,7 @@ import * as providers from './providers/registry.js'
 import * as mappers from './mappers/registry.js'
 import CoC7AIGenerationDialog from './generation-dialog.js'
 import CoC7NPCConfirmationDialog from './npc-confirmation-dialog.js'
+import { applyRandomCharacteristics } from './mappers/npc.js'
 
 const MODULE = 'coc7-qol'
 
@@ -245,6 +246,9 @@ async function _runNPCGeneration (dialog, html, form, buttonRow, promptArea, ori
 
     mapper.validate(llmData)
     const npcData = mapper.toFoundryData(llmData)
+
+    const randomChars = form.querySelector('[name="ai-random-characteristics"]')?.checked
+    if (randomChars) applyRandomCharacteristics(npcData)
 
     new CoC7NPCConfirmationDialog({
       npcData,

@@ -48,12 +48,13 @@ const NPC_PROMPT_CONFIG = {
  * "Create Item" dialog before doing any DOM work.
  */
 export function injectAIButton (dialog, html) {
-  if (!game.user.isGM) return
+  if (!game.user.isGM) return  // only GMs may trigger LLM generation
 
   const nameInput = html.querySelector('[name="name"]')
   const typeSelect = html.querySelector('[name="type"]')
-  if (!nameInput || !typeSelect) return
+  if (!nameInput || !typeSelect) return // not the Create Item dialog
 
+  // Only inject on the Create Item dialog — not Create Actor
   const typeValues = [...typeSelect.options].map(o => o.value)
   if (!typeValues.some(v => COC7_ITEM_TYPES.includes(v))) return
 
@@ -69,6 +70,7 @@ export function injectAIButton (dialog, html) {
   aiBtn.style.cssText = 'flex:0 0 auto; min-width:2rem; padding:0.25rem 0.5rem'
   buttonRow.appendChild(aiBtn)
 
+  // Only show the button when a supported item type is selected
   aiBtn.style.display = SUPPORTED_ITEM_TYPES.includes(typeSelect.value) ? '' : 'none'
   typeSelect.addEventListener('change', () => {
     aiBtn.style.display = SUPPORTED_ITEM_TYPES.includes(typeSelect.value) ? '' : 'none'
@@ -84,12 +86,13 @@ export function injectAIButton (dialog, html) {
  * "Create Actor" dialog before doing any DOM work.
  */
 export function injectNPCButton (dialog, html) {
-  if (!game.user.isGM) return
+  if (!game.user.isGM) return  // only GMs may trigger LLM generation
 
   const nameInput = html.querySelector('[name="name"]')
   const typeSelect = html.querySelector('[name="type"]')
-  if (!nameInput || !typeSelect) return
+  if (!nameInput || !typeSelect) return // not the Create Actor dialog
 
+  // Only inject on the Create Actor dialog — not Create Item
   const typeValues = [...typeSelect.options].map(o => o.value)
   if (!typeValues.some(v => COC7_ACTOR_TYPES.includes(v))) return
 
@@ -105,6 +108,7 @@ export function injectNPCButton (dialog, html) {
   aiBtn.style.cssText = 'flex:0 0 auto; min-width:2rem; padding:0.25rem 0.5rem'
   buttonRow.appendChild(aiBtn)
 
+  // Only show the button when a supported actor type is selected
   aiBtn.style.display = SUPPORTED_ACTOR_TYPES.includes(typeSelect.value) ? '' : 'none'
   typeSelect.addEventListener('change', () => {
     aiBtn.style.display = SUPPORTED_ACTOR_TYPES.includes(typeSelect.value) ? '' : 'none'
@@ -116,7 +120,8 @@ export function injectNPCButton (dialog, html) {
 }
 
 /**
- * Finds the button row element inside form first, then falls back to outer html.
+ * Finds the button row element. Searches inside the form first (DialogV2
+ * renders the footer inside the form), then falls back to the outer html.
  */
 function _findButtonRow (form, html) {
   return (form?.querySelector('.dialog-buttons') ?? form?.querySelector('footer'))
@@ -174,12 +179,13 @@ function _transformToPromptView (dialog, html, nameInput, aiBtn, config) {
   })
 
   buttonRow.querySelector('.coc7-btn-generate').addEventListener('click', () => {
-    config.runGeneration(dialog, html, form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn)
+    config.runGeneration(dialog, html, form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn, config)
   })
 }
 
 /**
  * Restores the form to its original Name + Type state.
+ * @param {object} config - Type-specific prompt-view configuration (passed through to re-attach the correct click listener).
  */
 function _restoreOriginalForm (form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn, dialog, html, config) {
   promptArea.remove()
@@ -201,8 +207,8 @@ function _restoreOriginalForm (form, buttonRow, promptArea, originalFieldNodes, 
 /**
  * Calls the LLM provider with the NPC mapper and opens the NPC confirmation dialog.
  */
-async function _runNPCGeneration (dialog, html, form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn) {
-  const textarea = form.querySelector('[name="ai-npc-prompt"]')
+async function _runNPCGeneration (dialog, html, form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn, config) {
+  const textarea = form.querySelector(`[name="${config.textareaName}"]`)
   const userPrompt = textarea?.value?.trim()
   const errorDiv = form.querySelector('.coc7-ai-error')
   const generateBtn = buttonRow.querySelector('.coc7-btn-generate')
@@ -294,8 +300,8 @@ async function _runNPCGeneration (dialog, html, form, buttonRow, promptArea, ori
 /**
  * Calls the LLM provider and opens the confirmation dialog on success.
  */
-async function _runGeneration (dialog, html, form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn) {
-  const textarea = form.querySelector('[name="ai-prompt"]')
+async function _runGeneration (dialog, html, form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn, config) {
+  const textarea = form.querySelector(`[name="${config.textareaName}"]`)
   const userPrompt = textarea?.value?.trim()
   const errorDiv = form.querySelector('.coc7-ai-error')
   const generateBtn = buttonRow.querySelector('.coc7-btn-generate')

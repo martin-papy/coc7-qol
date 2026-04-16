@@ -14,18 +14,38 @@ The AI sparkle button appears automatically when a supported type is selected in
 
 1. Open the Items sidebar and click **Create Item**
 2. Select **Weapon** as the type — a sparkle icon appears
+
+   ![Create Item dialog with sparkle button](images/Create-Weapon-1.png)
+
 3. Click the sparkle, then describe your weapon in plain language (e.g. *"A worn 1920s revolver, .38 calibre, 6-shot cylinder, wood grip"*)
 4. Click **Generate** — the module calls your configured LLM and fills in all CoC7 weapon fields
+
+   ![Weapon description prompt](images/Create-Weapon-2.png)
+
 5. Review the stats (name, damage, skill, range, ammo…), edit the name if needed, then click **Accept**
+
+   ![Review Weapon dialog showing generated .44 Magnum stats](images/Create-Weapon-3.png)
+
 6. The item is created in your world and its sheet opens immediately
 
 #### NPC Generation
 
 1. Open the Actors sidebar and click **Create Actor**
 2. Select **NPC** as the type — a sparkle icon appears
+
+   ![Create Actor dialog with sparkle button](images/Create-NPC-1.png)
+
 3. Click the sparkle, then describe your NPC in plain language (e.g. *"A nervous pharmacist in 1920s Arkham, middle-aged, hides a laudanum habit"*)
 4. Click **Generate** — the LLM creates a complete NPC with characteristics, skills, and backstory
+
+   ![NPC description prompt with Random characteristics option](images/Create-NPC-2.png)
+
 5. Review the full stat block (STR/CON/SIZ/DEX/APP/INT/POW/EDU), skills list, and narrative (appearance, personality, background), then click **Accept**
+
+   <table><tr>
+     <td><img src="images/Create-NPC-3a.png" alt="Review NPC dialog — random characteristics"/></td>
+     <td><img src="images/Create-NPC-3b.png" alt="Review NPC dialog — fixed characteristics"/></td>
+   </tr></table>
 6. The NPC actor is created with all characteristics set, skills resolved from the CoC7 compendium, and narrative text populated in the biography and keeper notes
 
 Skills are matched against the official CoC7 skills compendium when available, preserving proper skill flags and identifiers. Derived attributes (HP, MP, SAN, MOV, Build, Damage Bonus) are computed automatically by the system.
@@ -36,8 +56,14 @@ GMs can close all open chat cards in one action, directly from the Keeper's tool
 
 1. Click the tentacle-strike icon in the scene controls toolbar to open the Keeper's tools
 2. Click the **Close All Cards** button (the ╳-lines icon)
+
+   ![Close All Cards button in the Keeper's toolbar](images/Close-Cards-1.png)
+
 3. A dialog lists every open card in the chat log with its type, actor name, and timestamp
 4. Use the select-all checkbox or pick individual cards to close
+
+   ![Close All Cards selection dialog](images/Close-Cards-2.png)
+
 5. Click **Close Selected** — the selected cards are resolved and their action buttons removed
 
 This is useful when accumulated open cards block new rolls from being initiated.
@@ -49,6 +75,8 @@ Players can click on any item image (weapons, spells, books, skills, etc.) to vi
 ### Possession Tab Item Image Popout
 
 Players and GMs can click on the small item icon in the Gear & Cash tab of the character sheet to view the full-size illustration in a popout window. Works for all item types shown in that tab: items, weapons, books, spells, armor, talents, and statuses.
+
+![Item image popout from the Gear & Cash tab](images/Popup-Image.png)
 
 ## Installation
 

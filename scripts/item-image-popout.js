@@ -7,7 +7,7 @@ Hooks.on('renderItemSheetV2', (application, element, context, options) => {
 
   // Remove data-action so AppV2's root action dispatcher doesn't intercept clicks
   img.removeAttribute('data-action');
-  img.style.cursor = 'pointer';
+  img.classList.add('item-image-popout-trigger');
 
   img.addEventListener('click', (event) => {
     event.preventDefault();

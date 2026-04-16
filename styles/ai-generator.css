@@ -25,6 +25,21 @@
   box-sizing: border-box;
 }
 
+.coc7-ai-random-chars-label {
+  font-weight: normal;
+  font-size: 0.875em;
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  margin-top: 0.4em;
+  cursor: pointer;
+}
+
+.coc7-ai-hint {
+  color: var(--color-text-dark-secondary, #888);
+  font-style: italic;
+}
+
 .coc7-ai-error {
   display: none;
   color: var(--color-text-dark-error, red);

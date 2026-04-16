@@ -1,6 +1,8 @@
 // scripts/ai-generator/npc-confirmation-dialog.js
 // Rich read-only preview dialog for AI-generated NPC actors.
 
+import { escapeHtml } from '../utils.js'
+
 export default class CoC7NPCConfirmationDialog extends foundry.applications.api.ApplicationV2 {
   static DEFAULT_OPTIONS = {
     tag: 'div',
@@ -41,10 +43,10 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
     // --- Identity bar ---
     const identityHtml = `
       <div class="coc7-npc-identity" style="background:var(--color-cool-5,#1a1a2e);padding:0.75rem 1rem;border-bottom:1px solid var(--color-border-dark,#333)">
-        <div style="font-size:1.2rem;font-weight:bold;color:var(--color-warm-2,#e8d5b7);margin-bottom:0.2rem">${this.#esc(llm.name)}</div>
+        <div style="font-size:1.2rem;font-weight:bold;color:var(--color-warm-2,#e8d5b7);margin-bottom:0.2rem">${escapeHtml(llm.name)}</div>
         <div style="display:flex;gap:1.5rem;font-size:0.85rem;color:var(--color-text-light-6,#aaa)">
-          ${llm.occupation ? `<span><span style="color:var(--color-text-light-8,#888)">Occupation</span>&nbsp;${this.#esc(llm.occupation)}</span>` : ''}
-          ${llm.age ? `<span><span style="color:var(--color-text-light-8,#888)">Age</span>&nbsp;${this.#esc(String(llm.age))}</span>` : ''}
+          ${llm.occupation ? `<span><span style="color:var(--color-text-light-8,#888)">Occupation</span>&nbsp;${escapeHtml(llm.occupation)}</span>` : ''}
+          ${llm.age ? `<span><span style="color:var(--color-text-light-8,#888)">Age</span>&nbsp;${escapeHtml(String(llm.age))}</span>` : ''}
         </div>
       </div>`
 
@@ -54,7 +56,7 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
     const charCells = charKeys.map((k, i) => `
       <div style="text-align:center;background:var(--color-cool-5-75,#111);border-radius:4px;padding:0.35rem 0">
         <div style="font-size:0.65rem;color:var(--color-text-light-8,#888)">${charLabels[i]}</div>
-        <div style="font-size:1rem;font-weight:bold;color:var(--color-warm-2,#c9a96e)">${this.#esc(String(chars[k] ?? '—'))}</div>
+        <div style="font-size:1rem;font-weight:bold;color:var(--color-warm-2,#c9a96e)">${escapeHtml(String(chars[k] ?? '—'))}</div>
       </div>`).join('')
 
     const charsHtml = `
@@ -66,8 +68,8 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
     // --- Skills list ---
     const skillRows = skills.map(s => `
       <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--color-cool-5-75,#1f1f1f);padding:0.15rem 0">
-        <span style="color:var(--color-text-light-3,#ccc)">${this.#esc(s.name)}</span>
-        <span style="color:var(--color-warm-2,#c9a96e);font-weight:bold">${this.#esc(String(s.value))}%</span>
+        <span style="color:var(--color-text-light-3,#ccc)">${escapeHtml(s.name)}</span>
+        <span style="color:var(--color-warm-2,#c9a96e);font-weight:bold">${escapeHtml(String(s.value))}%</span>
       </div>`).join('')
 
     const skillsHtml = skills.length ? `
@@ -82,7 +84,7 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
       return `
         <div style="padding:0.75rem 1rem;border-bottom:1px solid var(--color-border-dark,#333)">
           <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--color-text-light-8,#888);margin-bottom:0.4rem">${label}</div>
-          <p style="font-size:0.82rem;color:var(--color-text-light-5,#bbb);margin:0">${this.#esc(text)}</p>
+          <p style="font-size:0.82rem;color:var(--color-text-light-5,#bbb);margin:0">${escapeHtml(text)}</p>
         </div>`
     }
 
@@ -105,14 +107,6 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
 
   _replaceHTML (result, content, _options) {
     content.replaceChildren(result)
-  }
-
-  #esc (str) {
-    return String(str ?? '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
   }
 
   static async #handleAccept (_event, _target) {

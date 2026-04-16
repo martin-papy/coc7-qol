@@ -3,6 +3,8 @@
 // Skill resolution (compendium lookup) is handled by resolveSkills() called from the injector
 // after the mapper produces the base actor data.
 
+import { escapeHtml } from '../../utils.js'
+
 const SYSTEM_PROMPT = `You are a Call of Cthulhu 7th Edition game master assistant. Generate a CoC7 NPC based on the user's description.
 
 The NPC should be a believable person with enough depth to be credible in a tabletop RPG session. Pick characteristics, skills, and narrative details that are internally consistent with the described occupation, age, and personality.
@@ -30,13 +32,6 @@ Optional fields (include when relevant, omit if not applicable):
 
 const REQUIRED_CHARACTERISTICS = ['str', 'con', 'siz', 'dex', 'app', 'int', 'pow', 'edu']
 
-function escapeHtml (str) {
-  return String(str ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-}
 
 export default {
   buildSystemPrompt () {

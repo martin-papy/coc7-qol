@@ -67,7 +67,6 @@ export function injectAIButton (dialog, html) {
   aiBtn.className = 'coc7-ai-generate-btn'
   aiBtn.title = 'Generate with AI'
   aiBtn.innerHTML = SPARKLE_SVG
-  aiBtn.style.cssText = 'flex:0 0 auto; min-width:2rem; padding:0.25rem 0.5rem'
   buttonRow.appendChild(aiBtn)
 
   // Only show the button when a supported item type is selected
@@ -105,7 +104,6 @@ export function injectNPCButton (dialog, html) {
   aiBtn.className = 'coc7-ai-generate-btn'
   aiBtn.title = 'Generate NPC with AI'
   aiBtn.innerHTML = SPARKLE_SVG
-  aiBtn.style.cssText = 'flex:0 0 auto; min-width:2rem; padding:0.25rem 0.5rem'
   buttonRow.appendChild(aiBtn)
 
   // Only show the button when a supported actor type is selected
@@ -149,18 +147,17 @@ function _transformToPromptView (dialog, html, nameInput, aiBtn, config) {
   }
 
   const promptArea = document.createElement('div')
-  promptArea.style.cssText = 'display:flex;flex-direction:column;gap:0.25rem;padding:0.5rem 0'
+  promptArea.className = 'coc7-ai-prompt-area'
   // Safe static HTML — config values are module-level constants, not user input
   promptArea.innerHTML = `
-    <label for="${config.textareaId}" style="font-weight:bold">${config.label}</label>
+    <label for="${config.textareaId}">${config.label}</label>
     <textarea
       id="${config.textareaId}"
       name="${config.textareaName}"
       rows="4"
       placeholder='${config.placeholder}'
-      style="width:100%;resize:vertical;box-sizing:border-box"
     ></textarea>
-    <div class="coc7-ai-error" style="display:none;color:var(--color-text-dark-error,red);margin-top:0.25rem;font-size:0.875em"></div>
+    <div class="coc7-ai-error"></div>
   `
   form.insertBefore(promptArea, buttonRow)
 
@@ -170,7 +167,7 @@ function _transformToPromptView (dialog, html, nameInput, aiBtn, config) {
   aiBtn.style.display = 'none'
 
   buttonRow.innerHTML = `
-    <button type="button" class="coc7-btn-generate" style="flex:1">Generate</button>
+    <button type="button" class="coc7-btn-generate">Generate</button>
     <button type="button" class="coc7-btn-back">Cancel</button>
   `
 
@@ -228,7 +225,7 @@ async function _runNPCGeneration (dialog, html, form, buttonRow, promptArea, ori
 
   generateBtn.disabled = true
   generateBtn.textContent = 'Generating…'
-  errorDiv.style.display = 'none'
+  errorDiv.style.display = 'none' // dynamic — toggled at runtime
 
   try {
     const providerId = game.settings.get(MODULE, 'ai-provider')

@@ -42,11 +42,11 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
 
     // --- Identity bar ---
     const identityHtml = `
-      <div class="coc7-npc-identity" style="background:var(--color-cool-5,#1a1a2e);padding:0.75rem 1rem;border-bottom:1px solid var(--color-border-dark,#333)">
-        <div style="font-size:1.2rem;font-weight:bold;color:var(--color-warm-2,#e8d5b7);margin-bottom:0.2rem">${escapeHtml(llm.name)}</div>
-        <div style="display:flex;gap:1.5rem;font-size:0.85rem;color:var(--color-text-light-6,#aaa)">
-          ${llm.occupation ? `<span><span style="color:var(--color-text-light-8,#888)">Occupation</span>&nbsp;${escapeHtml(llm.occupation)}</span>` : ''}
-          ${llm.age ? `<span><span style="color:var(--color-text-light-8,#888)">Age</span>&nbsp;${escapeHtml(String(llm.age))}</span>` : ''}
+      <div class="coc7-npc-identity">
+        <div class="coc7-npc-identity-name">${escapeHtml(llm.name)}</div>
+        <div class="coc7-npc-identity-meta">
+          ${llm.occupation ? `<span><span class="coc7-npc-identity-meta-label">Occupation</span>&nbsp;${escapeHtml(llm.occupation)}</span>` : ''}
+          ${llm.age ? `<span><span class="coc7-npc-identity-meta-label">Age</span>&nbsp;${escapeHtml(String(llm.age))}</span>` : ''}
         </div>
       </div>`
 
@@ -54,43 +54,43 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
     const charLabels = ['STR', 'CON', 'SIZ', 'DEX', 'APP', 'INT', 'POW', 'EDU']
     const charKeys = ['str', 'con', 'siz', 'dex', 'app', 'int', 'pow', 'edu']
     const charCells = charKeys.map((k, i) => `
-      <div style="text-align:center;background:var(--color-cool-5-75,#111);border-radius:4px;padding:0.35rem 0">
-        <div style="font-size:0.65rem;color:var(--color-text-light-8,#888)">${charLabels[i]}</div>
-        <div style="font-size:1rem;font-weight:bold;color:var(--color-warm-2,#c9a96e)">${escapeHtml(String(chars[k] ?? '—'))}</div>
+      <div class="coc7-npc-char-cell">
+        <div class="coc7-npc-char-label">${charLabels[i]}</div>
+        <div class="coc7-npc-char-value">${escapeHtml(String(chars[k] ?? '—'))}</div>
       </div>`).join('')
 
     const charsHtml = `
-      <div style="padding:0.75rem 1rem;border-bottom:1px solid var(--color-border-dark,#333)">
-        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--color-text-light-8,#888);margin-bottom:0.5rem">Characteristics</div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.4rem">${charCells}</div>
+      <div class="coc7-npc-section">
+        <div class="coc7-npc-section-label">Characteristics</div>
+        <div class="coc7-npc-chars-grid">${charCells}</div>
       </div>`
 
     // --- Skills list ---
     const skillRows = skills.map(s => `
-      <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--color-cool-5-75,#1f1f1f);padding:0.15rem 0">
-        <span style="color:var(--color-text-light-3,#ccc)">${escapeHtml(s.name)}</span>
-        <span style="color:var(--color-warm-2,#c9a96e);font-weight:bold">${escapeHtml(String(s.value))}%</span>
+      <div class="coc7-npc-skill-row">
+        <span class="coc7-npc-skill-name">${escapeHtml(s.name)}</span>
+        <span class="coc7-npc-skill-value">${escapeHtml(String(s.value))}%</span>
       </div>`).join('')
 
     const skillsHtml = skills.length ? `
-      <div style="padding:0.75rem 1rem;border-bottom:1px solid var(--color-border-dark,#333)">
-        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--color-text-light-8,#888);margin-bottom:0.5rem">Skills</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.25rem 1rem;font-size:0.85rem">${skillRows}</div>
+      <div class="coc7-npc-section">
+        <div class="coc7-npc-section-label">Skills</div>
+        <div class="coc7-npc-skills-grid">${skillRows}</div>
       </div>` : ''
 
     // --- Narrative sections ---
     const narrativeSection = (label, text) => {
       if (!text) return ''
       return `
-        <div style="padding:0.75rem 1rem;border-bottom:1px solid var(--color-border-dark,#333)">
-          <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--color-text-light-8,#888);margin-bottom:0.4rem">${label}</div>
-          <p style="font-size:0.82rem;color:var(--color-text-light-5,#bbb);margin:0">${escapeHtml(text)}</p>
+        <div class="coc7-npc-section">
+          <div class="coc7-npc-section-label">${label}</div>
+          <p class="coc7-npc-narrative">${escapeHtml(text)}</p>
         </div>`
     }
 
     // --- Buttons ---
     const buttonsHtml = `
-      <div class="form-footer" style="display:flex;flex-direction:row;gap:0.5rem;padding:0.75rem 1rem">
+      <div class="form-footer">
         <button type="button" data-action="accept" class="bright">Accept</button>
         <button type="button" data-action="regenerate">Regenerate</button>
         <button type="button" data-action="cancel">Cancel</button>

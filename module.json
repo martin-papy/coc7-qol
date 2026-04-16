@@ -28,7 +28,8 @@
   "manifest": "https://github.com/martin-papy/coc7-qol/releases/latest/download/module.json",
   "download": "https://github.com/martin-papy/coc7-qol/releases/download/v0.4.1/coc7-qol.zip",
   "styles": [
-    "styles/close-all-cards.css"
+    "styles/close-all-cards.css",
+    "styles/ai-generator.css"
   ],
   "esmodules": [
     "scripts/utils.js",

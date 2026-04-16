@@ -45,7 +45,7 @@ export default class CoC7AIGenerationDialog extends foundry.applications.api.App
       <div class="ai-item-description">
         <p>${escapeHtml(s.description.value)}</p>
       </div>
-      <div class="form-footer" style="display:flex;flex-direction:row;gap:0.5rem;margin-top:0.5rem">
+      <div class="form-footer">
         <button type="button" data-action="accept" class="bright">Accept</button>
         <button type="button" data-action="regenerate">Regenerate</button>
         <button type="button" data-action="cancel">Cancel</button>

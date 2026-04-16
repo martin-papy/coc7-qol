@@ -2,6 +2,7 @@
 // Rich read-only preview dialog for AI-generated NPC actors.
 
 import { escapeHtml } from '../utils.js'
+import { CHARACTERISTIC_FORMULAS } from './mappers/npc.js'
 
 export default class CoC7NPCConfirmationDialog extends foundry.applications.api.ApplicationV2 {
   static DEFAULT_OPTIONS = {
@@ -53,11 +54,17 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
     // --- Characteristics grid ---
     const charLabels = ['STR', 'CON', 'SIZ', 'DEX', 'APP', 'INT', 'POW', 'EDU']
     const charKeys = ['str', 'con', 'siz', 'dex', 'app', 'int', 'pow', 'edu']
-    const charCells = charKeys.map((k, i) => `
+    const isRandom = this.#npcData.randomCharacteristics ?? false
+    const charCells = charKeys.map((k, i) => {
+      const displayValue = isRandom
+        ? CHARACTERISTIC_FORMULAS[k]
+        : escapeHtml(String(chars[k] ?? '—'))
+      return `
       <div class="coc7-npc-char-cell">
         <div class="coc7-npc-char-label">${charLabels[i]}</div>
-        <div class="coc7-npc-char-value">${escapeHtml(String(chars[k] ?? '—'))}</div>
-      </div>`).join('')
+        <div class="coc7-npc-char-value">${escapeHtml(displayValue)}</div>
+      </div>`
+    }).join('')
 
     const charsHtml = `
       <div class="coc7-npc-section">

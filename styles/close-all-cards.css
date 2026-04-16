@@ -1,0 +1,62 @@
+.coc7-qol-close-all-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem;
+}
+
+.close-cards-header {
+  border-bottom: 1px solid var(--color-border-light-tertiary);
+  padding-bottom: 0.5rem;
+}
+
+.close-cards-toggle-all {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.close-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.close-cards-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.close-cards-row:hover {
+  background: var(--color-hover-bg, rgba(0, 0, 0, 0.05));
+}
+
+.close-cards-type {
+  font-weight: bold;
+  flex: 0 0 auto;
+}
+
+.close-cards-actor {
+  flex: 1;
+  color: var(--color-text-secondary, #666);
+}
+
+.close-cards-time {
+  flex: 0 0 auto;
+  font-size: 0.85em;
+  color: var(--color-text-secondary, #666);
+}
+
+.close-cards-footer {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}

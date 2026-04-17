@@ -6,21 +6,33 @@ export default class OpenAIProvider {
     const endpoint = game.settings.get(MODULE, 'ai-endpoint')
     const model = game.settings.get(MODULE, 'ai-model')
 
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model,
-        response_format: { type: 'json_object' },
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ]
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 60_000)
+
+    let response
+    try {
+      response = await fetch(endpoint, {
+        signal: controller.signal,
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model,
+          response_format: { type: 'json_object' },
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt }
+          ]
+        })
       })
-    })
+    } catch (err) {
+      if (err.name === 'AbortError') throw new Error('OpenAI request timed out after 60 s')
+      throw err
+    } finally {
+      clearTimeout(timeoutId)
+    }
 
     if (!response.ok) {
       const error = await response.text()

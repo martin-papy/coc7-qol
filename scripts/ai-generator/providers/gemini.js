@@ -7,15 +7,27 @@ export default class GeminiProvider {
     const model = game.settings.get(MODULE, 'ai-model')
     const endpoint = endpointTemplate.replace('{model}', model)
 
-    const response = await fetch(`${endpoint}?key=${encodeURIComponent(apiKey)}`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        system_instruction: { parts: [{ text: systemPrompt }] },
-        contents: [{ parts: [{ text: userPrompt }] }],
-        generationConfig: { responseMimeType: 'application/json' }
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 60_000)
+
+    let response
+    try {
+      response = await fetch(`${endpoint}?key=${encodeURIComponent(apiKey)}`, {
+        signal: controller.signal,
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: systemPrompt }] },
+          contents: [{ parts: [{ text: userPrompt }] }],
+          generationConfig: { responseMimeType: 'application/json' }
+        })
       })
-    })
+    } catch (err) {
+      if (err.name === 'AbortError') throw new Error('Gemini request timed out after 60 s')
+      throw err
+    } finally {
+      clearTimeout(timeoutId)
+    }
 
     if (!response.ok) {
       const error = await response.text()

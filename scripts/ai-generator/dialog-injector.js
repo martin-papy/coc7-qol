@@ -4,6 +4,7 @@ import * as mappers from './mappers/registry.js'
 import CoC7AIGenerationDialog from './generation-dialog.js'
 import CoC7NPCConfirmationDialog from './npc-confirmation-dialog.js'
 import { applyRandomCharacteristics } from './mappers/npc.js'
+import { t, tf } from '../utils.js'
 
 const MODULE = 'coc7-qol'
 
@@ -27,25 +28,27 @@ const SUPPORTED_ACTOR_TYPES = ['npc']
 
 // Type-specific configuration for the shared prompt-view flow
 const WEAPON_PROMPT_CONFIG = {
-  label: 'Describe your weapon',
+  get label () { return t('COC7QOL.AIGenerator.Weapon.Label') },
   textareaName: 'ai-prompt',
   textareaId: 'coc7-ai-prompt',
-  placeholder: 'e.g. "A worn 1920s revolver, .38 calibre, 6-shot cylinder, wood grip"',
-  prefillPrefix: 'A weapon called',
+  get placeholder () { return t('COC7QOL.AIGenerator.Weapon.Placeholder') },
+  get prefillPrefix () { return t('COC7QOL.AIGenerator.Weapon.PrefillPrefix') },
   runGeneration: _runGeneration
 }
 
 const NPC_PROMPT_CONFIG = {
-  label: 'Describe your NPC',
+  get label () { return t('COC7QOL.AIGenerator.NPC.Label') },
   textareaName: 'ai-npc-prompt',
   textareaId: 'coc7-ai-npc-prompt',
-  placeholder: 'e.g. "A nervous pharmacist in 1920s Arkham, middle-aged, hides a secret"',
-  prefillPrefix: 'An NPC named',
+  get placeholder () { return t('COC7QOL.AIGenerator.NPC.Placeholder') },
+  get prefillPrefix () { return t('COC7QOL.AIGenerator.NPC.PrefillPrefix') },
   runGeneration: _runNPCGeneration,
-  extraHTML: `<label class="coc7-ai-random-chars-label">
-    <input type="checkbox" name="ai-random-characteristics">
-    Random characteristics <span class="coc7-ai-hint">(rulebook formula, rolled on token drop)</span>
-  </label>`
+  get extraHTML () {
+    return `<label class="coc7-ai-random-chars-label">
+      <input type="checkbox" name="ai-random-characteristics">
+      ${t('COC7QOL.AIGenerator.NPC.RandomCharsLabel')} <span class="coc7-ai-hint">${t('COC7QOL.AIGenerator.NPC.RandomCharsHint')}</span>
+    </label>`
+  }
 }
 
 /**
@@ -70,7 +73,7 @@ export function injectAIButton (dialog, html) {
   const aiBtn = document.createElement('button')
   aiBtn.type = 'button'
   aiBtn.className = 'coc7-ai-generate-btn'
-  aiBtn.title = 'Generate with AI'
+  aiBtn.title = t('COC7QOL.AIGenerator.Button.GenerateWeapon')
   aiBtn.innerHTML = SPARKLE_SVG
   buttonRow.appendChild(aiBtn)
 
@@ -107,7 +110,7 @@ export function injectNPCButton (dialog, html) {
   const aiBtn = document.createElement('button')
   aiBtn.type = 'button'
   aiBtn.className = 'coc7-ai-generate-btn'
-  aiBtn.title = 'Generate NPC with AI'
+  aiBtn.title = t('COC7QOL.AIGenerator.Button.GenerateNPC')
   aiBtn.innerHTML = SPARKLE_SVG
   buttonRow.appendChild(aiBtn)
 
@@ -173,8 +176,8 @@ function _transformToPromptView (dialog, html, nameInput, aiBtn, config) {
   aiBtn.style.display = 'none'
 
   buttonRow.innerHTML = `
-    <button type="button" class="coc7-btn-generate">Generate</button>
-    <button type="button" class="coc7-btn-back">Cancel</button>
+    <button type="button" class="coc7-btn-generate">${t('COC7QOL.AIGenerator.Button.Generate')}</button>
+    <button type="button" class="coc7-btn-back">${t('COC7QOL.AIGenerator.Button.Cancel')}</button>
   `
 
   buttonRow.querySelector('.coc7-btn-back').addEventListener('click', () => {
@@ -217,20 +220,20 @@ async function _runNPCGeneration (dialog, html, form, buttonRow, promptArea, ori
   const generateBtn = buttonRow.querySelector('.coc7-btn-generate')
 
   if (!userPrompt) {
-    errorDiv.textContent = 'Please describe the NPC before generating.'
+    errorDiv.textContent = t('COC7QOL.AIGenerator.Error.EmptyNPCDescription')
     errorDiv.style.display = 'block'
     return
   }
 
   const apiKey = game.settings.get(MODULE, 'ai-api-key')
   if (!apiKey) {
-    errorDiv.textContent = 'No API key configured — set it in Module Settings → CoC7 QoL Improvements.'
+    errorDiv.textContent = t('COC7QOL.AIGenerator.Error.NoAPIKey')
     errorDiv.style.display = 'block'
     return
   }
 
   generateBtn.disabled = true
-  generateBtn.textContent = 'Generating…'
+  generateBtn.textContent = t('COC7QOL.AIGenerator.Button.Generating')
   errorDiv.style.display = 'none' // dynamic — toggled at runtime
 
   try {
@@ -261,7 +264,7 @@ async function _runNPCGeneration (dialog, html, form, buttonRow, promptArea, ori
           // Create actor
           const actor = await Actor.create(data.actorData)
           if (!actor) {
-            ui.notifications.error('CoC7 AI Generator: Actor creation was cancelled.')
+            ui.notifications.error(t('COC7QOL.AIGenerator.Error.NPCCreationCancelled'))
             return
           }
 
@@ -271,7 +274,7 @@ async function _runNPCGeneration (dialog, html, form, buttonRow, promptArea, ori
               await actor.createEmbeddedDocuments('Item', resolvedSkills)
             } catch (skillErr) {
               console.warn('[coc7-qol] Skill attachment failed:', skillErr)
-              ui.notifications.warn(`CoC7 AI Generator: NPC created but some skills failed — ${skillErr.message}`)
+              ui.notifications.warn(tf('COC7QOL.AIGenerator.Error.NPCSkillsFailed', { error: skillErr.message }))
             }
           }
 
@@ -279,13 +282,13 @@ async function _runNPCGeneration (dialog, html, form, buttonRow, promptArea, ori
           dialog.close()
         } catch (err) {
           console.error('[coc7-qol] NPC actor creation failed:', err)
-          ui.notifications.error(`CoC7 AI Generator: Failed to create NPC — ${err.message}`)
+          ui.notifications.error(tf('COC7QOL.AIGenerator.Error.NPCCreationFailed', { error: err.message }))
         }
       },
 
       onRegenerate: () => {
         generateBtn.disabled = false
-        generateBtn.textContent = 'Generate'
+        generateBtn.textContent = t('COC7QOL.AIGenerator.Button.Generate')
         textarea.focus()
       },
 
@@ -299,7 +302,7 @@ async function _runNPCGeneration (dialog, html, form, buttonRow, promptArea, ori
     errorDiv.textContent = err.message
     errorDiv.style.display = 'block'
     generateBtn.disabled = false
-    generateBtn.textContent = 'Retry'
+    generateBtn.textContent = t('COC7QOL.AIGenerator.Button.Retry')
   }
 }
 
@@ -313,7 +316,7 @@ async function _runGeneration (dialog, html, form, buttonRow, promptArea, origin
   const generateBtn = buttonRow.querySelector('.coc7-btn-generate')
 
   if (!userPrompt) {
-    errorDiv.textContent = 'Please describe the weapon before generating.'
+    errorDiv.textContent = t('COC7QOL.AIGenerator.Error.EmptyWeaponDescription')
     errorDiv.style.display = 'block'
     return
   }
@@ -321,14 +324,14 @@ async function _runGeneration (dialog, html, form, buttonRow, promptArea, origin
   // Guard: require API key before calling out
   const apiKey = game.settings.get(MODULE, 'ai-api-key')
   if (!apiKey) {
-    errorDiv.textContent = 'No API key configured — set it in Module Settings → CoC7 QoL Improvements.'
+    errorDiv.textContent = t('COC7QOL.AIGenerator.Error.NoAPIKey')
     errorDiv.style.display = 'block'
     return
   }
 
   // Loading state
   generateBtn.disabled = true
-  generateBtn.textContent = 'Generating…'
+  generateBtn.textContent = t('COC7QOL.AIGenerator.Button.Generating')
   errorDiv.style.display = 'none'
 
   try {
@@ -356,14 +359,14 @@ async function _runGeneration (dialog, html, form, buttonRow, promptArea, origin
           dialog.close()
         } catch (err) {
           console.error('[coc7-qol] Weapon item creation failed:', err)
-          ui.notifications.error(`CoC7 AI Generator: Failed to create item — ${err.message}`)
+          ui.notifications.error(tf('COC7QOL.AIGenerator.Error.WeaponCreationFailed', { error: err.message }))
         }
       },
 
       onRegenerate: () => {
         // Return focus to the prompt textarea; restore generate button
         generateBtn.disabled = false
-        generateBtn.textContent = 'Generate'
+        generateBtn.textContent = t('COC7QOL.AIGenerator.Button.Generate')
         textarea.focus()
       },
 
@@ -377,6 +380,6 @@ async function _runGeneration (dialog, html, form, buttonRow, promptArea, origin
     errorDiv.textContent = err.message
     errorDiv.style.display = 'block'
     generateBtn.disabled = false
-    generateBtn.textContent = 'Retry'
+    generateBtn.textContent = t('COC7QOL.AIGenerator.Button.Retry')
   }
 }

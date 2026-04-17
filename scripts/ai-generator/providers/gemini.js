@@ -12,10 +12,10 @@ export default class GeminiProvider {
 
     let response
     try {
-      response = await fetch(`${endpoint}?key=${encodeURIComponent(apiKey)}`, {
+      response = await fetch(endpoint, {
         signal: controller.signal,
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: { 'content-type': 'application/json', 'x-goog-api-key': apiKey },
         body: JSON.stringify({
           system_instruction: { parts: [{ text: systemPrompt }] },
           contents: [{ parts: [{ text: userPrompt }] }],

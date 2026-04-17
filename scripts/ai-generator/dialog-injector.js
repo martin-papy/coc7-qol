@@ -163,7 +163,7 @@ function _transformToPromptView (dialog, html, nameInput, aiBtn, config) {
       id="${config.textareaId}"
       name="${config.textareaName}"
       rows="4"
-      placeholder='${config.placeholder}'
+      placeholder="${config.placeholder}"
     ></textarea>
     ${config.extraHTML ?? ''}
     <div class="coc7-ai-error"></div>

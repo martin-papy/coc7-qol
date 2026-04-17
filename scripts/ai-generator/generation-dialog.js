@@ -1,9 +1,9 @@
-import { escapeHtml } from '../utils.js'
+import { escapeHtml, t } from '../utils.js'
 
 export default class CoC7AIGenerationDialog extends foundry.applications.api.ApplicationV2 {
   static DEFAULT_OPTIONS = {
     tag: 'div',
-    window: { title: 'CoC7 AI Generator — Review Weapon' },
+    window: {},
     position: { width: 480, height: 'auto' },
     actions: {
       accept: CoC7AIGenerationDialog.#handleAccept,
@@ -11,6 +11,8 @@ export default class CoC7AIGenerationDialog extends foundry.applications.api.App
       cancel: CoC7AIGenerationDialog.#handleCancel
     }
   }
+
+  get title () { return t('COC7QOL.AIGenerator.WeaponDialog.Title') }
 
   #itemData
   #acceptCallback
@@ -31,24 +33,24 @@ export default class CoC7AIGenerationDialog extends foundry.applications.api.App
     div.className = 'coc7-ai-generation-dialog'
     div.innerHTML = `
       <div class="form-group">
-        <label>Name</label>
+        <label>${t('CoC7.Name')}</label>
         <input type="text" name="ai-item-name" value="${escapeHtml(this.#itemData.name)}">
       </div>
       <dl class="ai-item-stats">
-        <div><dt>Damage</dt><dd>${escapeHtml(s.range.normal.damage)}</dd></div>
-        <div><dt>Skill</dt><dd>${escapeHtml(s.skill.main.name)}</dd></div>
-        <div><dt>Range</dt><dd>${escapeHtml(s.range.normal.value || '—')}</dd></div>
-        <div><dt>Uses/Round</dt><dd>${escapeHtml(s.usesPerRound.normal)}</dd></div>
-        <div><dt>Bullets</dt><dd>${escapeHtml(String(s.bullets ?? '—'))}</dd></div>
-        <div><dt>Malfunction</dt><dd>${escapeHtml(String(s.malfunction ?? '—'))}</dd></div>
+        <div><dt>${t('COC7QOL.AIGenerator.WeaponDialog.FieldDamage')}</dt><dd>${escapeHtml(s.range.normal.damage)}</dd></div>
+        <div><dt>${t('COC7QOL.AIGenerator.WeaponDialog.FieldSkill')}</dt><dd>${escapeHtml(s.skill.main.name)}</dd></div>
+        <div><dt>${t('COC7QOL.AIGenerator.WeaponDialog.FieldRange')}</dt><dd>${escapeHtml(s.range.normal.value || '—')}</dd></div>
+        <div><dt>${t('COC7QOL.AIGenerator.WeaponDialog.FieldUsesPerRound')}</dt><dd>${escapeHtml(s.usesPerRound.normal)}</dd></div>
+        <div><dt>${t('COC7QOL.AIGenerator.WeaponDialog.FieldBullets')}</dt><dd>${escapeHtml(String(s.bullets ?? '—'))}</dd></div>
+        <div><dt>${t('COC7QOL.AIGenerator.WeaponDialog.FieldMalfunction')}</dt><dd>${escapeHtml(String(s.malfunction ?? '—'))}</dd></div>
       </dl>
       <div class="ai-item-description">
         <p>${escapeHtml(s.description.value)}</p>
       </div>
       <div class="form-footer">
-        <button type="button" data-action="accept" class="bright">Accept</button>
-        <button type="button" data-action="regenerate">Regenerate</button>
-        <button type="button" data-action="cancel">Cancel</button>
+        <button type="button" data-action="accept" class="bright">${t('COC7QOL.AIGenerator.Button.Accept')}</button>
+        <button type="button" data-action="regenerate">${t('COC7QOL.AIGenerator.Button.Regenerate')}</button>
+        <button type="button" data-action="cancel">${t('COC7QOL.AIGenerator.Button.Cancel')}</button>
       </div>
     `
     return div

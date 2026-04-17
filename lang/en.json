@@ -67,7 +67,7 @@
   "COC7QOL.Settings.AIProvider.OpenAI": "OpenAI (GPT)",
   "COC7QOL.Settings.AIProvider.Gemini": "Google (Gemini)",
   "COC7QOL.Settings.AIAPIKey.Name": "AI Generator: API Key",
-  "COC7QOL.Settings.AIAPIKey.Hint": "Your API key for the selected provider. Stored only in your browser (localStorage) \u2014 never sent to other players.",
+  "COC7QOL.Settings.AIAPIKey.Hint": "Your API key for the selected provider. Stored only in your browser (localStorage) \u2014 never sent to other players. The key is sent directly from your browser to the provider \u2014 use a provider-scoped, spend-limited key, not a master key.",
   "COC7QOL.Settings.AIEndpoint.Name": "AI Generator: Endpoint URL",
   "COC7QOL.Settings.AIEndpoint.Hint": "API endpoint URL. Updated automatically when changing provider. Override for custom deployments.",
   "COC7QOL.Settings.AIModel.Name": "AI Generator: Model",

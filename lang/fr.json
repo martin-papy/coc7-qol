@@ -67,7 +67,7 @@
   "COC7QOL.Settings.AIProvider.OpenAI": "OpenAI (GPT)",
   "COC7QOL.Settings.AIProvider.Gemini": "Google (Gemini)",
   "COC7QOL.Settings.AIAPIKey.Name": "Générateur IA : Clé API",
-  "COC7QOL.Settings.AIAPIKey.Hint": "Votre clé API pour le fournisseur sélectionné. Stockée uniquement dans votre navigateur (localStorage) — jamais envoyée aux autres joueurs.",
+  "COC7QOL.Settings.AIAPIKey.Hint": "Votre clé API pour le fournisseur sélectionné. Stockée uniquement dans votre navigateur (localStorage) — jamais envoyée aux autres joueurs. La clé est envoyée directement depuis votre navigateur au fournisseur — utilisez une clé limitée au fournisseur avec un plafond de dépenses, pas une clé principale.",
   "COC7QOL.Settings.AIEndpoint.Name": "Générateur IA : URL de l'Endpoint",
   "COC7QOL.Settings.AIEndpoint.Hint": "URL de l'endpoint API. Mise à jour automatiquement lors du changement de fournisseur. Remplacez pour des déploiements personnalisés.",
   "COC7QOL.Settings.AIModel.Name": "Générateur IA : Modèle",

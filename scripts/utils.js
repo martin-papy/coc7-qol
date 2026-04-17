@@ -12,3 +12,18 @@ export function escapeHtml (str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
 }
+
+/**
+ * Localise a static string by i18n key.
+ * @param {string} key
+ * @returns {string}
+ */
+export const t = key => game.i18n.localize(key)
+
+/**
+ * Localise a string with runtime data substitutions.
+ * @param {string} key
+ * @param {object} data
+ * @returns {string}
+ */
+export const tf = (key, data) => game.i18n.format(key, data)

@@ -27,9 +27,16 @@
   "url": "https://github.com/martin-papy/coc7-qol",
   "manifest": "https://github.com/martin-papy/coc7-qol/releases/latest/download/module.json",
   "download": "https://github.com/martin-papy/coc7-qol/releases/download/v0.4.3/coc7-qol.zip",
+  "readme": "https://github.com/martin-papy/coc7-qol/blob/main/README.md",
+  "changelog" : "https://github.com/martin-papy/coc7-qol/blob/main/CHANGELOG.md",
+  "bugs": "https://github.com/martin-papy/coc7-qol/issues",
   "styles": [
     "styles/close-all-cards.css",
     "styles/ai-generator.css"
+  ],
+  "languages": [
+    { "lang": "en", "name": "English",  "path": "lang/en.json" },
+    { "lang": "fr", "name": "Français", "path": "lang/fr.json" }
   ],
   "esmodules": [
     "scripts/utils.js",

@@ -44,15 +44,15 @@ export function registerSettingsHooks () {
 
 export function registerSettings () {
   game.settings.register(MODULE, 'ai-provider', {
-    name: 'AI Generator: Provider',
-    hint: 'LLM provider used for item generation. Changing this auto-updates the endpoint and model to provider defaults.',
+    name: 'COC7QOL.Settings.AIProvider.Name',
+    hint: 'COC7QOL.Settings.AIProvider.Hint',
     scope: 'world',
     config: true,
     type: String,
     choices: {
-      anthropic: 'Anthropic (Claude)',
-      openai: 'OpenAI (GPT)',
-      gemini: 'Google (Gemini)'
+      anthropic: 'COC7QOL.Settings.AIProvider.Anthropic',
+      openai: 'COC7QOL.Settings.AIProvider.OpenAI',
+      gemini: 'COC7QOL.Settings.AIProvider.Gemini'
     },
     default: 'anthropic',
     onChange: (value) => {
@@ -64,8 +64,8 @@ export function registerSettings () {
   })
 
   game.settings.register(MODULE, 'ai-api-key', {
-    name: 'AI Generator: API Key',
-    hint: 'Your API key for the selected provider. Stored only in your browser (localStorage) — never sent to other players.',
+    name: 'COC7QOL.Settings.AIAPIKey.Name',
+    hint: 'COC7QOL.Settings.AIAPIKey.Hint',
     scope: 'client',
     config: true,
     type: String,
@@ -73,8 +73,8 @@ export function registerSettings () {
   })
 
   game.settings.register(MODULE, 'ai-endpoint', {
-    name: 'AI Generator: Endpoint URL',
-    hint: 'API endpoint URL. Updated automatically when changing provider. Override for custom deployments.',
+    name: 'COC7QOL.Settings.AIEndpoint.Name',
+    hint: 'COC7QOL.Settings.AIEndpoint.Hint',
     scope: 'world',
     config: true,
     type: String,
@@ -82,8 +82,8 @@ export function registerSettings () {
   })
 
   game.settings.register(MODULE, 'ai-model', {
-    name: 'AI Generator: Model',
-    hint: 'Model name. Updated automatically when changing provider. Override for custom or newer models.',
+    name: 'COC7QOL.Settings.AIModel.Name',
+    hint: 'COC7QOL.Settings.AIModel.Hint',
     scope: 'world',
     config: true,
     type: String,

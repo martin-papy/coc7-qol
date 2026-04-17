@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.4.4] - 2026-04-17
+
+### Added
+
+- **Internationalization (i18n)** — All user-visible strings are now extracted into translation JSON files. Module supports English and French at launch. Strings are managed via FoundryVTT's built-in i18n system (`game.i18n.localize()`). Settings automatically display in the user's configured language.
+
 ## [0.4.3] - 2026-04-16
 
 ### Added

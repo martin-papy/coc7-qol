@@ -79,6 +79,15 @@ Players and GMs can click on the small item icon in the Gear & Cash tab of the c
 
 ![Item image popout from the Gear & Cash tab](images/Popup-Image.png)
 
+## Internationalization
+
+All user-visible strings in the module are translated via FoundryVTT's i18n system. Currently supported languages:
+
+- **English** (en)
+- **Français** (fr)
+
+Dialogs, buttons, settings, and notifications automatically display in your configured FoundryVTT language. Contributions for additional languages are welcome.
+
 ## Installation
 
 ### From FoundryVTT

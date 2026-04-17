@@ -1,13 +1,13 @@
 // scripts/ai-generator/npc-confirmation-dialog.js
 // Rich read-only preview dialog for AI-generated NPC actors.
 
-import { escapeHtml } from '../utils.js'
+import { escapeHtml, t } from '../utils.js'
 import { CHARACTERISTIC_FORMULAS } from './mappers/npc.js'
 
 export default class CoC7NPCConfirmationDialog extends foundry.applications.api.ApplicationV2 {
   static DEFAULT_OPTIONS = {
     tag: 'div',
-    window: { title: 'CoC7 AI Generator — Review NPC' },
+    window: {},
     position: { width: 520, height: 'auto' },
     actions: {
       accept: CoC7NPCConfirmationDialog.#handleAccept,
@@ -15,6 +15,8 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
       cancel: CoC7NPCConfirmationDialog.#handleCancel
     }
   }
+
+  get title () { return t('COC7QOL.AIGenerator.NPCDialog.Title') }
 
   #npcData      // { actorData, skillsRaw, llmData } from mapper.toFoundryData()
   #acceptCallback
@@ -46,13 +48,13 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
       <div class="coc7-npc-identity">
         <div class="coc7-npc-identity-name">${escapeHtml(llm.name)}</div>
         <div class="coc7-npc-identity-meta">
-          ${llm.occupation ? `<span><span class="coc7-npc-identity-meta-label">Occupation</span>&nbsp;${escapeHtml(llm.occupation)}</span>` : ''}
-          ${llm.age ? `<span><span class="coc7-npc-identity-meta-label">Age</span>&nbsp;${escapeHtml(String(llm.age))}</span>` : ''}
+          ${llm.occupation ? `<span><span class="coc7-npc-identity-meta-label">${t('CoC7.Occupation')}</span>&nbsp;${escapeHtml(llm.occupation)}</span>` : ''}
+          ${llm.age ? `<span><span class="coc7-npc-identity-meta-label">${t('CoC7.Age')}</span>&nbsp;${escapeHtml(String(llm.age))}</span>` : ''}
         </div>
       </div>`
 
     // --- Characteristics grid ---
-    const charLabels = ['STR', 'CON', 'SIZ', 'DEX', 'APP', 'INT', 'POW', 'EDU']
+    const charLabels = ['CHARAC.STR', 'CHARAC.CON', 'CHARAC.SIZ', 'CHARAC.DEX', 'CHARAC.APP', 'CHARAC.INT', 'CHARAC.POW', 'CHARAC.EDU'].map(k => t(k))
     const charKeys = ['str', 'con', 'siz', 'dex', 'app', 'int', 'pow', 'edu']
     const isRandom = this.#npcData.randomCharacteristics ?? false
     const charCells = charKeys.map((k, i) => {
@@ -68,7 +70,7 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
 
     const charsHtml = `
       <div class="coc7-npc-section">
-        <div class="coc7-npc-section-label">Characteristics</div>
+        <div class="coc7-npc-section-label">${t('COC7QOL.AIGenerator.NPCDialog.SectionCharacteristics')}</div>
         <div class="coc7-npc-chars-grid">${charCells}</div>
       </div>`
 
@@ -81,7 +83,7 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
 
     const skillsHtml = skills.length ? `
       <div class="coc7-npc-section">
-        <div class="coc7-npc-section-label">Skills</div>
+        <div class="coc7-npc-section-label">${t('COC7QOL.AIGenerator.NPCDialog.SectionSkills')}</div>
         <div class="coc7-npc-skills-grid">${skillRows}</div>
       </div>` : ''
 
@@ -98,15 +100,15 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
     // --- Buttons ---
     const buttonsHtml = `
       <div class="form-footer">
-        <button type="button" data-action="accept" class="bright">Accept</button>
-        <button type="button" data-action="regenerate">Regenerate</button>
-        <button type="button" data-action="cancel">Cancel</button>
+        <button type="button" data-action="accept" class="bright">${t('COC7QOL.AIGenerator.Button.Accept')}</button>
+        <button type="button" data-action="regenerate">${t('COC7QOL.AIGenerator.Button.Regenerate')}</button>
+        <button type="button" data-action="cancel">${t('COC7QOL.AIGenerator.Button.Cancel')}</button>
       </div>`
 
     div.innerHTML = identityHtml + charsHtml + skillsHtml
-      + narrativeSection('Appearance', llm.physicalDescription)
-      + narrativeSection('Personality', llm.personalityTraits)
-      + narrativeSection('Background', llm.background)
+      + narrativeSection(t('COC7QOL.AIGenerator.NPCDialog.SectionAppearance'), llm.physicalDescription)
+      + narrativeSection(t('COC7QOL.AIGenerator.NPCDialog.SectionPersonality'), llm.personalityTraits)
+      + narrativeSection(t('COC7QOL.AIGenerator.NPCDialog.SectionBackground'), llm.background)
       + buttonsHtml
 
     return div

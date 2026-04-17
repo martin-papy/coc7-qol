@@ -1,28 +1,31 @@
 // scripts/close-all-cards.js
 
-import { escapeHtml } from './utils.js'
+import { escapeHtml, t, tf } from './utils.js'
 
-const CARD_TYPE_LABELS = {
-  CoC7Check: 'Skill/Attribute Check',
-  CoC7SanCheckCard: 'Sanity Check',
-  CoC7ConCheck: 'Constitution Check',
-  CoC7ChatCombatMelee: 'Melee Combat',
-  CoC7ChatCombatRanged: 'Ranged Combat',
-  CoC7ChatDamage: 'Damage',
-  CoC7ChatOpposedMessage: 'Opposed Roll',
-  CoC7ChatCombinedMessage: 'Combined Roll',
-  CoC7ChatChaseObstacle: 'Chase Obstacle'
-};
+// Maps CoC7 card template class names to i18n keys.
+// Values are keys — resolved via t() at use-time (game.i18n not available at load time).
+const CARD_TYPE_KEYS = {
+  CoC7Check: 'COC7QOL.CloseAllCards.CardType.SkillCheck',
+  CoC7SanCheckCard: 'COC7QOL.CloseAllCards.CardType.SanityCheck',
+  CoC7ConCheck: 'COC7QOL.CloseAllCards.CardType.ConstitutionCheck',
+  CoC7ChatCombatMelee: 'COC7QOL.CloseAllCards.CardType.MeleeCombat',
+  CoC7ChatCombatRanged: 'COC7QOL.CloseAllCards.CardType.RangedCombat',
+  CoC7ChatDamage: 'COC7QOL.CloseAllCards.CardType.Damage',
+  CoC7ChatOpposedMessage: 'COC7QOL.CloseAllCards.CardType.OpposedRoll',
+  CoC7ChatCombinedMessage: 'COC7QOL.CloseAllCards.CardType.CombinedRoll',
+  CoC7ChatChaseObstacle: 'COC7QOL.CloseAllCards.CardType.ChaseObstacle'
+}
 
 function getOpenCards () {
   const open = [];
   for (const message of game.messages) {
     const load = message.flags?.CoC7?.load;
     if (load?.cardOpen === true) {
+      const typeKey = CARD_TYPE_KEYS[load.as]
       open.push({
         messageId: message.id,
-        type: CARD_TYPE_LABELS[load.as] ?? 'Card',
-        actor: message.speaker?.alias ?? 'Unknown',
+        type: typeKey ? t(typeKey) : t('COC7QOL.CloseAllCards.UnknownCardType'),
+        actor: message.speaker?.alias ?? t('COC7QOL.CloseAllCards.UnknownActor'),
         timestamp: new Date(message.timestamp).toLocaleTimeString()
       });
     }
@@ -34,7 +37,7 @@ class CloseAllCardsDialog extends foundry.applications.api.ApplicationV2 {
   static DEFAULT_OPTIONS = {
     id: 'coc7-close-all-cards',
     tag: 'div',
-    window: { title: 'Close All Cards' },
+    window: {},
     position: { width: 420, height: 'auto' },
     actions: {
       closeSelected: CloseAllCardsDialog.#handleCloseSelected,
@@ -43,6 +46,8 @@ class CloseAllCardsDialog extends foundry.applications.api.ApplicationV2 {
       toggleCard: CloseAllCardsDialog.#handleToggleCard
     }
   };
+
+  get title () { return t('COC7QOL.CloseAllCards.Title') }
 
   #cards;
 
@@ -61,7 +66,7 @@ class CloseAllCardsDialog extends foundry.applications.api.ApplicationV2 {
     header.innerHTML = `
       <label class="close-cards-toggle-all">
         <input type="checkbox" data-action="toggleAll" checked>
-        <strong>${this.#cards.length} open card${this.#cards.length === 1 ? '' : 's'}</strong>
+        <strong>${tf(this.#cards.length === 1 ? 'COC7QOL.CloseAllCards.Header.OpenCard' : 'COC7QOL.CloseAllCards.Header.OpenCards', { count: this.#cards.length })}</strong>
       </label>
     `;
     container.appendChild(header);
@@ -86,8 +91,8 @@ class CloseAllCardsDialog extends foundry.applications.api.ApplicationV2 {
     const footer = document.createElement('div');
     footer.className = 'close-cards-footer';
     footer.innerHTML = `
-      <button type="button" data-action="closeSelected" class="bright">Close Selected</button>
-      <button type="button" data-action="cancel">Cancel</button>
+      <button type="button" data-action="closeSelected" class="bright">${t('COC7QOL.CloseAllCards.Button.CloseSelected')}</button>
+      <button type="button" data-action="cancel">${t('COC7QOL.CloseAllCards.Button.Cancel')}</button>
     `;
     container.appendChild(footer);
 
@@ -147,7 +152,7 @@ class CloseAllCardsDialog extends foundry.applications.api.ApplicationV2 {
       closed++;
     }
 
-    ui.notifications.info(`Closed ${closed} card${closed === 1 ? '' : 's'}.`);
+    ui.notifications.info(tf(closed === 1 ? 'COC7QOL.CloseAllCards.Notification.Closed' : 'COC7QOL.CloseAllCards.Notification.ClosedPlural', { count: closed }));
     this.close();
   }
 
@@ -178,11 +183,11 @@ Hooks.on('getSceneControlButtons', (controls) => {
     button: true,
     icon: 'fa-solid fa-xmarks-lines',
     name: 'coc7-close-all-cards',
-    title: 'Close All Cards',
+    title: t('COC7QOL.CloseAllCards.Title'),
     onChange: () => {
       const openCards = getOpenCards();
       if (openCards.length === 0) {
-        ui.notifications.info('No open cards found.');
+        ui.notifications.info(t('COC7QOL.CloseAllCards.Notification.NoCardsFound'));
         return;
       }
       new CloseAllCardsDialog(openCards).render(true);

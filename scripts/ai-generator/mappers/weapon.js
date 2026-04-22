@@ -9,7 +9,7 @@ Required fields (must always be present):
 
 Optional fields (omit or use null if not applicable):
 - description: string — flavour text and physical description (default "")
-- range: string — effective range (e.g. "15m", "30 yards") or "" for melee weapons
+- range: integer or null — effective range as a plain integer with NO unit (e.g. 15, 30); null for melee weapons
 - usesPerRound: string — attacks per round (e.g. "1", "2")
 - bullets: number or null — magazine/cylinder capacity; null for non-firearms
 - malfunction: number or null — malfunction threshold 96–100; null for non-firearms
@@ -51,7 +51,7 @@ export default {
           alternativ: { name: '', id: '' }
         },
         range: {
-          normal: { value: data.range || '', damage: data.damage || '' },
+          normal: { value: Number.isFinite(data.range) ? data.range : null, damage: data.damage || '' },
           long: { value: '', damage: '' },
           extreme: { value: '', damage: '' }
         },

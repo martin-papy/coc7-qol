@@ -1,3 +1,5 @@
+import { formatApiError } from '../../utils.js'
+
 const MODULE = 'coc7-qol'
 
 export default class AnthropicProvider {
@@ -36,7 +38,7 @@ export default class AnthropicProvider {
 
     if (!response.ok) {
       const error = await response.text()
-      throw new Error(`Anthropic API error ${response.status}: ${error}`)
+      throw new Error(formatApiError('Anthropic', response.status, error))
     }
 
     const data = await response.json()

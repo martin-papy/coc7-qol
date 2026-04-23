@@ -1,3 +1,5 @@
+import { formatApiError } from '../../utils.js'
+
 const MODULE = 'coc7-qol'
 
 export default class GeminiProvider {
@@ -31,7 +33,7 @@ export default class GeminiProvider {
 
     if (!response.ok) {
       const error = await response.text()
-      throw new Error(`Gemini API error ${response.status}: ${error}`)
+      throw new Error(formatApiError('Gemini', response.status, error))
     }
 
     const data = await response.json()

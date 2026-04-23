@@ -1,3 +1,5 @@
+import { formatApiError } from '../../utils.js'
+
 const MODULE = 'coc7-qol'
 
 export default class OpenAIProvider {
@@ -36,7 +38,7 @@ export default class OpenAIProvider {
 
     if (!response.ok) {
       const error = await response.text()
-      throw new Error(`OpenAI API error ${response.status}: ${error}`)
+      throw new Error(formatApiError('OpenAI', response.status, error))
     }
 
     const data = await response.json()

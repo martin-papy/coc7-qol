@@ -2,3 +2,4 @@ coc7-qol.code-workspace
 .claude/settings.local.json
 .worktrees/
 .superpowers/
+temp/

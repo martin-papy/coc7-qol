@@ -10,7 +10,7 @@
   ],
   "compatibility": {
     "minimum": "13",
-    "verified": "13"
+    "verified": "14"
   },
   "relationships": {
     "systems": [
@@ -18,8 +18,7 @@
         "id": "CoC7",
         "type": "system",
         "compatibility": {
-          "minimum": "8.1",
-          "verified": "8.4"
+          "minimum": "8"
         }
       }
     ]

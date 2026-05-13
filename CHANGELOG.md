@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.4.5] - 2026-05-13
+
+### Security
+
+- `escapeHtml` extended to the full OWASP attribute-value set (`&`, `<`, `>`, `"`, `'`, `/`, backtick) in a single-pass regex, closing escape gaps that surfaced with French apostrophes (`l'Arkham`, `d'âge moyen`) breaking the placeholder attribute.
+- Gemini API key moved from the URL query string to the `x-goog-api-key` request header so the key no longer leaks into browser history, proxy logs, or `Referer` headers.
+- Provider error responses sanitized before display: `formatApiError()` maps 401/429/5xx to friendly strings, strips HTML tags, and truncates unknown bodies to 300 chars — Cloudflare/proxy HTML interstitials no longer reach `ui.notifications.error`.
+- API key setting hint strengthened to surface the direct-browser-access caveat (the key is sent from the player's browser and is readable by any module on the client). Users are now advised to use a provider-scoped, spend-limited key.
+
+### Fixed
+
+- 60 s `AbortController` timeout added to all three LLM providers (Anthropic, OpenAI, Gemini). Stuck requests now fail cleanly through the existing error surface instead of leaving the UI in "Generating…" indefinitely.
+- Anthropic `max_tokens` raised from 1024 to 4096, matching the OpenAI/Gemini ceiling. Long NPC responses (characteristics + skills + narrative) no longer get truncated mid-JSON and crash `JSON.parse`.
+- `applyRandomCharacteristics` now returns a new object instead of mutating its argument — the call site in `dialog-injector` was updated to capture the returned value.
+- Weapon range enforced as a finite integer or `null` for melee. The system prompt requests no unit, and `toFoundryData` writes `system.range.normal.value` as a number — string units (e.g. `"50 m"`) can no longer slip through.
+- Single quotes (`'` → `&#39;`) added to `escapeHtml`; placeholder attribute switched from single to double quotes in `dialog-injector` so French strings render correctly.
+
+### Changed
+
+- Module compatibility bumped: FoundryVTT minimum **v13**, verified **v14**. CoC7 system minimum **v8**.
+
 ## [0.4.4] - 2026-04-17
 
 ### Added
@@ -80,7 +101,9 @@ All notable changes to this project will be documented in this file.
 
 - **Item Image Popout** — Players can click on any item image to view the full-size illustration in a draggable, resizable popout window. GMs retain the default file picker behavior.
 
-[Unreleased]: https://github.com/martin-papy/coc7-qol/compare/v0.4.3...HEAD
+[Unreleased]: https://github.com/martin-papy/coc7-qol/compare/v0.4.5...HEAD
+[0.4.5]: https://github.com/martin-papy/coc7-qol/compare/v0.4.4...v0.4.5
+[0.4.4]: https://github.com/martin-papy/coc7-qol/compare/v0.4.3...v0.4.4
 [0.4.3]: https://github.com/martin-papy/coc7-qol/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/martin-papy/coc7-qol/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/martin-papy/coc7-qol/compare/v0.4.0...v0.4.1

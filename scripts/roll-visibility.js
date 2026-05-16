@@ -92,9 +92,22 @@ Hooks.on('preCreateChatMessage', (document, data) => {
   const messageData = foundry.utils.deepClone(data)
   ChatMessage.applyRollMode(messageData, mode)
 
-  document.updateSource({
+  const update = {
     whisper: messageData.whisper ?? [],
     blind: messageData.blind ?? false,
     rollMode: messageData.rollMode ?? mode
-  })
+  }
+
+  // When a CoC7 standby card is created (GM rolls on a player-owned actor),
+  // the check is serialized into flags.CoC7.load and later re-hydrated when
+  // the player/GM clicks "Roll". Without rewriting the stored rollMode, the
+  // re-hydrated check rolls under whatever core rollMode is currently active
+  // — making blind/private results leak as public. Rewriting the flag keeps
+  // the chosen visibility on every subsequent message produced by this check.
+  const coc7Load = data.flags?.CoC7?.load
+  if (coc7Load && typeof coc7Load.rollMode !== 'undefined') {
+    update['flags.CoC7.load.rollMode'] = mode
+  }
+
+  document.updateSource(update)
 })

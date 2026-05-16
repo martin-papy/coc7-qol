@@ -107,6 +107,10 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
         </div>`
     }
 
+    // --- Warnings ---
+    const warnings = this.#npcData.warnings ?? []
+    const warningsHtml = this.#renderWarningsSection(warnings)
+
     // --- Buttons ---
     const buttonsHtml = `
       <div class="form-footer">
@@ -119,6 +123,7 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
       + narrativeSection(t('COC7QOL.AIGenerator.NPCDialog.SectionAppearance'), llm.physicalDescription)
       + narrativeSection(t('COC7QOL.AIGenerator.NPCDialog.SectionPersonality'), llm.personalityTraits)
       + narrativeSection(t('COC7QOL.AIGenerator.NPCDialog.SectionBackground'), llm.background)
+      + warningsHtml
       + buttonsHtml
 
     return div
@@ -189,6 +194,16 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
       <div class="coc7-npc-section" data-section="possessions">
         <div class="coc7-npc-section-label">${escapeHtml(headerLabel)}</div>
         <div class="coc7-npc-equip-list">${rows}</div>
+      </div>`
+  }
+
+  #renderWarningsSection (warnings) {
+    if (!warnings.length) return ''
+    const items = warnings.map(w => `<li>${escapeHtml(w)}</li>`).join('')
+    return `
+      <div class="coc7-npc-section coc7-ai-warnings">
+        <div class="coc7-npc-section-label">${escapeHtml(t('COC7QOL.AIGenerator.NPC.Preview.WarningsHeader'))}</div>
+        <ul class="coc7-ai-warnings-list">${items}</ul>
       </div>`
   }
 

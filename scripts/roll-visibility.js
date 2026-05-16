@@ -2,11 +2,37 @@
 
 import { t } from './utils.js'
 
+const MODULE = 'coc7-qol'
+const LAST_MODE_SETTING = 'last-roll-mode'
 const ROLL_MODES = ['publicroll', 'gmroll', 'blindroll']
 
 // Module-level state: the last value picked in the CoC7 roll dialog,
 // consumed by the next preCreateChatMessage. Cancelled dialogs leave it null.
 let pendingRollMode = null
+
+Hooks.once('init', () => {
+  game.settings.register(MODULE, LAST_MODE_SETTING, {
+    scope: 'client',
+    config: false,
+    type: String,
+    default: ''
+  })
+})
+
+function readLastRollMode () {
+  try {
+    const stored = game.settings.get(MODULE, LAST_MODE_SETTING)
+    if (ROLL_MODES.includes(stored)) return stored
+  } catch (_) { /* setting not yet registered — fall through */ }
+  return null
+}
+
+function writeLastRollMode (mode) {
+  if (!ROLL_MODES.includes(mode)) return
+  game.settings.set(MODULE, LAST_MODE_SETTING, mode).catch(err => {
+    console.warn('[coc7-qol] Failed to persist last roll mode:', err)
+  })
+}
 
 Hooks.on('renderDialogV2', (dialog, element) => {
   if (!dialog.options?.classes?.includes('bonus-selection')) return
@@ -18,8 +44,10 @@ Hooks.on('renderDialogV2', (dialog, element) => {
   // Guard against re-renders
   if (element.querySelector('[name="coc7qol-rollMode"]')) return
 
+  const remembered = readLastRollMode()
   const coreMode = game.settings.get('core', 'rollMode')
-  const currentMode = ROLL_MODES.includes(coreMode) ? coreMode : 'publicroll'
+  const currentMode = remembered
+    ?? (ROLL_MODES.includes(coreMode) ? coreMode : 'publicroll')
 
   const group = document.createElement('div')
   group.className = 'form-group'
@@ -47,6 +75,7 @@ Hooks.on('renderDialogV2', (dialog, element) => {
     const select = element.querySelector('[name="coc7qol-rollMode"]')
     if (select && ROLL_MODES.includes(select.value)) {
       pendingRollMode = select.value
+      writeLastRollMode(select.value)
     }
   }, true)
 })

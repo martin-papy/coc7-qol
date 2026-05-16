@@ -93,6 +93,10 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
     const weaponsData = this.#npcData.weaponsData ?? []
     const weaponsHtml = this.#renderWeaponsSection(weaponsData)
 
+    // --- Possessions section ---
+    const possessionsData = this.#npcData.possessionsData ?? []
+    const possessionsHtml = this.#renderPossessionsSection(possessionsData)
+
     // --- Narrative sections ---
     const narrativeSection = (label, text) => {
       if (!text) return ''
@@ -111,7 +115,7 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
         <button type="button" data-action="cancel">${t('COC7QOL.AIGenerator.Button.Cancel')}</button>
       </div>`
 
-    div.innerHTML = identityHtml + charsHtml + skillsHtml + weaponsHtml
+    div.innerHTML = identityHtml + charsHtml + skillsHtml + weaponsHtml + possessionsHtml
       + narrativeSection(t('COC7QOL.AIGenerator.NPCDialog.SectionAppearance'), llm.physicalDescription)
       + narrativeSection(t('COC7QOL.AIGenerator.NPCDialog.SectionPersonality'), llm.personalityTraits)
       + narrativeSection(t('COC7QOL.AIGenerator.NPCDialog.SectionBackground'), llm.background)
@@ -152,6 +156,37 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
 
     return `
       <div class="coc7-npc-section" data-section="weapons">
+        <div class="coc7-npc-section-label">${escapeHtml(headerLabel)}</div>
+        <div class="coc7-npc-equip-list">${rows}</div>
+      </div>`
+  }
+
+  #renderPossessionsSection (possessionsData) {
+    if (!possessionsData.length) return ''
+    const total = possessionsData.length
+    const kept = total - this.#removedPossessionIndexes.size
+    const headerLabel = this.#removedPossessionIndexes.size > 0
+      ? tf('COC7QOL.AIGenerator.NPC.Preview.PossessionsHeaderPartial', { kept, count: total })
+      : tf('COC7QOL.AIGenerator.NPC.Preview.PossessionsHeader', { count: total })
+    const removeTitle = t('COC7QOL.AIGenerator.NPC.Button.RemoveItem')
+
+    const rows = possessionsData.map((p, i) => {
+      const name = p?.name ?? ''
+      const quantity = p?.system?.quantity ?? 1
+      const qtyText = quantity > 1
+        ? tf('COC7QOL.AIGenerator.NPC.Preview.PossessionRowQuantity', { quantity })
+        : ''
+      const removed = this.#removedPossessionIndexes.has(i) ? ' coc7-ai-removed' : ''
+      return `
+        <div class="coc7-npc-equip-row${removed}" data-equip-kind="possession" data-equip-index="${i}">
+          <span class="coc7-npc-equip-name">${escapeHtml(name)}</span>
+          <span class="coc7-npc-equip-detail">${escapeHtml(qtyText)}</span>
+          <button type="button" class="coc7-npc-equip-remove" title="${escapeHtml(removeTitle)}" aria-label="${escapeHtml(removeTitle)}">×</button>
+        </div>`
+    }).join('')
+
+    return `
+      <div class="coc7-npc-section" data-section="possessions">
         <div class="coc7-npc-section-label">${escapeHtml(headerLabel)}</div>
         <div class="coc7-npc-equip-list">${rows}</div>
       </div>`

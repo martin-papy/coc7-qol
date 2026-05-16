@@ -21,7 +21,7 @@ LANGUAGE RULES:
 - If the prompt is mixed-language, pick the dominant language. If the prompt is very short (e.g. "a doctor"), default to English.
 
 Required fields (must always be present):
-- name: string — full name of the NPC
+- name: string — full name of the NPC (language: culturally appropriate, per LANGUAGE RULES above)
 - characteristics: object with all 8 integer values:
   - str, con, siz, dex, app, int, pow, edu
   - Values range 15–90 for a typical human, consistent with CoC7 3d6×5 / (2d6+6)×5 generation
@@ -33,7 +33,7 @@ Required fields (must always be present):
   - Include whatever skills make sense for the character — typically 5–12 skills
 
 Optional fields (include when relevant, omit if not applicable):
-- occupation: string — the NPC's job or role (e.g. "Pharmacist", "Dockworker", "Professor")
+- occupation: string — the NPC's job or role, ALWAYS in English (used for system lookup; e.g. "Pharmacist", "Dockworker", "Professor")
 - age: number — age in years
 - physicalDescription: string — 1-2 sentences describing appearance
 - personalityTraits: string — 1-2 sentences describing personality and demeanour
@@ -48,14 +48,14 @@ Optional fields (include when relevant, omit if not applicable):
   - bullets: number or null (optional) — magazine/cylinder capacity; null for non-firearms
   - malfunction: number or null (optional) — malfunction threshold 96–100; null for non-firearms
   - properties: object with boolean flags (optional): rngd (ranged), impl (impaling), addb (adds full damage bonus), ahdb (adds half damage bonus)
-- possessions: array of possession objects (3–8 typical). Each possession:
+- possessions: array of possession objects (3–8 typical; may be empty or sparse for situational NPCs). Each possession:
   - name: string (required) — the item name
   - description: string (optional) — short flavour text
   - quantity: integer (optional, default 1) — positive integer
 
 EQUIPMENT GUIDANCE:
 - Add 0–3 weapons and 3–8 possessions, all consistent with the NPC's occupation, age, era, and personality.
-- A pacifist librarian likely has 0 weapons; a 1920s detective might have a revolver and a few notebooks; a cultist might carry ritual items. Use judgement.`
+- A pacifist librarian likely has 0 weapons; a 1920s detective might have a revolver and a few notebooks; a cultist might carry ritual items. Use your judgement.`
 
 const REQUIRED_CHARACTERISTICS = ['str', 'con', 'siz', 'dex', 'app', 'int', 'pow', 'edu']
 

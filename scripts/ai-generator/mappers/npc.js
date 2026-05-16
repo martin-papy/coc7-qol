@@ -11,6 +11,15 @@ The NPC should be a believable person with enough depth to be credible in a tabl
 
 Respond with ONLY a valid JSON object. No explanation, no markdown fences, no extra text — raw JSON only.
 
+LANGUAGE RULES:
+- Write the free-text narrative fields (physicalDescription, personalityTraits, background, and weapons[].description / possessions[].description) in the SAME LANGUAGE as the user's prompt. If the user wrote in French, write these fields in French. Same for Spanish, German, Japanese, etc.
+- The "name" field should be culturally appropriate for the setting/era (use your judgement).
+- KEEP THE FOLLOWING IN ENGLISH regardless of prompt language:
+  - "occupation" (required for system lookups)
+  - every entry in skills[].name (required for compendium lookup — use the official CoC7 English skill names exactly)
+- Weapon and possession "name" fields should typically be in English for canonical items (e.g. "Colt 1911", "Pocket notebook"), but use your judgement for culturally specific items.
+- If the prompt is mixed-language, pick the dominant language. If the prompt is very short (e.g. "a doctor"), default to English.
+
 Required fields (must always be present):
 - name: string — full name of the NPC
 - characteristics: object with all 8 integer values:
@@ -28,7 +37,25 @@ Optional fields (include when relevant, omit if not applicable):
 - age: number — age in years
 - physicalDescription: string — 1-2 sentences describing appearance
 - personalityTraits: string — 1-2 sentences describing personality and demeanour
-- background: string — 2-3 sentences of relevant background, hooks, or secrets useful to a GM`
+- background: string — 2-3 sentences of relevant background, hooks, or secrets useful to a GM
+- weapons: array of weapon objects (0–3 typical, may be omitted entirely for non-combatants). Each weapon:
+  - name: string (required) — the weapon name
+  - damage: string (required) — dice expression (e.g. "1d8", "1d6+1", "1d10+db")
+  - skill: string (required) — the CoC7 skill name (e.g. "Firearms (Handgun)", "Fighting (Brawl)", "Throw")
+  - description: string (optional) — flavour text
+  - range: integer or null (optional) — effective range as a plain integer with NO unit (e.g. 15, 30); null for melee
+  - usesPerRound: string (optional) — attacks per round (e.g. "1", "2")
+  - bullets: number or null (optional) — magazine/cylinder capacity; null for non-firearms
+  - malfunction: number or null (optional) — malfunction threshold 96–100; null for non-firearms
+  - properties: object with boolean flags (optional): rngd (ranged), impl (impaling), addb (adds full damage bonus), ahdb (adds half damage bonus)
+- possessions: array of possession objects (3–8 typical). Each possession:
+  - name: string (required) — the item name
+  - description: string (optional) — short flavour text
+  - quantity: integer (optional, default 1) — positive integer
+
+EQUIPMENT GUIDANCE:
+- Add 0–3 weapons and 3–8 possessions, all consistent with the NPC's occupation, age, era, and personality.
+- A pacifist librarian likely has 0 weapons; a 1920s detective might have a revolver and a few notebooks; a cultist might carry ritual items. Use judgement.`
 
 const REQUIRED_CHARACTERISTICS = ['str', 'con', 'siz', 'dex', 'app', 'int', 'pow', 'edu']
 

@@ -71,5 +71,10 @@
   "COC7QOL.Settings.AIEndpoint.Name": "Générateur IA : URL de l'Endpoint",
   "COC7QOL.Settings.AIEndpoint.Hint": "URL de l'endpoint API. Mise à jour automatiquement lors du changement de fournisseur. Remplacez pour des déploiements personnalisés.",
   "COC7QOL.Settings.AIModel.Name": "Générateur IA : Modèle",
-  "COC7QOL.Settings.AIModel.Hint": "Nom du modèle. Mis à jour automatiquement lors du changement de fournisseur. Remplacez pour des modèles personnalisés ou plus récents."
+  "COC7QOL.Settings.AIModel.Hint": "Nom du modèle. Mis à jour automatiquement lors du changement de fournisseur. Remplacez pour des modèles personnalisés ou plus récents.",
+
+  "COC7QOL.RollVisibility.Label": "Visibilité du Jet",
+  "COC7QOL.RollVisibility.Public": "Public — visible par tous",
+  "COC7QOL.RollVisibility.Private": "Privé — MJ et vous",
+  "COC7QOL.RollVisibility.Blind": "Aveugle — MJ uniquement"
 }

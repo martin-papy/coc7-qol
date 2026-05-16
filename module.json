@@ -42,6 +42,7 @@
     "scripts/item-image-popout.js",
     "scripts/possession-item-image-popout.js",
     "scripts/ai-generator/index.js",
-    "scripts/close-all-cards.js"
+    "scripts/close-all-cards.js",
+    "scripts/roll-visibility.js"
   ]
 }

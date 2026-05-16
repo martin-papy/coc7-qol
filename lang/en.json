@@ -71,5 +71,10 @@
   "COC7QOL.Settings.AIEndpoint.Name": "AI Generator: Endpoint URL",
   "COC7QOL.Settings.AIEndpoint.Hint": "API endpoint URL. Updated automatically when changing provider. Override for custom deployments.",
   "COC7QOL.Settings.AIModel.Name": "AI Generator: Model",
-  "COC7QOL.Settings.AIModel.Hint": "Model name. Updated automatically when changing provider. Override for custom or newer models."
+  "COC7QOL.Settings.AIModel.Hint": "Model name. Updated automatically when changing provider. Override for custom or newer models.",
+
+  "COC7QOL.RollVisibility.Label": "Roll Visibility",
+  "COC7QOL.RollVisibility.Public": "Public — visible to all",
+  "COC7QOL.RollVisibility.Private": "Private — GM and you",
+  "COC7QOL.RollVisibility.Blind": "Blind — GM only"
 }

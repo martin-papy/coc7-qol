@@ -133,6 +133,53 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
     content.replaceChildren(result)
   }
 
+  _onRender (_context, _options) {
+    const root = this.element
+    if (!root) return
+    this.#attachEquipRemoveListeners(root)
+  }
+
+  #attachEquipRemoveListeners (scope) {
+    scope.querySelectorAll('.coc7-npc-equip-remove').forEach(btn => {
+      btn.addEventListener('click', (event) => {
+        event.preventDefault()
+        const row = btn.closest('.coc7-npc-equip-row')
+        if (!row) return
+        const kind = row.dataset.equipKind
+        const idx = Number(row.dataset.equipIndex)
+        if (!Number.isInteger(idx)) return
+        this.#toggleRemoved(kind, idx)
+      })
+    })
+  }
+
+  #toggleRemoved (kind, index) {
+    const set = kind === 'weapon' ? this.#removedWeaponIndexes : this.#removedPossessionIndexes
+    if (set.has(index)) set.delete(index)
+    else set.add(index)
+    this.#refreshEquipSection(kind)
+  }
+
+  #refreshEquipSection (kind) {
+    const root = this.element
+    if (!root) return
+    const selector = `[data-section="${kind === 'weapon' ? 'weapons' : 'possessions'}"]`
+    const oldSection = root.querySelector(selector)
+    if (!oldSection) return
+    const data = kind === 'weapon'
+      ? (this.#npcData.weaponsData ?? [])
+      : (this.#npcData.possessionsData ?? [])
+    const html = kind === 'weapon'
+      ? this.#renderWeaponsSection(data)
+      : this.#renderPossessionsSection(data)
+    const template = document.createElement('template')
+    template.innerHTML = html.trim()
+    const newSection = template.content.firstElementChild
+    if (!newSection) return
+    oldSection.replaceWith(newSection)
+    this.#attachEquipRemoveListeners(newSection)
+  }
+
   #renderWeaponsSection (weaponsData) {
     if (!weaponsData.length) return ''
     const total = weaponsData.length
@@ -208,7 +255,16 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
   }
 
   static async #handleAccept (_event, _target) {
-    await this.#acceptCallback(this.#npcData)
+    const data = this.#npcData
+    const filteredWeapons = (data.weaponsData ?? [])
+      .filter((_, i) => !this.#removedWeaponIndexes.has(i))
+    const filteredPossessions = (data.possessionsData ?? [])
+      .filter((_, i) => !this.#removedPossessionIndexes.has(i))
+    await this.#acceptCallback({
+      ...data,
+      weaponsData: filteredWeapons,
+      possessionsData: filteredPossessions
+    })
     this.close()
   }
 

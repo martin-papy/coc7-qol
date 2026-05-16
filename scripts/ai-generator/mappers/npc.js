@@ -4,6 +4,7 @@
 // after the mapper produces the base actor data.
 
 import { escapeHtml } from '../../utils.js'
+import weaponMapper from './weapon.js'
 
 const SYSTEM_PROMPT = `You are a Call of Cthulhu 7th Edition game master assistant. Generate a CoC7 NPC based on the user's description.
 
@@ -124,6 +125,10 @@ export default {
       ? `<p><strong>Background:</strong> ${escapeHtml(data.background)}</p>`
       : ''
 
+    const warnings = []
+    const weaponsData = this._validateAndMapWeapons(data.weapons, warnings)
+    const possessionsData = this._mapPossessions(data.possessions)
+
     return {
       actorData: {
         name: data.name,
@@ -154,6 +159,9 @@ export default {
         }
       },
       skillsRaw: data.skills,
+      weaponsData,
+      possessionsData,
+      warnings,
       llmData: data
     }
   },
@@ -223,5 +231,39 @@ export default {
         }
       }
     }
+  },
+
+  _validateAndMapWeapons (rawWeapons, warnings) {
+    if (!Array.isArray(rawWeapons)) return []
+    const mapped = []
+    for (const raw of rawWeapons) {
+      if (!raw || typeof raw !== 'object' || !raw.name) continue  // drop silently
+      try {
+        weaponMapper.validate(raw)
+        mapped.push(weaponMapper.toFoundryData(raw))
+      } catch (err) {
+        warnings.push(`Weapon "${raw.name}": ${err.message}`)
+      }
+    }
+    return mapped
+  },
+
+  _mapPossessions (rawPossessions) {
+    if (!Array.isArray(rawPossessions)) return []
+    const mapped = []
+    for (const raw of rawPossessions) {
+      if (!raw || typeof raw !== 'object' || !raw.name) continue  // drop silently
+      const n = Math.floor(Number(raw.quantity))
+      const quantity = Number.isFinite(n) && n > 0 ? n : 1
+      mapped.push({
+        name: raw.name,
+        type: 'item',
+        system: {
+          description: { value: escapeHtml(raw.description ?? '') },
+          quantity
+        }
+      })
+    }
+    return mapped
   }
 }

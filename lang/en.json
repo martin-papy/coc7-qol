@@ -44,7 +44,7 @@
   "COC7QOL.AIGenerator.Error.WeaponCreationFailed": "CoC7 AI Generator: Failed to create item \u2014 {error}",
   "COC7QOL.AIGenerator.Error.NPCCreationFailed": "CoC7 AI Generator: Failed to create NPC \u2014 {error}",
   "COC7QOL.AIGenerator.Error.NPCCreationCancelled": "CoC7 AI Generator: Actor creation was cancelled.",
-  "COC7QOL.AIGenerator.Error.NPCSkillsFailed": "CoC7 AI Generator: NPC created but some skills failed \u2014 {error}",
+  "COC7QOL.AIGenerator.Error.NPCItemsFailed": "CoC7 AI Generator: NPC created but some items (skills/weapons/possessions) failed \u2014 {error}",
 
   "COC7QOL.AIGenerator.WeaponDialog.Title": "CoC7 AI Generator \u2014 Review Weapon",
   "COC7QOL.AIGenerator.WeaponDialog.FieldDamage": "Damage",
@@ -60,6 +60,15 @@
   "COC7QOL.AIGenerator.NPCDialog.SectionAppearance": "Appearance",
   "COC7QOL.AIGenerator.NPCDialog.SectionPersonality": "Personality",
   "COC7QOL.AIGenerator.NPCDialog.SectionBackground": "Background",
+
+  "COC7QOL.AIGenerator.NPC.Preview.WeaponsHeader": "Weapons ({count})",
+  "COC7QOL.AIGenerator.NPC.Preview.WeaponsHeaderPartial": "Weapons ({kept} / {count})",
+  "COC7QOL.AIGenerator.NPC.Preview.PossessionsHeader": "Possessions ({count})",
+  "COC7QOL.AIGenerator.NPC.Preview.PossessionsHeaderPartial": "Possessions ({kept} / {count})",
+  "COC7QOL.AIGenerator.NPC.Preview.WarningsHeader": "Warnings",
+  "COC7QOL.AIGenerator.NPC.Preview.WeaponRowDamage": "{damage} • {skill}",
+  "COC7QOL.AIGenerator.NPC.Preview.PossessionRowQuantity": "×{quantity}",
+  "COC7QOL.AIGenerator.NPC.Button.RemoveItem": "Remove from NPC",
 
   "COC7QOL.Settings.AIProvider.Name": "AI Generator: Provider",
   "COC7QOL.Settings.AIProvider.Hint": "LLM provider used for item generation. Changing this auto-updates the endpoint and model to provider defaults.",

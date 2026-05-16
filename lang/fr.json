@@ -44,7 +44,7 @@
   "COC7QOL.AIGenerator.Error.WeaponCreationFailed": "CoC7 AI Generator : Échec de la création de l'objet — {error}",
   "COC7QOL.AIGenerator.Error.NPCCreationFailed": "CoC7 AI Generator : Échec de la création du PNJ — {error}",
   "COC7QOL.AIGenerator.Error.NPCCreationCancelled": "CoC7 AI Generator : La création de l'acteur a été annulée.",
-  "COC7QOL.AIGenerator.Error.NPCSkillsFailed": "CoC7 AI Generator : PNJ créé mais certaines compétences ont échoué — {error}",
+  "COC7QOL.AIGenerator.Error.NPCItemsFailed": "CoC7 AI Generator : PNJ créé mais certains objets (compétences/armes/possessions) ont échoué — {error}",
 
   "COC7QOL.AIGenerator.WeaponDialog.Title": "CoC7 AI Generator — Vérifier l'Arme",
   "COC7QOL.AIGenerator.WeaponDialog.FieldDamage": "Dégâts",
@@ -60,6 +60,15 @@
   "COC7QOL.AIGenerator.NPCDialog.SectionAppearance": "Apparence",
   "COC7QOL.AIGenerator.NPCDialog.SectionPersonality": "Personnalité",
   "COC7QOL.AIGenerator.NPCDialog.SectionBackground": "Historique",
+
+  "COC7QOL.AIGenerator.NPC.Preview.WeaponsHeader": "Armes ({count})",
+  "COC7QOL.AIGenerator.NPC.Preview.WeaponsHeaderPartial": "Armes ({kept} / {count})",
+  "COC7QOL.AIGenerator.NPC.Preview.PossessionsHeader": "Possessions ({count})",
+  "COC7QOL.AIGenerator.NPC.Preview.PossessionsHeaderPartial": "Possessions ({kept} / {count})",
+  "COC7QOL.AIGenerator.NPC.Preview.WarningsHeader": "Avertissements",
+  "COC7QOL.AIGenerator.NPC.Preview.WeaponRowDamage": "{damage} • {skill}",
+  "COC7QOL.AIGenerator.NPC.Preview.PossessionRowQuantity": "×{quantity}",
+  "COC7QOL.AIGenerator.NPC.Button.RemoveItem": "Retirer du PNJ",
 
   "COC7QOL.Settings.AIProvider.Name": "Générateur IA : Fournisseur",
   "COC7QOL.Settings.AIProvider.Hint": "Fournisseur LLM utilisé pour la génération. Changer ceci met à jour automatiquement l'endpoint et le modèle.",

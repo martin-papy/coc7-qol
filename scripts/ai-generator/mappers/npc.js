@@ -240,10 +240,11 @@ export default {
       if (!raw || typeof raw !== 'object' || !raw.name) continue  // drop silently
       try {
         weaponMapper.validate(raw)
-        mapped.push(weaponMapper.toFoundryData(raw))
       } catch (err) {
         warnings.push(`Weapon "${raw.name}": ${err.message}`)
+        continue
       }
+      mapped.push(weaponMapper.toFoundryData(raw))
     }
     return mapped
   },

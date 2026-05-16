@@ -1,7 +1,7 @@
 // scripts/ai-generator/npc-confirmation-dialog.js
 // Rich read-only preview dialog for AI-generated NPC actors.
 
-import { escapeHtml, t } from '../utils.js'
+import { escapeHtml, t, tf } from '../utils.js'
 import { CHARACTERISTIC_FORMULAS } from './mappers/npc.js'
 
 export default class CoC7NPCConfirmationDialog extends foundry.applications.api.ApplicationV2 {
@@ -18,10 +18,12 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
 
   get title () { return t('COC7QOL.AIGenerator.NPCDialog.Title') }
 
-  #npcData      // { actorData, skillsRaw, llmData } from mapper.toFoundryData()
+  #npcData      // { actorData, skillsRaw, weaponsData, possessionsData, warnings, llmData }
   #acceptCallback
   #regenerateCallback
   #cancelCallback
+  #removedWeaponIndexes = new Set()
+  #removedPossessionIndexes = new Set()
 
   constructor ({ npcData, onAccept, onRegenerate, onCancel } = {}, options = {}) {
     super(options)
@@ -87,6 +89,10 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
         <div class="coc7-npc-skills-grid">${skillRows}</div>
       </div>` : ''
 
+    // --- Weapons section ---
+    const weaponsData = this.#npcData.weaponsData ?? []
+    const weaponsHtml = this.#renderWeaponsSection(weaponsData)
+
     // --- Narrative sections ---
     const narrativeSection = (label, text) => {
       if (!text) return ''
@@ -105,7 +111,7 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
         <button type="button" data-action="cancel">${t('COC7QOL.AIGenerator.Button.Cancel')}</button>
       </div>`
 
-    div.innerHTML = identityHtml + charsHtml + skillsHtml
+    div.innerHTML = identityHtml + charsHtml + skillsHtml + weaponsHtml
       + narrativeSection(t('COC7QOL.AIGenerator.NPCDialog.SectionAppearance'), llm.physicalDescription)
       + narrativeSection(t('COC7QOL.AIGenerator.NPCDialog.SectionPersonality'), llm.personalityTraits)
       + narrativeSection(t('COC7QOL.AIGenerator.NPCDialog.SectionBackground'), llm.background)
@@ -116,6 +122,39 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
 
   _replaceHTML (result, content, _options) {
     content.replaceChildren(result)
+  }
+
+  #renderWeaponsSection (weaponsData) {
+    if (!weaponsData.length) return ''
+    const total = weaponsData.length
+    const kept = total - this.#removedWeaponIndexes.size
+    const headerLabel = this.#removedWeaponIndexes.size > 0
+      ? tf('COC7QOL.AIGenerator.NPC.Preview.WeaponsHeaderPartial', { kept, count: total })
+      : tf('COC7QOL.AIGenerator.NPC.Preview.WeaponsHeader', { count: total })
+    const removeTitle = t('COC7QOL.AIGenerator.NPC.Button.RemoveItem')
+
+    const rows = weaponsData.map((w, i) => {
+      const name = w?.name ?? ''
+      const damage = w?.system?.range?.normal?.damage ?? ''
+      const skill = w?.system?.skill?.main?.name ?? ''
+      const detail = tf('COC7QOL.AIGenerator.NPC.Preview.WeaponRowDamage', {
+        damage: escapeHtml(damage),
+        skill: escapeHtml(skill)
+      })
+      const removed = this.#removedWeaponIndexes.has(i) ? ' coc7-ai-removed' : ''
+      return `
+        <div class="coc7-npc-equip-row${removed}" data-equip-kind="weapon" data-equip-index="${i}">
+          <span class="coc7-npc-equip-name">${escapeHtml(name)}</span>
+          <span class="coc7-npc-equip-detail">${detail}</span>
+          <button type="button" class="coc7-npc-equip-remove" title="${escapeHtml(removeTitle)}" aria-label="${escapeHtml(removeTitle)}">×</button>
+        </div>`
+    }).join('')
+
+    return `
+      <div class="coc7-npc-section" data-section="weapons">
+        <div class="coc7-npc-section-label">${escapeHtml(headerLabel)}</div>
+        <div class="coc7-npc-equip-list">${rows}</div>
+      </div>`
   }
 
   static async #handleAccept (_event, _target) {

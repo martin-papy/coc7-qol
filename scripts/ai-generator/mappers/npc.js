@@ -57,9 +57,12 @@ Optional fields (include when relevant, omit if not applicable):
 
 EQUIPMENT GUIDANCE:
 - Add 0–3 weapons and 3–8 possessions, all consistent with the NPC's occupation, age, era, and personality.
-- A pacifist librarian likely has 0 weapons; a 1920s detective might have a revolver and a few notebooks; a cultist might carry ritual items. Use your judgement.`
+- A pacifist librarian likely has 0 weapons; a 1920s detective might have a revolver and a few notebooks; a cultist might carry ritual items. Use your judgement.
+- For EVERY weapon you include, you MUST also list its "skill" name inside skills[] with a value appropriate to the character (e.g. a thug with a knife → "Fighting (Brawl)" at 50–70; a soldier with a rifle → "Firearms (Rifle/Shotgun)" at 60+). If you forget, a generic default will be auto-added, but it won't reflect the character's actual competence.`
 
 const REQUIRED_CHARACTERISTICS = ['str', 'con', 'siz', 'dex', 'app', 'int', 'pow', 'edu']
+
+const WEAPON_SKILL_FALLBACK_VALUE = 40
 
 export const CHARACTERISTIC_FORMULAS = {
   str: '5*(3d6)',
@@ -129,6 +132,7 @@ export default {
     const warnings = []
     const weaponsData = this._validateAndMapWeapons(data.weapons, warnings)
     const possessionsData = this._mapPossessions(data.possessions)
+    const skillsRaw = this._ensureWeaponSkills(data.skills, weaponsData, warnings)
 
     return {
       actorData: {
@@ -159,7 +163,7 @@ export default {
           }
         }
       },
-      skillsRaw: data.skills,
+      skillsRaw,
       weaponsData,
       possessionsData,
       warnings,
@@ -232,6 +236,24 @@ export default {
         }
       }
     }
+  },
+
+  _ensureWeaponSkills (rawSkills, weaponsData, warnings) {
+    const existing = Array.isArray(rawSkills) ? [...rawSkills] : []
+    if (!Array.isArray(weaponsData) || weaponsData.length === 0) return existing
+    const presentLowercase = new Set(
+      existing.map(s => (s?.name ?? '').trim().toLowerCase()).filter(Boolean)
+    )
+    for (const weapon of weaponsData) {
+      const skillName = (weapon?.system?.skill?.main?.name ?? '').trim()
+      if (!skillName) continue
+      const key = skillName.toLowerCase()
+      if (presentLowercase.has(key)) continue
+      existing.push({ name: skillName, value: WEAPON_SKILL_FALLBACK_VALUE })
+      presentLowercase.add(key)
+      warnings.push(`Auto-added skill "${skillName}" at ${WEAPON_SKILL_FALLBACK_VALUE}% (referenced by a weapon but missing from skills)`)
+    }
+    return existing
   },
 
   _validateAndMapWeapons (rawWeapons, warnings) {

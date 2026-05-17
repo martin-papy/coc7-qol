@@ -142,6 +142,8 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
 
   #attachEquipRemoveListeners (scope) {
     scope.querySelectorAll('.coc7-npc-equip-remove').forEach(btn => {
+      if (btn.dataset.listenerAttached === '1') return
+      btn.dataset.listenerAttached = '1'
       btn.addEventListener('click', (event) => {
         event.preventDefault()
         const row = btn.closest('.coc7-npc-equip-row')
@@ -202,7 +204,7 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
       return `
         <div class="coc7-npc-equip-row${removed}" data-equip-kind="weapon" data-equip-index="${i}">
           <span class="coc7-npc-equip-name">${escapeHtml(name)}</span>
-          <span class="coc7-npc-equip-detail">${detail}</span>
+          <span class="coc7-npc-equip-detail">${escapeHtml(detail)}</span>
           <button type="button" class="coc7-npc-equip-remove" title="${escapeHtml(removeTitle)}" aria-label="${escapeHtml(removeTitle)}">×</button>
         </div>`
     }).join('')

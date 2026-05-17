@@ -168,3 +168,73 @@
   gap: 0.5rem;
   padding: 0.75rem 1rem;
 }
+
+/* ─── NPC dialog: equipment rows (weapons + possessions) ─────────────────── */
+
+.coc7-npc-equip-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.coc7-npc-equip-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.2rem 0;
+  font-size: 0.85rem;
+  border-bottom: 1px solid var(--color-cool-5-75, #1f1f1f);
+}
+
+.coc7-npc-equip-name {
+  color: var(--color-text-light-3, #ccc);
+}
+
+.coc7-npc-equip-detail {
+  color: var(--color-text-light-6, #888);
+  font-size: 0.78rem;
+}
+
+.coc7-npc-equip-remove {
+  flex: 0 0 auto;
+  width: 1.5rem;
+  height: 1.5rem;
+  line-height: 1;
+  padding: 0;
+  font-size: 1rem;
+  background: transparent;
+  border: 1px solid var(--color-border-dark, #333);
+  border-radius: 4px;
+  color: var(--color-text-light-6, #888);
+  cursor: pointer;
+}
+
+.coc7-npc-equip-remove:hover {
+  color: var(--color-warm-2, #c9a96e);
+  border-color: var(--color-warm-2, #c9a96e);
+}
+
+.coc7-npc-equip-row.coc7-ai-removed .coc7-npc-equip-name,
+.coc7-npc-equip-row.coc7-ai-removed .coc7-npc-equip-detail {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
+/* ─── NPC dialog: warnings callout ───────────────────────────────────────── */
+
+.coc7-ai-warnings {
+  border-left: 3px solid var(--color-warm-2, #d4a017);
+  background: rgba(212, 160, 23, 0.08);
+}
+
+.coc7-ai-warnings-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: 0.8rem;
+  color: var(--color-text-light-5, #bbb);
+}
+
+.coc7-ai-warnings-list li {
+  margin: 0.15rem 0;
+}

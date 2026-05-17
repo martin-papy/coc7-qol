@@ -10,7 +10,8 @@ Required fields (must always be present):
 Optional fields (omit or use null if not applicable):
 - description: string — flavour text and physical description (default "")
 - range: integer or null — effective range as a plain integer with NO unit (e.g. 15, 30); null for melee weapons
-- usesPerRound: string — attacks per round (e.g. "1", "2")
+- usesPerRound: integer or string — BASE attacks per round, just a plain number (e.g. 1, 2). Do NOT use parentheses or burst ranges here.
+- usesPerRoundMax: integer or null — maximum attacks per round when faster than base (e.g. 3 quick shots from a revolver); null when not applicable. CoC7 displays this as "normal(max)".
 - bullets: number or null — magazine/cylinder capacity; null for non-firearms
 - malfunction: number or null — malfunction threshold 96–100; null for non-firearms
 - properties: object with boolean flags:
@@ -23,6 +24,31 @@ Common CoC7 skills: "Fighting (Brawl)", "Fighting (Sword)", "Fighting (Axe)", "F
 Common damage bonus usage: melee weapons typically use "addb" or "ahdb"; firearms do not.`
 
 const REQUIRED_FIELDS = ['name', 'damage', 'skill']
+
+/**
+ * Split the LLM's usesPerRound into the CoC7 schema's separate normal/max strings.
+ *
+ * Accepts: a plain number ("1", 2), CoC7's display idiom ("1(3)", "1 (3)"),
+ * a slash form ("1/3"), or a separate explicit `rawMax`. Explicit max wins.
+ * Falls back to normal="1", max=null for anything unparseable (e.g. "burst").
+ */
+function parseUsesPerRound (raw, rawMax) {
+  const baseStr = raw == null ? '' : String(raw).trim()
+  const maxStr = rawMax == null ? '' : String(rawMax).trim()
+  let normal = '1'
+  let max = null
+
+  const combined = baseStr.match(/^(\d+)\s*[(/]\s*(\d+)\s*\)?$/)
+  if (combined) {
+    normal = combined[1]
+    max = combined[2]
+  } else if (/^\d+$/.test(baseStr)) {
+    normal = baseStr
+  }
+
+  if (/^\d+$/.test(maxStr)) max = maxStr
+  return { normal, max }
+}
 
 export default {
   buildSystemPrompt () {
@@ -56,12 +82,11 @@ export default {
           extreme: { value: '', damage: '' }
         },
         usesPerRound: {
-          normal: data.usesPerRound || '1',
-          max: null,
+          ...parseUsesPerRound(data.usesPerRound, data.usesPerRoundMax),
           burst: null
         },
         bullets: data.bullets ?? null,
-        ammo: 0,
+        ammo: (typeof data.bullets === 'number' && Number.isFinite(data.bullets) && data.bullets > 0) ? data.bullets : 0,
         malfunction: data.malfunction ?? null,
         blastRadius: null,
         properties: {

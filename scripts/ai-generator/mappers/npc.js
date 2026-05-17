@@ -45,7 +45,8 @@ Optional fields (include when relevant, omit if not applicable):
   - skill: string (required) — the CoC7 skill name (e.g. "Firearms (Handgun)", "Fighting (Brawl)", "Throw")
   - description: string (optional) — flavour text
   - range: integer or null (optional) — effective range as a plain integer with NO unit (e.g. 15, 30); null for melee
-  - usesPerRound: string (optional) — attacks per round (e.g. "1", "2")
+  - usesPerRound: integer or string (optional) — BASE attacks per round, just a plain number (e.g. 1, 2). Do NOT use parentheses or burst ranges here.
+  - usesPerRoundMax: integer or null (optional) — maximum attacks per round when faster than base (e.g. 3 quick shots from a revolver); null when not applicable
   - bullets: number or null (optional) — magazine/cylinder capacity; null for non-firearms
   - malfunction: number or null (optional) — malfunction threshold 96–100; null for non-firearms
   - properties: object with boolean flags (optional): rngd (ranged), impl (impaling), addb (adds full damage bonus), ahdb (adds half damage bonus)

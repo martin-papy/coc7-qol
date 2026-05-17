@@ -133,7 +133,8 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
     content.replaceChildren(result)
   }
 
-  _onRender (_context, _options) {
+  async _onRender (_context, _options) {
+    await super._onRender(_context, _options)
     const root = this.element
     if (!root) return
     this.#attachEquipRemoveListeners(root)

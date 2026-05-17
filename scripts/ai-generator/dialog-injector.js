@@ -78,12 +78,17 @@ const NPC_PROMPT_CONFIG = {
         ui.notifications.error(t('COC7QOL.AIGenerator.Error.NPCCreationCancelled'))
         return
       }
-      if (resolvedSkills.length > 0) {
+      const items = [
+        ...resolvedSkills,
+        ...(data.weaponsData ?? []),
+        ...(data.possessionsData ?? [])
+      ]
+      if (items.length > 0) {
         try {
-          await actor.createEmbeddedDocuments('Item', resolvedSkills)
-        } catch (skillErr) {
-          console.warn('[coc7-qol] Skill attachment failed:', skillErr)
-          ui.notifications.warn(tf('COC7QOL.AIGenerator.Error.NPCSkillsFailed', { error: skillErr.message }))
+          await actor.createEmbeddedDocuments('Item', items)
+        } catch (itemErr) {
+          console.warn('[coc7-qol] Item attachment failed:', itemErr)
+          ui.notifications.warn(tf('COC7QOL.AIGenerator.Error.NPCItemsFailed', { error: itemErr.message }))
         }
       }
       actor?.sheet?.render(true)

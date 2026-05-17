@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.4.6] - 2026-05-17
+
+### Added
+
+- **AI NPC equipment** — NPC generation now returns weapons and possessions alongside characteristics and skills. Weapons render in a dedicated section of the confirmation dialog (name, skill, damage, range, ammo); possessions render as a flat list. Items can be toggled on/off before acceptance and are created in a single batch on accept.
+- **AI NPC warnings** — A warnings section in the confirmation dialog surfaces non-blocking issues raised by the generator (e.g. ambiguous skill, suspicious value) so the GM can review them before creating the actor.
+- **Language-aware prompts** — The NPC system prompt now instructs the model to honour the world locale for names and prose, so output matches the language of the campaign.
+- **Roll visibility selector** — A roll visibility dropdown (public / private / blind / self) is now embedded in the CoC7 bonus dialog. The last choice is remembered per user and persisted through CoC7 standby flags so it survives the standby → resolve roundtrip.
+
+### Fixed
+
+- AI-generated NPCs that reference a weapon now also get the matching skill auto-added when it is missing from the skills list (e.g. *Pocket Knife* → *Fighting (Brawl)*), with a fallback skill value of 20.
+- Civilian NPCs default to 0 weapons unless the role is explicitly combat — pharmacists no longer ship with revolvers.
+- Weapon `usesPerRound` split into `normal` and `max` so multi-shot weapons map correctly to CoC7's data model, and default ammo now falls back to magazine capacity instead of zero.
+- Weapon detail span in the NPC confirmation dialog is HTML-escaped, and remove listeners are deduplicated to avoid double-firing on re-render.
+
 ## [0.4.5] - 2026-05-13
 
 ### Security
@@ -101,7 +117,8 @@ All notable changes to this project will be documented in this file.
 
 - **Item Image Popout** — Players can click on any item image to view the full-size illustration in a draggable, resizable popout window. GMs retain the default file picker behavior.
 
-[Unreleased]: https://github.com/martin-papy/coc7-qol/compare/v0.4.5...HEAD
+[Unreleased]: https://github.com/martin-papy/coc7-qol/compare/v0.4.6...HEAD
+[0.4.6]: https://github.com/martin-papy/coc7-qol/compare/v0.4.5...v0.4.6
 [0.4.5]: https://github.com/martin-papy/coc7-qol/compare/v0.4.4...v0.4.5
 [0.4.4]: https://github.com/martin-papy/coc7-qol/compare/v0.4.3...v0.4.4
 [0.4.3]: https://github.com/martin-papy/coc7-qol/compare/v0.4.2...v0.4.3

@@ -47,9 +47,13 @@ The AI sparkle button appears automatically when a supported type is selected in
      <td><img src="images/Create-NPC-3a.png" alt="Review NPC dialog — random characteristics"/></td>
      <td><img src="images/Create-NPC-3b.png" alt="Review NPC dialog — fixed characteristics"/></td>
    </tr></table>
-7. The NPC actor is created with all characteristics set, skills resolved from the CoC7 compendium, and narrative text populated in the biography and keeper notes
+7. The NPC actor is created with all characteristics set, skills resolved from the CoC7 compendium, weapons and possessions added as items, and narrative text populated in the biography and keeper notes
 
-Skills are matched against the official CoC7 skills compendium when available, preserving proper skill flags and identifiers. Derived attributes (HP, MP, SAN, MOV, Build, Damage Bonus) are computed automatically by the system.
+Skills are matched against the official CoC7 skills compendium when available, preserving proper skill flags and identifiers. Weapons come with their matching combat skill auto-added when missing (e.g. a pocket knife adds *Fighting (Brawl)*). Combat-role NPCs get armed; civilians default to no weapons. Derived attributes (HP, MP, SAN, MOV, Build, Damage Bonus) are computed automatically by the system. Names and prose follow the configured world language.
+
+### Roll Visibility Selector
+
+The CoC7 bonus/penalty dialog now includes a **roll visibility** dropdown (public / private / blind / self). Your last choice is remembered per user and is preserved across the standby → resolve flow, so you no longer have to re-pick visibility every time you roll.
 
 ### Close All Cards (GM only)
 

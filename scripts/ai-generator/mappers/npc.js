@@ -56,9 +56,9 @@ Optional fields (include when relevant, omit if not applicable):
   - quantity: integer (optional, default 1) — positive integer
 
 EQUIPMENT GUIDANCE:
-- Add 0–3 weapons and 3–8 possessions, all consistent with the NPC's occupation, age, era, and personality.
-- A pacifist librarian likely has 0 weapons; a 1920s detective might have a revolver and a few notebooks; a cultist might carry ritual items. Use your judgement.
-- For EVERY weapon you include, you MUST also list its "skill" name inside skills[] with a value appropriate to the character (e.g. a thug with a knife → "Fighting (Brawl)" at 50–70; a soldier with a rifle → "Firearms (Rifle/Shotgun)" at 60+). If you forget, a generic default will be auto-added, but it won't reflect the character's actual competence.`
+- Possessions: 3–8 items consistent with the NPC's occupation, age, era, and personality. A shopkeeper might have keys, a ledger, and a pen; a doctor a stethoscope and a notebook; a 1920s detective notebooks and a magnifying glass; a cultist ritual trinkets.
+- Weapons: 0 is the DEFAULT for most NPCs. Include weapons ONLY when the role clearly calls for them — soldiers, hunters, criminals, gangsters, private investigators, bodyguards, vigilantes, monster-hunters, beat cops on duty. Ordinary civilians and professionals (shopkeepers, teachers, doctors, clerks, librarians, scholars, dock workers, farmers, journalists, accountants, etc.) carry 0 weapons by default, EVEN in violent settings or eras like 1920s America. Do not arm a character just because the era is dangerous.
+- If you do include weapons (typically 1–3 when justified), EVERY weapon's "skill" name MUST appear in skills[] with an appropriate value (e.g. a thug with a knife → "Fighting (Brawl)" at 30–60; a soldier with a rifle → "Firearms (Rifle/Shotgun)" at 50+). If you forget the skill, a generic default will be auto-added, but it won't reflect the character's actual competence.`
 
 const REQUIRED_CHARACTERISTICS = ['str', 'con', 'siz', 'dex', 'app', 'int', 'pow', 'edu']
 

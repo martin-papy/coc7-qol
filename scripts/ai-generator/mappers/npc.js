@@ -62,7 +62,7 @@ EQUIPMENT GUIDANCE:
 
 const REQUIRED_CHARACTERISTICS = ['str', 'con', 'siz', 'dex', 'app', 'int', 'pow', 'edu']
 
-const WEAPON_SKILL_FALLBACK_VALUE = 40
+const WEAPON_SKILL_FALLBACK_VALUE = 20
 
 export const CHARACTERISTIC_FORMULAS = {
   str: '5*(3d6)',

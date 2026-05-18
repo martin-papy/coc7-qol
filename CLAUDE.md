@@ -29,14 +29,45 @@ Targets FoundryVTT v13+ only. The `html` parameter in render hooks is an HTMLEle
 
 ## Releasing
 
-Releases are created via `gh` CLI. The release zip must contain only the files needed at runtime (`module.json` + `scripts/`):
+Releases are automated by `.github/workflows/release.yml`, which fires on any tag matching `v*`.
 
-```bash
-zip -r /tmp/coc7-qol.zip module.json scripts/
-gh release create vX.Y.Z --title "vX.Y.Z" --notes "Release notes" /tmp/coc7-qol.zip module.json
+### Standard flow
+
+1. Bump `version` in `module.json` to `X.Y.Z`.
+2. Update `download` in `module.json` to `https://github.com/martin-papy/coc7-qol/releases/download/vX.Y.Z/coc7-qol.zip` (the `v`-prefixed tag is required).
+3. Commit the `module.json` change to `main`.
+4. Tag and push: `git tag vX.Y.Z && git push origin vX.Y.Z`.
+5. Watch the **Release** workflow run on GitHub Actions. The job summary on a successful run contains the GitHub release URL and the FoundryVTT package edit URL.
+
+Pre-release tags (`vX.Y.Z-beta.N`, `vX.Y.Z-rc.N`, etc.) create a GitHub pre-release and skip the FoundryVTT publish step.
+
+### Required secret
+
+`FOUNDRY_RELEASE_TOKEN` — the `fvttp_...` token from the "Package Release Token" field on the package admin page at `https://foundryvtt.com/packages/coc7-qol/edit/`. Set it in the repository secrets (Settings → Secrets and variables → Actions).
+
+### Zip contents
+
+The workflow builds `coc7-qol.zip` containing the runtime files referenced by `module.json`:
+
+```
+module.json
+scripts/
+styles/
+lang/
 ```
 
-**Important:** The `download` URL in `module.json` must use the `v`-prefixed tag (e.g., `v0.1.0`, not `0.1.0`). Update this URL when bumping versions.
+`images/`, `docs/`, `temp/`, `CHANGELOG.md`, `README.md`, `LICENSE`, and `.github/` are repo-only and excluded.
+
+### Manual fallback
+
+If the workflow is broken or unavailable, the release can be produced by hand:
+
+```bash
+zip -r /tmp/coc7-qol.zip module.json scripts/ styles/ lang/
+gh release create vX.Y.Z --title "vX.Y.Z" --generate-notes /tmp/coc7-qol.zip module.json
+```
+
+Then submit the release to FoundryVTT by editing the package on foundryvtt.com (no automated submission in this path).
 
 ## Testing
 

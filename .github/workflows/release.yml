@@ -14,3 +14,37 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Parse module.json and tag
+        id: parse
+        run: |
+          set -euo pipefail
+
+          TAG="${GITHUB_REF_NAME}"
+          VERSION_FROM_TAG="${TAG#v}"
+
+          MODULE_ID=$(jq -r '.id'                          module.json)
+          MODULE_VERSION=$(jq -r '.version'                module.json)
+          MODULE_DOWNLOAD=$(jq -r '.download'              module.json)
+          COMPAT_MIN=$(jq -r '.compatibility.minimum'      module.json)
+          COMPAT_VERIFIED=$(jq -r '.compatibility.verified' module.json)
+          COMPAT_MAX=$(jq -r '.compatibility.maximum // ""' module.json)
+
+          IS_STABLE=false
+          if [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            IS_STABLE=true
+          fi
+
+          {
+            echo "TAG=$TAG"
+            echo "VERSION_FROM_TAG=$VERSION_FROM_TAG"
+            echo "MODULE_ID=$MODULE_ID"
+            echo "MODULE_VERSION=$MODULE_VERSION"
+            echo "MODULE_DOWNLOAD=$MODULE_DOWNLOAD"
+            echo "COMPAT_MIN=$COMPAT_MIN"
+            echo "COMPAT_VERIFIED=$COMPAT_VERIFIED"
+            echo "COMPAT_MAX=$COMPAT_MAX"
+            echo "IS_STABLE=$IS_STABLE"
+          } >> "$GITHUB_ENV"
+
+          echo "Parsed: tag=$TAG version=$MODULE_VERSION id=$MODULE_ID stable=$IS_STABLE"

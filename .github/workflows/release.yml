@@ -84,3 +84,22 @@ jobs:
           zip -r coc7-qol.zip module.json scripts/ styles/ lang/
           echo "Zip contents:"
           unzip -l coc7-qol.zip
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          PRERELEASE_FLAG="--prerelease"
+          if [[ "$IS_STABLE" == "true" ]]; then
+            PRERELEASE_FLAG="--latest"
+          fi
+
+          gh release create "$TAG" \
+            coc7-qol.zip module.json \
+            --title "$TAG" \
+            --generate-notes \
+            $PRERELEASE_FLAG
+
+          echo "GitHub release created: https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG}"

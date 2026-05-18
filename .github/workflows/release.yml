@@ -48,3 +48,32 @@ jobs:
           } >> "$GITHUB_ENV"
 
           echo "Parsed: tag=$TAG version=$MODULE_VERSION id=$MODULE_ID stable=$IS_STABLE"
+
+      - name: Preflight assertions
+        run: |
+          set -euo pipefail
+
+          fail() { echo "::error::$1"; exit 1; }
+
+          # 1. Tag format
+          if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?$ ]]; then
+            fail "Tag '$TAG' does not match vX.Y.Z[-suffix]"
+          fi
+
+          # 2. Tag version matches module.json
+          if [[ "$VERSION_FROM_TAG" != "$MODULE_VERSION" ]]; then
+            fail "Tag version '$VERSION_FROM_TAG' does not match module.json .version '$MODULE_VERSION'"
+          fi
+
+          # 3. download URL points at this tag's zip
+          EXPECTED_DOWNLOAD="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/coc7-qol.zip"
+          if [[ "$MODULE_DOWNLOAD" != "$EXPECTED_DOWNLOAD" ]]; then
+            fail "module.json .download is '$MODULE_DOWNLOAD' but expected '$EXPECTED_DOWNLOAD'"
+          fi
+
+          # 4. Required Foundry fields are non-empty
+          [[ -n "$MODULE_ID"        ]] || fail "module.json .id is empty"
+          [[ -n "$COMPAT_MIN"       ]] || fail "module.json .compatibility.minimum is empty"
+          [[ -n "$COMPAT_VERIFIED"  ]] || fail "module.json .compatibility.verified is empty"
+
+          echo "Preflight OK: id=$MODULE_ID version=$MODULE_VERSION download=$MODULE_DOWNLOAD"

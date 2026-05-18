@@ -1,96 +1,72 @@
 # CoC7 QoL Improvements
 
-A companion module for the [Call of Cthulhu 7th Edition](https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT) system on [FoundryVTT](https://foundryvtt.com/).
+> *Spend less time wrestling with sheets, more time describing the shadows.*
 
-## Features
+A companion module for the [Call of Cthulhu 7th Edition](https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT) system on [FoundryVTT](https://foundryvtt.com/). It hooks alongside CoC7 — no patches, no overrides, no breakage when the system updates — and adds a handful of small but meaningful improvements to everyday play.
 
-### AI Generation (GM only)
+If you Keep CoC7 games and find yourself doing the same tedious thing for the fifth time in a session, this module is probably for you.
 
-Generate CoC7 content from natural-language descriptions, directly inside FoundryVTT. Supports **Anthropic (Claude)**, **OpenAI (GPT)**, and **Google Gemini**. Configure your provider, API key, endpoint, and model under **Settings → Module Settings → CoC7 QoL Improvements**.
+## What's inside
 
-The AI sparkle button appears automatically when a supported type is selected in the creation dialog.
+| Feature | What it does | For |
+|---|---|---|
+| [🎲 Roll Visibility Selector](#-roll-visibility-selector) | Pick public / private / blind / self per roll — and remember your last choice | Everyone |
+| [🗂️ Close All Cards](#-close-all-cards) | Sweep stale chat cards out of the way in one click | GM |
+| [🖼️ Item Image Popouts](#-item-image-popouts) | Click any item portrait to see it full size, draggable, resizable | Everyone |
+| [✨ AI Generation](#-ai-generation) | Conjure fully-statted weapons and NPCs from a one-line description | GM |
 
-#### Weapon Generation
+---
 
-1. Open the Items sidebar and click **Create Item**
-2. Select **Weapon** as the type — a sparkle icon appears
+## 🎲 Roll Visibility Selector
 
-   ![Create Item dialog with sparkle button](images/Create-Weapon-1.png)
+The CoC7 bonus/penalty dialog now sports a **visibility** dropdown — public, private, blind, or self. Your last choice sticks per user and is preserved across the standby → resolve flow, so you stop re-picking it every single roll.
 
-3. Click the sparkle, then describe your weapon in plain language (e.g. *"A worn 1920s revolver, .38 calibre, 6-shot cylinder, wood grip"*)
-4. Click **Generate** — the module calls your configured LLM and fills in all CoC7 weapon fields
+Small change. Big difference once you've made fifty rolls in a session.
 
-   ![Weapon description prompt](images/Create-Weapon-2.png)
+[**Read more →**](docs/features/roll-visibility.md)
 
-5. Review the stats (name, damage, skill, range, ammo…), edit the name if needed, then click **Accept**
+---
 
-   ![Review Weapon dialog showing generated .44 Magnum stats](images/Create-Weapon-3.png)
+## 🗂️ Close All Cards
 
-6. The item is created in your world and its sheet opens immediately
+Open the Keeper's toolbar (the tentacle-strike icon), click **Close All Cards**, and pick exactly which lingering chat cards to dismiss — listed by type, actor, and timestamp. Particularly useful when accumulated open cards start blocking new rolls.
 
-#### NPC Generation
+![Close All Cards selection dialog](images/Close-Cards-2.png)
 
-1. Open the Actors sidebar and click **Create Actor**
-2. Select **NPC** as the type — a sparkle icon appears
+[**Read more →**](docs/features/close-all-cards.md)
 
-   ![Create Actor dialog with sparkle button](images/Create-NPC-1.png)
+---
 
-3. Click the sparkle, then describe your NPC in plain language (e.g. *"A nervous pharmacist in 1920s Arkham, middle-aged, hides a laudanum habit"*)
-4. Optionally tick **Random characteristics** — the AI returns rulebook dice formulas (e.g. `5*(3d6)`) instead of fixed values, so each characteristic is rolled fresh when the token is dropped on the canvas
-5. Click **Generate** — the LLM creates a complete NPC with characteristics, skills, and backstory
+## 🖼️ Item Image Popouts
 
-   ![NPC description prompt with Random characteristics option](images/Create-NPC-2.png)
-
-6. Review the full stat block (STR/CON/SIZ/DEX/APP/INT/POW/EDU), skills list, and narrative (appearance, personality, background), then click **Accept**
-
-   <table><tr>
-     <td><img src="images/Create-NPC-3a.png" alt="Review NPC dialog — random characteristics"/></td>
-     <td><img src="images/Create-NPC-3b.png" alt="Review NPC dialog — fixed characteristics"/></td>
-   </tr></table>
-7. The NPC actor is created with all characteristics set, skills resolved from the CoC7 compendium, weapons and possessions added as items, and narrative text populated in the biography and keeper notes
-
-Skills are matched against the official CoC7 skills compendium when available, preserving proper skill flags and identifiers. Weapons come with their matching combat skill auto-added when missing (e.g. a pocket knife adds *Fighting (Brawl)*). Combat-role NPCs get armed; civilians default to no weapons. Derived attributes (HP, MP, SAN, MOV, Build, Damage Bonus) are computed automatically by the system. Names and prose follow the configured world language.
-
-### Roll Visibility Selector
-
-The CoC7 bonus/penalty dialog now includes a **roll visibility** dropdown (public / private / blind / self). Your last choice is remembered per user and is preserved across the standby → resolve flow, so you no longer have to re-pick visibility every time you roll.
-
-### Close All Cards (GM only)
-
-GMs can close all open chat cards in one action, directly from the Keeper's toolbar.
-
-1. Click the tentacle-strike icon in the scene controls toolbar to open the Keeper's tools
-2. Click the **Close All Cards** button (the ╳-lines icon)
-
-   ![Close All Cards button in the Keeper's toolbar](images/Close-Cards-1.png)
-
-3. A dialog lists every open card in the chat log with its type, actor name, and timestamp
-4. Use the select-all checkbox or pick individual cards to close
-
-   ![Close All Cards selection dialog](images/Close-Cards-2.png)
-
-5. Click **Close Selected** — the selected cards are resolved and their action buttons removed
-
-This is useful when accumulated open cards block new rolls from being initiated.
-
-### Item Image Popout
-
-Players can click on any item image (weapons, spells, books, skills, etc.) to view the full-size illustration in a draggable, resizable popout window. GMs retain the default file picker behavior.
-
-### Possession Tab Item Image Popout
-
-Players and GMs can click on the small item icon in the Gear & Cash tab of the character sheet to view the full-size illustration in a popout window. Works for all item types shown in that tab: items, weapons, books, spells, armor, talents, and statuses.
+Players can finally click on an item's portrait and see the actual art — no GM-only file picker getting in the way. Works on the item sheet itself and on the small icons in the Gear & Cash tab. GMs keep their default editing behavior where it makes sense.
 
 ![Item image popout from the Gear & Cash tab](images/Popup-Image.png)
 
+[**Read more →**](docs/features/item-image-popouts.md)
+
+---
+
+## ✨ AI Generation
+
+Open the Create Item dialog, pick **Weapon**, and a sparkle icon appears. Type *"A worn 1920s revolver, .38 calibre, 6-shot cylinder, wood grip"* and get a fully-statted CoC7 weapon back — skill, damage, range, ammo, malfunction. Or pick **NPC** in the Create Actor dialog and describe a character (*"A nervous pharmacist in 1920s Arkham, middle-aged, hides a laudanum habit"*) to get the full stat block, skills resolved against the official CoC7 compendium, weapons, possessions, biography, and Keeper notes — ready to drop on the canvas.
+
+Plug in your own key for **Anthropic Claude**, **OpenAI GPT**, or **Google Gemini** under **Settings → Module Settings → CoC7 QoL Improvements**. Your prompt goes straight to the provider you chose — the module doesn't proxy your traffic.
+
+![Generated weapon stats](images/Create-Weapon-3.png)
+
+[**Read the full walkthrough →**](docs/features/ai-generation.md)
+
+---
+
 ## Internationalization
 
-All user-visible strings in the module are translated via FoundryVTT's i18n system. Currently supported languages:
+All user-visible strings flow through FoundryVTT's i18n system. Currently shipping with:
 
 - **English** (en)
 - **Français** (fr)
 
-Dialogs, buttons, settings, and notifications automatically display in your configured FoundryVTT language. Contributions for additional languages are welcome.
+Dialogs, buttons, settings, and notifications follow your configured Foundry language. PRs for additional languages are very welcome.
 
 ## Installation
 
@@ -112,7 +88,7 @@ Dialogs, buttons, settings, and notifications automatically display in your conf
 ## Compatibility
 
 - **FoundryVTT:** v13+
-- **System:** Call of Cthulhu 7th Edition (CoC7) - v8.x
+- **System:** Call of Cthulhu 7th Edition (CoC7) — v8.x
 
 ## License
 

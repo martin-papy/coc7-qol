@@ -9,6 +9,8 @@ The CoC7 bonus/penalty dialog now includes a **roll visibility** dropdown with f
 - **Blind GM Roll** — hidden even from the GM until revealed
 - **Self Roll** — visible only to you
 
+![Roll Visibility Selector](../../images/Roll-Visibility.png)
+
 ## What changes in practice
 
 - **Your last choice is remembered, per user.** Next time you roll, the dropdown is already on the visibility you usually use — no re-picking.

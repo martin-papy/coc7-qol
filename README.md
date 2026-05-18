@@ -23,6 +23,8 @@ The CoC7 bonus/penalty dialog now sports a **visibility** dropdown — public, p
 
 Small change. Big difference once you've made fifty rolls in a session.
 
+![Roll Visibility Selector](images/Roll-Visibility.png)
+
 [**Read more →**](docs/features/roll-visibility.md)
 
 ---

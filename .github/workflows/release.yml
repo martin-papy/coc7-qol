@@ -188,3 +188,20 @@ jobs:
           FOUNDRY_PAGE=$(echo "$REAL_RESPONSE" | jq -r '.page')
           echo "FOUNDRY_PAGE=$FOUNDRY_PAGE" >> "$GITHUB_ENV"
           echo "Foundry publish succeeded: $FOUNDRY_PAGE"
+
+      - name: Job summary
+        if: always()
+        run: |
+          set -euo pipefail
+          {
+            echo "## Release ${TAG}"
+            echo ""
+            echo "- GitHub release: https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG}"
+            if [[ "${IS_STABLE:-false}" == "true" ]]; then
+              echo "- Foundry publish: ${FOUNDRY_PAGE:-N/A}"
+              echo "- Manifest: https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/module.json"
+              echo "- Compatibility: min ${COMPAT_MIN:-?} / verified ${COMPAT_VERIFIED:-?}"
+            else
+              echo "- Foundry publish: skipped (pre-release tag)"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

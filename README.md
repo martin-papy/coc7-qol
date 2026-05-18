@@ -1,7 +1,5 @@
 # CoC7 QoL Improvements
 
-> *Spend less time wrestling with sheets, more time describing the shadows.*
-
 A companion module for the [Call of Cthulhu 7th Edition](https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT) system on [FoundryVTT](https://foundryvtt.com/). It hooks alongside CoC7 — no patches, no overrides, no breakage when the system updates — and adds a handful of small but meaningful improvements to everyday play.
 
 If you Keep CoC7 games and find yourself doing the same tedious thing for the fifth time in a session, this module is probably for you.
@@ -10,7 +8,7 @@ If you Keep CoC7 games and find yourself doing the same tedious thing for the fi
 
 | Feature | What it does | For |
 |---|---|---|
-| [🎲 Roll Visibility Selector](#-roll-visibility-selector) | Pick public / private / blind / self per roll — and remember your last choice | Everyone |
+| [🎲 Roll Visibility Selector](#-roll-visibility-selector) | Easily pick public / private / blind per roll — and remember your last choice | Everyone |
 | [🗂️ Close All Cards](#-close-all-cards) | Sweep stale chat cards out of the way in one click | GM |
 | [🖼️ Item Image Popouts](#-item-image-popouts) | Click any item portrait to see it full size, draggable, resizable | Everyone |
 | [✨ AI Generation](#-ai-generation) | Conjure fully-statted weapons and NPCs from a one-line description | GM |
@@ -19,7 +17,7 @@ If you Keep CoC7 games and find yourself doing the same tedious thing for the fi
 
 ## 🎲 Roll Visibility Selector
 
-The CoC7 bonus/penalty dialog now sports a **visibility** dropdown — public, private, blind, or self. Your last choice sticks per user and is preserved across the standby → resolve flow, so you stop re-picking it every single roll.
+The CoC7 bonus/penalty dialog now sports a **visibility** dropdown — public, private, or blind. Makes the use Private/Blind rolls way easier. Your last choice sticks per user and is preserved across the standby.
 
 Small change. Big difference once you've made fifty rolls in a session.
 

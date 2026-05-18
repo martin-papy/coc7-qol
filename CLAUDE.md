@@ -27,6 +27,12 @@ The `scripts/ai-generator/` directory uses an extensible registry pattern:
 
 Targets FoundryVTT v13+ only. The `html` parameter in render hooks is an HTMLElement, and `ImagePopout` is at `foundry.applications.apps.ImagePopout` (ApplicationV2).
 
+## Development workflow
+
+- The default ongoing development branch is `develop`. `main` only receives released code.
+- Unless explicitly instructed otherwise, every new feature or fix gets its own branch off `develop`, named `feature-xxx` for features or `bugfix-yyy` for fixes. Use branches, not git worktrees.
+- A change ships in two PRs: feature/bugfix branch → `develop`, then `develop` → `main`. The release workflow then runs from the tag pushed on `main` (see [Releasing](#releasing)).
+
 ## Releasing
 
 Releases are automated by `.github/workflows/release.yml`, which fires on any tag matching `v*`.
@@ -35,8 +41,8 @@ Releases are automated by `.github/workflows/release.yml`, which fires on any ta
 
 1. Bump `version` in `module.json` to `X.Y.Z`.
 2. Update `download` in `module.json` to `https://github.com/martin-papy/coc7-qol/releases/download/vX.Y.Z/coc7-qol.zip` (the `v`-prefixed tag is required).
-3. Commit the `module.json` change to `main`.
-4. Tag and push: `git tag vX.Y.Z && git push origin vX.Y.Z`.
+3. Land the `module.json` change on `main` via the normal flow: commit on `develop` (or a `feature-release-X.Y.Z` branch into `develop`), then open a `develop` → `main` PR and merge it.
+4. From `main` at the merged commit, tag and push: `git tag vX.Y.Z && git push origin vX.Y.Z`.
 5. Watch the **Release** workflow run on GitHub Actions. The job summary on a successful run contains the GitHub release URL and the FoundryVTT package edit URL.
 
 Pre-release tags (`vX.Y.Z-beta.N`, `vX.Y.Z-rc.N`, etc.) create a GitHub pre-release and skip the FoundryVTT publish step.

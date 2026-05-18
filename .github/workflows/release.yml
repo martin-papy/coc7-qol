@@ -77,3 +77,10 @@ jobs:
           [[ -n "$COMPAT_VERIFIED"  ]] || fail "module.json .compatibility.verified is empty"
 
           echo "Preflight OK: id=$MODULE_ID version=$MODULE_VERSION download=$MODULE_DOWNLOAD"
+
+      - name: Build release zip
+        run: |
+          set -euo pipefail
+          zip -r coc7-qol.zip module.json scripts/ styles/ lang/
+          echo "Zip contents:"
+          unzip -l coc7-qol.zip

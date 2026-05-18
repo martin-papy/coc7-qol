@@ -103,3 +103,88 @@ jobs:
             $PRERELEASE_FLAG
 
           echo "GitHub release created: https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG}"
+
+      - name: Foundry publish (stable only)
+        if: env.IS_STABLE == 'true'
+        env:
+          FOUNDRY_RELEASE_TOKEN: ${{ secrets.FOUNDRY_RELEASE_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${FOUNDRY_RELEASE_TOKEN:-}" ]]; then
+            echo "::error::FOUNDRY_RELEASE_TOKEN secret is not set"
+            exit 1
+          fi
+
+          MANIFEST_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/module.json"
+          NOTES_URL="https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG}"
+
+          # 1. Reachability: up to 3 attempts with 5s backoff
+          for attempt in 1 2 3; do
+            if curl -fsSL --head -o /dev/null "$MANIFEST_URL"; then
+              echo "Manifest reachable on attempt $attempt: $MANIFEST_URL"
+              break
+            fi
+            if [[ $attempt -eq 3 ]]; then
+              echo "::error::Manifest URL not reachable after 3 attempts: $MANIFEST_URL"
+              exit 1
+            fi
+            echo "Manifest not reachable yet, retrying in 5s..."
+            sleep 5
+          done
+
+          # 2. Build payload.json
+          jq -n \
+            --arg id        "$MODULE_ID" \
+            --arg version   "$MODULE_VERSION" \
+            --arg manifest  "$MANIFEST_URL" \
+            --arg notes     "$NOTES_URL" \
+            --arg minimum   "$COMPAT_MIN" \
+            --arg verified  "$COMPAT_VERIFIED" \
+            --arg maximum   "$COMPAT_MAX" \
+            '{
+              id: $id,
+              "dry-run": true,
+              release: ({
+                version: $version,
+                manifest: $manifest,
+                notes: $notes,
+                compatibility: ({
+                  minimum: $minimum,
+                  verified: $verified
+                } + (if $maximum == "" then {} else {maximum: $maximum} end))
+              })
+            }' > payload.json
+
+          echo "Dry-run payload:"
+          cat payload.json
+
+          # 3. Dry-run POST
+          DRY_RESPONSE=$(curl -sS -X POST https://foundryvtt.com/_api/packages/release_version/ \
+            -H "Authorization: $FOUNDRY_RELEASE_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d @payload.json)
+
+          echo "Dry-run response: $DRY_RESPONSE"
+          if [[ "$(echo "$DRY_RESPONSE" | jq -r '.status')" != "success" ]]; then
+            echo "::error::Foundry dry-run failed: $DRY_RESPONSE"
+            exit 1
+          fi
+
+          # 4. Real POST (strip dry-run field)
+          jq 'del(."dry-run")' payload.json > payload-real.json
+
+          REAL_RESPONSE=$(curl -sS -X POST https://foundryvtt.com/_api/packages/release_version/ \
+            -H "Authorization: $FOUNDRY_RELEASE_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d @payload-real.json)
+
+          echo "Real submit response: $REAL_RESPONSE"
+          if [[ "$(echo "$REAL_RESPONSE" | jq -r '.status')" != "success" ]]; then
+            echo "::error::Foundry real submit failed: $REAL_RESPONSE"
+            exit 1
+          fi
+
+          FOUNDRY_PAGE=$(echo "$REAL_RESPONSE" | jq -r '.page')
+          echo "FOUNDRY_PAGE=$FOUNDRY_PAGE" >> "$GITHUB_ENV"
+          echo "Foundry publish succeeded: $FOUNDRY_PAGE"

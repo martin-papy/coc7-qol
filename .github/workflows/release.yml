@@ -47,6 +47,8 @@ jobs:
             echo "IS_STABLE=$IS_STABLE"
           } >> "$GITHUB_ENV"
 
+          echo "is_stable=$IS_STABLE" >> "$GITHUB_OUTPUT"
+
           echo "Parsed: tag=$TAG version=$MODULE_VERSION id=$MODULE_ID stable=$IS_STABLE"
 
       - name: Preflight assertions
@@ -105,7 +107,7 @@ jobs:
           echo "GitHub release created: https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG}"
 
       - name: Foundry publish (stable only)
-        if: env.IS_STABLE == 'true'
+        if: steps.parse.outputs.is_stable == 'true'
         env:
           FOUNDRY_RELEASE_TOKEN: ${{ secrets.FOUNDRY_RELEASE_TOKEN }}
         run: |

@@ -278,7 +278,8 @@ merge_back() {
 
   # Sync local develop with origin/develop. Ahead is fine (push will publish), diverged is fatal.
   local counts behind ahead
-  counts=$(git rev-list --left-right --count origin/develop...HEAD)
+  counts=$(git rev-list --left-right --count origin/develop...HEAD) \
+    || die 4 "release succeeded but could not compare origin/develop and HEAD. Manually run: git pull --ff-only origin develop && git merge main && git push origin develop"
   behind=$(printf '%s' "$counts" | awk '{print $1}')
   ahead=$(printf '%s' "$counts" | awk '{print $2}')
   if [[ "$behind" != "0" && "$ahead" == "0" ]]; then

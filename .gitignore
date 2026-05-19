@@ -3,3 +3,4 @@ coc7-qol.code-workspace
 .worktrees/
 .superpowers/
 temp/
+module.json.tmp

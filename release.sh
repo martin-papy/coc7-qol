@@ -226,16 +226,20 @@ plan_summary() {
 execute_release() {
   local download_url="${DOWNLOAD_URL_BASE}/v${TARGET}/coc7-qol.zip"
 
-  # 1. Edit module.json
-  jq --arg v "$TARGET" --arg dl "$download_url" \
-     '.version = $v | .download = $dl' module.json > module.json.tmp \
-     && mv module.json.tmp module.json \
-     || die 4 "module.json edit failed — no changes committed."
+  # 1. Detect no-op: if module.json already has the target values, skip the edit/commit/push entirely.
+  local current_ver current_dl
+  current_ver=$(jq -r '.version' module.json)
+  current_dl=$(jq -r '.download' module.json)
 
-  # 2. No-op detection: skip commit/push if jq produced no diff
-  if git diff --quiet module.json; then
+  if [[ "$current_ver" == "$TARGET" && "$current_dl" == "$download_url" ]]; then
     log "module.json already up to date; skipping main commit."
   else
+    # 2. Edit module.json atomically
+    jq --arg v "$TARGET" --arg dl "$download_url" \
+       '.version = $v | .download = $dl' module.json > module.json.tmp \
+       && mv module.json.tmp module.json \
+       || die 4 "module.json edit failed — run 'rm -f module.json.tmp' then re-run release.sh."
+
     # 3. Commit
     git add module.json
     git commit -m "chore: release v${TARGET}" \
@@ -243,7 +247,7 @@ execute_release() {
 
     # 4. Push main
     git push origin main \
-      || die 4 "push rejected — remote moved. Reset with 'git reset --hard HEAD~1' and re-run release.sh."
+      || die 4 "push origin main failed. If the remote moved: 'git reset --hard HEAD~1' then re-run. Otherwise fix the push error and re-run."
   fi
 
   # 5. Create tag

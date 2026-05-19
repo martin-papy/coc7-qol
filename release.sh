@@ -176,6 +176,25 @@ pick_target() {
 }
 
 # ----------------------------------------------------------------------------
+# CHANGELOG validation
+# ----------------------------------------------------------------------------
+
+changelog_check() {
+  # Escape dots in TARGET so they're literal in the regex.
+  local pattern
+  pattern="^## \[${TARGET//./\\.}\] - [0-9]{4}-[0-9]{2}-[0-9]{2}( |$)"
+
+  local count
+  count=$(grep -cE "$pattern" CHANGELOG.md || true)
+
+  case "$count" in
+    0) die 3 "CHANGELOG.md is missing an entry for v${TARGET}. Add a section \"## [${TARGET}] - YYYY-MM-DD\" before releasing." ;;
+    1) log "✓ CHANGELOG entry for v${TARGET} found" ;;
+    *) die 3 "CHANGELOG.md has duplicate entries for v${TARGET} (found $count)." ;;
+  esac
+}
+
+# ----------------------------------------------------------------------------
 # main
 # ----------------------------------------------------------------------------
 
@@ -183,8 +202,9 @@ main() {
   preflight
   read_versions
   pick_target
+  changelog_check
   log ""
-  log "DEBUG: TARGET=$TARGET"
+  log "DEBUG: TARGET=$TARGET (changelog ok)"
 }
 
 main "$@"

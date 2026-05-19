@@ -5,6 +5,11 @@
 set -euo pipefail
 IFS=$'\n\t'
 
+# Globals set by read_versions / pick_target, consumed by later phases:
+#   CURRENT — stable semver from module.json (no 'v' prefix)
+#   LATEST  — latest published stable release (no 'v' prefix); "0.0.0" if none
+#   TARGET  — the version string that will be tagged and released
+
 # ----------------------------------------------------------------------------
 # Helpers
 # ----------------------------------------------------------------------------
@@ -159,7 +164,7 @@ pick_target() {
   local ans=""
   while true; do
     printf '> '
-    read -r ans || true
+    read -r ans || die 1 "aborted (EOF on stdin)"
     case "$ans" in
       p|P) TARGET="$next_patch"; return ;;
       m|M) TARGET="$next_minor"; return ;;

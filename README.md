@@ -1,8 +1,6 @@
 # CoC7 QoL Improvements
 
-A companion module for the [Call of Cthulhu 7th Edition](https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT) system on [FoundryVTT](https://foundryvtt.com/). It hooks alongside CoC7 — no patches, no overrides, no breakage when the system updates — and adds a handful of small but meaningful improvements to everyday play.
-
-If you Keep CoC7 games and find yourself doing the same tedious thing for the fifth time in a session, this module is probably for you.
+ A module for the Call of Cthulhu 7th Edition (CoC7) system on FoundryVTT. Adds easy setting of dice roll visibility, image popouts, AI-powered weapon and NPC generation, and bulk card management for GMs.
 
 ## What's inside
 

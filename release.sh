@@ -220,6 +220,47 @@ plan_summary() {
 }
 
 # ----------------------------------------------------------------------------
+# Execute release
+# ----------------------------------------------------------------------------
+
+execute_release() {
+  local download_url="${DOWNLOAD_URL_BASE}/v${TARGET}/coc7-qol.zip"
+
+  # 1. Edit module.json
+  jq --arg v "$TARGET" --arg dl "$download_url" \
+     '.version = $v | .download = $dl' module.json > module.json.tmp \
+     && mv module.json.tmp module.json \
+     || die 4 "module.json edit failed — no changes committed."
+
+  # 2. No-op detection: skip commit/push if jq produced no diff
+  if git diff --quiet module.json; then
+    log "module.json already up to date; skipping main commit."
+  else
+    # 3. Commit
+    git add module.json
+    git commit -m "chore: release v${TARGET}" \
+      || die 4 "commit failed — inspect with 'git status' and run 'git restore --staged module.json && git checkout -- module.json' to reset."
+
+    # 4. Push main
+    git push origin main \
+      || die 4 "push rejected — remote moved. Reset with 'git reset --hard HEAD~1' and re-run release.sh."
+  fi
+
+  # 5. Create tag
+  if git rev-parse --verify --quiet "refs/tags/v${TARGET}" >/dev/null; then
+    die 4 "local tag v${TARGET} already exists — delete with 'git tag -d v${TARGET}' before retrying."
+  fi
+  git tag "v${TARGET}" \
+    || die 4 "git tag v${TARGET} failed."
+
+  # 6. Push tag
+  git push origin "v${TARGET}" \
+    || die 4 "tag push failed — delete local tag with 'git tag -d v${TARGET}' and investigate (the main branch push has already landed)."
+
+  log "✓ v${TARGET} tagged and pushed"
+}
+
+# ----------------------------------------------------------------------------
 # main
 # ----------------------------------------------------------------------------
 
@@ -229,8 +270,9 @@ main() {
   pick_target
   changelog_check
   plan_summary
+  execute_release
   log ""
-  log "DEBUG: would now execute release for v${TARGET}"
+  log "DEBUG: release pushed; merge-back not implemented yet"
 }
 
 main "$@"

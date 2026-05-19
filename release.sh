@@ -265,6 +265,39 @@ execute_release() {
 }
 
 # ----------------------------------------------------------------------------
+# Merge-back to develop
+# ----------------------------------------------------------------------------
+
+# Step 8 failures use exit 4 but message that the release itself succeeded.
+merge_back() {
+  git checkout develop \
+    || die 4 "release succeeded but 'git checkout develop' failed. Manually run: git checkout develop && git merge main && git push origin develop"
+
+  git fetch origin develop >/dev/null \
+    || die 4 "release succeeded but 'git fetch origin develop' failed. Manually run: git pull --ff-only origin develop && git merge main && git push origin develop"
+
+  # Sync local develop with origin/develop. Ahead is fine (push will publish), diverged is fatal.
+  local counts behind ahead
+  counts=$(git rev-list --left-right --count origin/develop...HEAD)
+  behind=$(printf '%s' "$counts" | awk '{print $1}')
+  ahead=$(printf '%s' "$counts" | awk '{print $2}')
+  if [[ "$behind" != "0" && "$ahead" == "0" ]]; then
+    git merge --ff-only origin/develop \
+      || die 4 "release succeeded but fast-forward of develop from origin/develop failed. Manually run: git pull --ff-only origin develop && git merge main && git push origin develop"
+  elif [[ "$behind" != "0" && "$ahead" != "0" ]]; then
+    die 4 "release succeeded but local develop has diverged from origin/develop (ahead ${ahead}, behind ${behind}). Resolve manually, then run: git merge main && git push origin develop"
+  fi
+
+  git merge --no-edit main \
+    || die 4 "release succeeded but merging main into develop produced conflicts. Resolve them, then run: git push origin develop"
+
+  git push origin develop \
+    || die 4 "release succeeded and main↔develop merged locally, but 'git push origin develop' failed. Manually run: git push origin develop"
+
+  log "✓ develop synced with main"
+}
+
+# ----------------------------------------------------------------------------
 # main
 # ----------------------------------------------------------------------------
 
@@ -275,8 +308,13 @@ main() {
   changelog_check
   plan_summary
   execute_release
+  merge_back
+
   log ""
-  log "DEBUG: release pushed; merge-back not implemented yet"
+  log "v${TARGET} released."
+  log "Now on develop, synced with main."
+  log "Actions: https://github.com/martin-papy/coc7-qol/actions"
+  log "Release (when workflow finishes): https://github.com/martin-papy/coc7-qol/releases/tag/v${TARGET}"
 }
 
 main "$@"

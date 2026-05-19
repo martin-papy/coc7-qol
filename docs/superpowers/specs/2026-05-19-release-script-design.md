@@ -32,8 +32,11 @@ The script replaces the manual checklist in `CLAUDE.md` § Releasing and reduces
 4. Decide target version  → prompt branch A (bump) or B (confirm)
 5. Validate CHANGELOG     → fail fast (exit 3)
 6. Plan summary + confirm → user types y to proceed
-7. Execute steps          → first failure aborts with cleanup hint (exit 4)
+7. Execute release        → bump module.json (if needed), commit/push main, tag, push tag
+8. Merge-back to develop  → checkout develop, merge main, push develop, end on develop
 ```
+
+The script ends on `develop` with `main` merged in. Steps 7 and 8 use exit code 4 on failure, but Step 8 failures print a "release succeeded; develop sync failed" message because the tag is already published and the workflow has fired.
 
 Exit codes:
 
@@ -55,6 +58,7 @@ Each check reports the specific failure and exits with code 2.
 - `git status --porcelain` is empty. Refuse to stash or auto-commit.
 - `git fetch origin main` succeeds.
 - `git rev-list --left-right --count origin/main...HEAD` returns `0\t0`. Ahead → "push first"; behind → "pull first"; diverged → manual fix.
+- Local `develop` branch exists (`git rev-parse --verify develop`). Step 8 needs to switch to it.
 - `module.json` exists and parses (`jq empty module.json`).
 - `CHANGELOG.md` exists.
 
@@ -137,12 +141,12 @@ No side effects until this confirmation passes.
 
 ```
 Plan for v${TARGET}:
-  • Update module.json: version ${CURRENT} → ${TARGET}
-  • Update module.json: download URL → https://github.com/martin-papy/coc7-qol/releases/download/v${TARGET}/coc7-qol.zip
-  • Commit on main:     "chore: release v${TARGET}"
-  • Push origin main
+  • Update module.json: version ${CURRENT} → ${TARGET} (if not already)
+  • Update module.json: download URL → https://github.com/martin-papy/coc7-qol/releases/download/v${TARGET}/coc7-qol.zip (if not already)
+  • Commit + push origin main  (skipped if module.json is already up to date)
   • Tag v${TARGET} at HEAD and push the tag
   • GitHub Actions release workflow will fire on the tag
+  • Switch to develop, merge main, push origin develop, end on develop
 
 Proceed? [y/N]
 >
@@ -150,7 +154,7 @@ Proceed? [y/N]
 
 Anything but `y`/`Y` exits 1, no files modified.
 
-## Step 7 — Execute (fail-fast, no rollback)
+## Step 7 — Execute release (fail-fast, no rollback)
 
 Each step that fails prints a recovery hint and exits 4.
 
@@ -165,26 +169,62 @@ Each step that fails prints a recovery hint and exits 4.
 
    On failure: `module.json edit failed — no changes committed.`
 
-2. **Commit**: `git add module.json && git commit -m "chore: release v${TARGET}"`
+2. **Detect no-op case**: if `git diff --quiet module.json` (no change), skip 7.3 and 7.4. This happens in Branch B when the user pre-bumped both `version` and `download` via a develop → main PR before running the script. Print: `module.json already up to date; skipping main commit.`
+
+3. **Commit**: `git add module.json && git commit -m "chore: release v${TARGET}"`
 
    On failure: `commit failed — inspect with 'git status' and run 'git restore --staged module.json && git checkout -- module.json' to reset.`
 
-3. **Push main**: `git push origin main`
+4. **Push main**: `git push origin main`
 
    On rejection (remote moved during the run): `push rejected — remote moved. Reset with 'git reset --hard HEAD~1' and re-run release.sh.`
 
-4. **Create tag**: `git tag "v${TARGET}"`
+5. **Create tag**: `git tag "v${TARGET}"`
 
    If tag already exists locally: `local tag v${TARGET} already exists — delete with 'git tag -d v${TARGET}' before retrying.`
 
-5. **Push tag**: `git push origin "v${TARGET}"`
+6. **Push tag**: `git push origin "v${TARGET}"`
 
    On failure: `tag push failed — delete local tag with 'git tag -d v${TARGET}' and investigate (the main branch push has already landed).`
 
-6. **Success**: print release & actions URLs:
+After step 7.6 succeeds the release is published and the GitHub Actions workflow has fired. The script proceeds to Step 8; any failure there is post-release.
+
+## Step 8 — Merge-back to develop and switch
+
+After the tag is pushed, `main` may carry commits that aren't on `develop` yet:
+
+- The `chore: release v${TARGET}` commit from step 7.3 (if produced).
+- Any CHANGELOG updates or other prep commits the user landed directly on `main` (or via a prep PR) before running the script.
+
+All of these need to come back to `develop` so the branches stay aligned and `develop` never falls behind on the latest release commit.
+
+Step 8 failures use exit code 4 but print a `release succeeded; develop sync failed` message because the tag is already public.
+
+1. **Switch to develop**: `git checkout develop`
+
+   On failure: `release succeeded but 'git checkout develop' failed: <stderr>. Manually run: git checkout develop && git merge main && git push origin develop`
+
+2. **Sync local develop with origin**: `git fetch origin develop` then check status.
+
+   - Local behind origin/develop: `git merge --ff-only origin/develop`.
+   - Local ahead of origin/develop: leave it; the final push will publish those commits.
+   - Diverged: abort. `release succeeded but local develop has diverged from origin/develop. Resolve manually, then run: git merge main && git push origin develop`
+
+3. **Merge main into develop**: `git merge --no-edit main`
+
+   Fast-forwards if possible; produces a merge commit otherwise. The `--no-edit` flag accepts the default merge message non-interactively.
+
+   On merge conflict (very rare — would require both branches to edit the same lines in `module.json` or another release-touched file): `release succeeded but merging main into develop has conflicts. Resolve them, then run: git push origin develop`
+
+4. **Push develop**: `git push origin develop`
+
+   On failure: `release succeeded and main↔develop merged locally, but 'git push origin develop' failed: <stderr>. Manually run: git push origin develop`
+
+5. **Final success message**:
 
    ```
    v${TARGET} released.
+   Now on develop, synced with main.
    Actions: https://github.com/martin-papy/coc7-qol/actions
    Release (when workflow finishes): https://github.com/martin-papy/coc7-qol/releases/tag/v${TARGET}
    ```
@@ -200,8 +240,9 @@ Each step that fails prints a recovery hint and exits 4.
 Manual only — this is a release tool that mutates `main`. Verification approach:
 
 1. **Dry-run by inspection** — run the script in a throwaway clone (`git clone . /tmp/coc7-qol-test`) with `gh` pointed at a forked repo, walk through both branches (bump and pre-bump) and abort at the final confirmation prompt. Verify no files changed.
-2. **Real release** — first production use ships the next bump from current. Confirm `.github/workflows/release.yml` runs and the FoundryVTT package edit URL appears in the job summary.
-3. **Failure-path spot checks** — simulate dirty tree, wrong branch, missing CHANGELOG entry, duplicate CHANGELOG entry, missing `jq`, `gh` not authenticated. Confirm correct exit code and message for each.
+2. **Real release** — first production use ships the next bump from current. Confirm `.github/workflows/release.yml` runs, the FoundryVTT package edit URL appears in the job summary, and the script ends on `develop` with `main` reachable from `HEAD`.
+3. **Failure-path spot checks** — simulate dirty tree, wrong branch, missing CHANGELOG entry, duplicate CHANGELOG entry, missing `jq`, `gh` not authenticated, missing local `develop` branch. Confirm correct exit code and message for each.
+4. **Step 8 failure isolation** — simulate `develop` diverged from `origin/develop` before running the script. Confirm the release tag still gets pushed and the script reports `release succeeded; develop sync failed` with the manual recovery command.
 
 ## Open questions
 

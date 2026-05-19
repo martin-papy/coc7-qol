@@ -142,6 +142,12 @@ pick_target() {
   log "Latest released:             $LATEST"
   log ""
 
+  if [[ "$cmp" == "-1" ]]; then
+    log "Warning: module.json version ($CURRENT) is older than the latest release ($LATEST)."
+    log "         Bump past $LATEST to avoid a duplicate-tag error."
+    log ""
+  fi
+
   if [[ "$cmp" == "1" ]]; then
     # Branch B — user pre-bumped.
     prompt_yn "Release v${CURRENT}?" \
@@ -168,6 +174,7 @@ pick_target() {
   local ans=""
   while true; do
     printf '> '
+    # EOF on stdin means non-interactive use — abort rather than silently picking a default.
     read -r ans || die 1 "aborted (EOF on stdin)"
     case "$ans" in
       p|P) TARGET="$next_patch"; return ;;
@@ -238,7 +245,7 @@ execute_release() {
     jq --arg v "$TARGET" --arg dl "$download_url" \
        '.version = $v | .download = $dl' module.json > module.json.tmp \
        && mv module.json.tmp module.json \
-       || die 4 "module.json edit failed — run 'rm -f module.json.tmp' then re-run release.sh."
+       || die 4 "module.json edit failed — no changes committed. Run 'rm -f module.json.tmp' then re-run release.sh."
 
     # 3. Commit
     git add module.json

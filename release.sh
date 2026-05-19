@@ -108,11 +108,78 @@ preflight() {
 }
 
 # ----------------------------------------------------------------------------
+# Version decision
+# ----------------------------------------------------------------------------
+
+# Sets CURRENT and LATEST (no 'v' prefix).
+read_versions() {
+  CURRENT=$(jq -r '.version' module.json)
+  [[ "$CURRENT" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] \
+    || die 2 "module.json version '$CURRENT' is not stable semver X.Y.Z"
+
+  LATEST=$(gh release list --limit 50 --json tagName,isDraft,isPrerelease \
+    | jq -r '[.[] | select(.isDraft|not) | select(.isPrerelease|not) | .tagName]
+             | map(select(test("^v[0-9]+\\.[0-9]+\\.[0-9]+$")))
+             | .[0] // "v0.0.0"' \
+    | sed 's/^v//')
+}
+
+# Sets TARGET.
+pick_target() {
+  local cmp
+  cmp=$(semver_cmp "$CURRENT" "$LATEST")
+
+  log "Current module.json version: $CURRENT"
+  log "Latest released:             $LATEST"
+  log ""
+
+  if [[ "$cmp" == "1" ]]; then
+    # Branch B — user pre-bumped.
+    prompt_yn "Release v${CURRENT}?" \
+      || die 1 "aborted by user"
+    TARGET="$CURRENT"
+    return
+  fi
+
+  # Branch A — needs bump.
+  local maj min patch
+  IFS=. read -r maj min patch <<< "$CURRENT"
+  local next_patch="${maj}.${min}.$((patch + 1))"
+  local next_minor="${maj}.$((min + 1)).0"
+  local next_major="$((maj + 1)).0.0"
+
+  log "The version needs to be bumped."
+  log ""
+  log "Bump which?"
+  log "  [P]atch  → ${next_patch}"
+  log "  [M]inor  → ${next_minor}"
+  log "  m[A]jor  → ${next_major}"
+  log "  [Q]uit"
+
+  local ans=""
+  while true; do
+    printf '> '
+    read -r ans || true
+    case "$ans" in
+      p|P) TARGET="$next_patch"; return ;;
+      m|M) TARGET="$next_minor"; return ;;
+      a|A) TARGET="$next_major"; return ;;
+      q|Q) die 1 "aborted by user" ;;
+      *)   log "Please answer P, M, A, or Q." ;;
+    esac
+  done
+}
+
+# ----------------------------------------------------------------------------
 # main
 # ----------------------------------------------------------------------------
 
 main() {
   preflight
+  read_versions
+  pick_target
+  log ""
+  log "DEBUG: TARGET=$TARGET"
 }
 
 main "$@"

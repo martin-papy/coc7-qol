@@ -9,6 +9,10 @@ IFS=$'\n\t'
 #   CURRENT — stable semver from module.json (no 'v' prefix)
 #   LATEST  — latest published stable release (no 'v' prefix); "0.0.0" if none
 #   TARGET  — the version string that will be tagged and released
+#
+# Other globals:
+#   DOWNLOAD_URL_BASE — base URL for the release zip download link
+DOWNLOAD_URL_BASE="https://github.com/martin-papy/coc7-qol/releases/download"
 
 # ----------------------------------------------------------------------------
 # Helpers
@@ -51,8 +55,6 @@ semver_cmp() {
   if (( a3 > b3 )); then echo 1;  return; fi
   echo 0
 }
-
-DOWNLOAD_URL_BASE="https://github.com/martin-papy/coc7-qol/releases/download"
 
 # ----------------------------------------------------------------------------
 # Pre-flight checks

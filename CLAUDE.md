@@ -39,17 +39,17 @@ Releases are automated by `.github/workflows/release.yml`, which fires on any ta
 
 ### Standard flow
 
-1. Bump `version` in `module.json` to `X.Y.Z`.
-2. Update `download` in `module.json` to `https://github.com/martin-papy/coc7-qol/releases/download/vX.Y.Z/coc7-qol.zip` (the `v`-prefixed tag is required).
-3. Land the `module.json` change on `main` via the normal flow: commit on `develop` (or a `feature-release-X.Y.Z` branch into `develop`), then open a `develop` → `main` PR and merge it.
-4. From `main` at the merged commit, tag and push: `git tag vX.Y.Z && git push origin vX.Y.Z`.
-5. Watch the **Release** workflow run on GitHub Actions. The job summary on a successful run contains the GitHub release URL and the FoundryVTT package edit URL.
+From the `main` branch, run:
+
+    ./release.sh
+
+The script handles version selection, `module.json` edits, the release commit, tag creation, push, and the merge-back to `develop`. It validates that `CHANGELOG.md` already has a `## [X.Y.Z] - YYYY-MM-DD` entry for the target version and aborts cleanly if not.
+
+End state: you are on `develop`, fully synced with `main`. The GitHub Actions release workflow runs from the pushed tag and submits to FoundryVTT.
+
+See [docs/superpowers/specs/2026-05-19-release-script-design.md](docs/superpowers/specs/2026-05-19-release-script-design.md) for the full design and [docs/superpowers/plans/2026-05-19-release-script.md](docs/superpowers/plans/2026-05-19-release-script.md) for the implementation breakdown.
 
 Pre-release tags (`vX.Y.Z-beta.N`, `vX.Y.Z-rc.N`, etc.) create a GitHub pre-release and skip the FoundryVTT publish step.
-
-### Required secret
-
-`FOUNDRY_RELEASE_TOKEN` — the `fvttp_...` token from the "Package Release Token" field on the package admin page at `https://foundryvtt.com/packages/coc7-qol/edit/`. Set it in the repository secrets (Settings → Secrets and variables → Actions).
 
 ### Zip contents
 

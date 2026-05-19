@@ -48,11 +48,67 @@ semver_cmp() {
 }
 
 # ----------------------------------------------------------------------------
+# Pre-flight checks
+# ----------------------------------------------------------------------------
+
+preflight() {
+  # Tools on PATH
+  for tool in git gh jq; do
+    command -v "$tool" >/dev/null 2>&1 \
+      || die 2 "required tool '$tool' not found on PATH"
+  done
+
+  # gh authenticated
+  gh auth status >/dev/null 2>&1 \
+    || die 2 "gh is not authenticated — run 'gh auth login'"
+
+  # On main
+  local branch
+  branch=$(git rev-parse --abbrev-ref HEAD)
+  [[ "$branch" == "main" ]] \
+    || die 2 "must be on 'main' branch (currently on '$branch')"
+
+  # Clean tree
+  [[ -z "$(git status --porcelain)" ]] \
+    || die 2 "working tree is not clean — commit or stash changes first"
+
+  # Fetch and check sync with origin/main
+  git fetch origin main >/dev/null \
+    || die 2 "git fetch origin main failed"
+
+  local counts behind ahead
+  counts=$(git rev-list --left-right --count origin/main...HEAD)
+  behind=$(printf '%s' "$counts" | awk '{print $1}')
+  ahead=$(printf '%s' "$counts" | awk '{print $2}')
+  if [[ "$behind" != "0" || "$ahead" != "0" ]]; then
+    if [[ "$ahead" != "0" && "$behind" == "0" ]]; then
+      die 2 "local main is ahead of origin/main by ${ahead} commit(s) — push first"
+    elif [[ "$behind" != "0" && "$ahead" == "0" ]]; then
+      die 2 "local main is behind origin/main by ${behind} commit(s) — pull first"
+    else
+      die 2 "local main has diverged from origin/main (ahead ${ahead}, behind ${behind}) — resolve manually"
+    fi
+  fi
+
+  # develop branch exists locally
+  git rev-parse --verify --quiet develop >/dev/null \
+    || die 2 "local 'develop' branch not found — create it with 'git checkout -b develop origin/develop'"
+
+  # module.json and CHANGELOG.md exist + parse
+  [[ -f module.json ]]  || die 2 "module.json not found in $(pwd)"
+  [[ -f CHANGELOG.md ]] || die 2 "CHANGELOG.md not found in $(pwd)"
+  jq empty module.json 2>/dev/null \
+    || die 2 "module.json is not valid JSON"
+
+  log "✓ pre-flight checks passed"
+}
+
+# ----------------------------------------------------------------------------
 # main
 # ----------------------------------------------------------------------------
 
 main() {
-  log "release.sh: scaffold only — no phases wired yet."
+  preflight
 }
 
 main "$@"

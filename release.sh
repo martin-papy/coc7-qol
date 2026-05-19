@@ -31,10 +31,11 @@ prompt_yn() {
   esac
 }
 
+# Expects clean stable semver "X.Y.Z" — strip pre-release suffixes before calling.
 # semver_cmp <a> <b>  → echoes -1, 0, or 1
 semver_cmp() {
   local a="$1" b="$2"
-  local a1 a2 a3 b1 b2 b3
+  local a1=0 a2=0 a3=0 b1=0 b2=0 b3=0
   IFS=. read -r a1 a2 a3 <<< "$a"
   IFS=. read -r b1 b2 b3 <<< "$b"
   if (( a1 < b1 )); then echo -1; return; fi

@@ -47,10 +47,6 @@ Releases are automated by `.github/workflows/release.yml`, which fires on any ta
 
 Pre-release tags (`vX.Y.Z-beta.N`, `vX.Y.Z-rc.N`, etc.) create a GitHub pre-release and skip the FoundryVTT publish step.
 
-### Required secret
-
-`FOUNDRY_RELEASE_TOKEN` — the `fvttp_...` token from the "Package Release Token" field on the package admin page at `https://foundryvtt.com/packages/coc7-qol/edit/`. Set it in the repository secrets (Settings → Secrets and variables → Actions).
-
 ### Zip contents
 
 The workflow builds `coc7-qol.zip` containing the runtime files referenced by `module.json`:

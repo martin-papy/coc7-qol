@@ -65,8 +65,11 @@ preflight() {
   # On main
   local branch
   branch=$(git rev-parse --abbrev-ref HEAD)
+  if [[ "$branch" == "HEAD" ]]; then
+    die 2 "HEAD is detached — checkout 'main' with 'git checkout main'"
+  fi
   [[ "$branch" == "main" ]] \
-    || die 2 "must be on 'main' branch (currently on '$branch')"
+    || die 2 "must be on 'main' branch (currently on '$branch') — run 'git checkout main'"
 
   # Clean tree
   [[ -z "$(git status --porcelain)" ]] \
@@ -77,7 +80,8 @@ preflight() {
     || die 2 "git fetch origin main failed"
 
   local counts behind ahead
-  counts=$(git rev-list --left-right --count origin/main...HEAD)
+  counts=$(git rev-list --left-right --count origin/main...HEAD) \
+    || die 2 "could not compare origin/main and HEAD — ensure 'origin' remote is set correctly"
   behind=$(printf '%s' "$counts" | awk '{print $1}')
   ahead=$(printf '%s' "$counts" | awk '{print $2}')
   if [[ "$behind" != "0" || "$ahead" != "0" ]]; then
@@ -98,7 +102,7 @@ preflight() {
   [[ -f module.json ]]  || die 2 "module.json not found in $(pwd)"
   [[ -f CHANGELOG.md ]] || die 2 "CHANGELOG.md not found in $(pwd)"
   jq empty module.json 2>/dev/null \
-    || die 2 "module.json is not valid JSON"
+    || die 2 "module.json is not valid JSON — run 'jq . module.json' to see the parse error"
 
   log "✓ pre-flight checks passed"
 }

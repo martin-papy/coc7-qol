@@ -144,7 +144,7 @@ pick_target() {
 
   if [[ "$cmp" == "-1" ]]; then
     log "Warning: module.json version ($CURRENT) is older than the latest release ($LATEST)."
-    log "         Bump past $LATEST to avoid a duplicate-tag error."
+    log "         Bump options are derived from $LATEST to avoid a duplicate-tag error."
     log ""
   fi
 
@@ -153,37 +153,47 @@ pick_target() {
     prompt_yn "Release v${CURRENT}?" \
       || die 1 "aborted by user"
     TARGET="$CURRENT"
-    return
+  else
+    # Branch A — needs bump. Derive next_* from max(CURRENT, LATEST) so every
+    # suggested version is strictly greater than the latest published release.
+    local base
+    if [[ "$cmp" == "-1" ]]; then
+      base="$LATEST"
+    else
+      base="$CURRENT"
+    fi
+    local maj min patch
+    IFS=. read -r maj min patch <<< "$base"
+    local next_patch="${maj}.${min}.$((patch + 1))"
+    local next_minor="${maj}.$((min + 1)).0"
+    local next_major="$((maj + 1)).0.0"
+
+    log "The version needs to be bumped."
+    log ""
+    log "Bump which?"
+    log "  [P]atch  → ${next_patch}"
+    log "  [M]inor  → ${next_minor}"
+    log "  m[A]jor  → ${next_major}"
+    log "  [Q]uit"
+
+    local ans=""
+    while true; do
+      printf '> '
+      # EOF on stdin means non-interactive use — abort rather than silently picking a default.
+      read -r ans || die 1 "aborted (EOF on stdin)"
+      case "$ans" in
+        p|P) TARGET="$next_patch"; break ;;
+        m|M) TARGET="$next_minor"; break ;;
+        a|A) TARGET="$next_major"; break ;;
+        q|Q) die 1 "aborted by user" ;;
+        *)   log "Please answer P, M, A, or Q." ;;
+      esac
+    done
   fi
 
-  # Branch A — needs bump.
-  local maj min patch
-  IFS=. read -r maj min patch <<< "$CURRENT"
-  local next_patch="${maj}.${min}.$((patch + 1))"
-  local next_minor="${maj}.$((min + 1)).0"
-  local next_major="$((maj + 1)).0.0"
-
-  log "The version needs to be bumped."
-  log ""
-  log "Bump which?"
-  log "  [P]atch  → ${next_patch}"
-  log "  [M]inor  → ${next_minor}"
-  log "  m[A]jor  → ${next_major}"
-  log "  [Q]uit"
-
-  local ans=""
-  while true; do
-    printf '> '
-    # EOF on stdin means non-interactive use — abort rather than silently picking a default.
-    read -r ans || die 1 "aborted (EOF on stdin)"
-    case "$ans" in
-      p|P) TARGET="$next_patch"; return ;;
-      m|M) TARGET="$next_minor"; return ;;
-      a|A) TARGET="$next_major"; return ;;
-      q|Q) die 1 "aborted by user" ;;
-      *)   log "Please answer P, M, A, or Q." ;;
-    esac
-  done
+  # Defense-in-depth: TARGET must be strictly greater than LATEST.
+  [[ "$(semver_cmp "$TARGET" "$LATEST")" == "1" ]] \
+    || die 2 "target v${TARGET} is not greater than the latest release v${LATEST} — aborting to avoid a duplicate tag"
 }
 
 # ----------------------------------------------------------------------------

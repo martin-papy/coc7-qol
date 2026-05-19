@@ -52,6 +52,8 @@ semver_cmp() {
   echo 0
 }
 
+DOWNLOAD_URL_BASE="https://github.com/martin-papy/coc7-qol/releases/download"
+
 # ----------------------------------------------------------------------------
 # Pre-flight checks
 # ----------------------------------------------------------------------------
@@ -195,6 +197,27 @@ changelog_check() {
 }
 
 # ----------------------------------------------------------------------------
+# Plan summary and confirmation
+# ----------------------------------------------------------------------------
+
+plan_summary() {
+  local download_url="${DOWNLOAD_URL_BASE}/v${TARGET}/coc7-qol.zip"
+
+  log ""
+  log "Plan for v${TARGET}:"
+  log "  • Update module.json: version ${CURRENT} → ${TARGET} (if not already)"
+  log "  • Update module.json: download URL → ${download_url} (if not already)"
+  log "  • Commit + push origin main  (skipped if module.json is already up to date)"
+  log "  • Tag v${TARGET} at HEAD and push the tag"
+  log "  • GitHub Actions release workflow will fire on the tag"
+  log "  • Switch to develop, merge main, push origin develop, end on develop"
+  log ""
+
+  prompt_yn "Proceed?" \
+    || die 1 "aborted by user"
+}
+
+# ----------------------------------------------------------------------------
 # main
 # ----------------------------------------------------------------------------
 
@@ -203,8 +226,9 @@ main() {
   read_versions
   pick_target
   changelog_check
+  plan_summary
   log ""
-  log "DEBUG: TARGET=$TARGET (changelog ok)"
+  log "DEBUG: would now execute release for v${TARGET}"
 }
 
 main "$@"

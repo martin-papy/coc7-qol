@@ -2,6 +2,12 @@
 
  A module for the Call of Cthulhu 7th Edition (CoC7) system on FoundryVTT. Adds easy setting of dice roll visibility, image popouts, AI-powered weapon and NPC generation, and bulk card management for GMs.
 
+## Have an idea or a feedback ?
+
+If there's a workflow that annoys you, a small thing that could be smoother, or a feature you keep wishing existed — feel free to open a [GitHub issue](https://github.com/martin-papy/coc7-qol/issues) and describe it.
+
+A short note is plenty.
+
 ## What's inside
 
 | Feature | What it does | For |

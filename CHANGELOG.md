@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.4.8] - 2026-05-22
+
+### Fixed
+
+- **Roll visibility with 'Self' chat mode** — Blind and private rolls now correctly reach the GM when the Foundry chat box is set to `Self`. Foundry v13's `ChatMessage.applyRollMode` preserves pre-existing whisper recipients, so CoC7's `[self.id]` pre-population was overriding the GM list for `blindroll` and `gmroll`. The whisper array is now reset before applying the chosen roll mode.
+
+### Changed
+
+- CI: bumped `actions/checkout` to v5 for Node.js 24 support in the release workflow.
+
 ## [0.4.7] - 2026-05-19
 
 ### Changed
@@ -123,7 +133,9 @@ All notable changes to this project will be documented in this file.
 
 - **Item Image Popout** — Players can click on any item image to view the full-size illustration in a draggable, resizable popout window. GMs retain the default file picker behavior.
 
-[Unreleased]: https://github.com/martin-papy/coc7-qol/compare/v0.4.6...HEAD
+[Unreleased]: https://github.com/martin-papy/coc7-qol/compare/v0.4.8...HEAD
+[0.4.8]: https://github.com/martin-papy/coc7-qol/compare/v0.4.7...v0.4.8
+[0.4.7]: https://github.com/martin-papy/coc7-qol/compare/v0.4.6...v0.4.7
 [0.4.6]: https://github.com/martin-papy/coc7-qol/compare/v0.4.5...v0.4.6
 [0.4.5]: https://github.com/martin-papy/coc7-qol/compare/v0.4.4...v0.4.5
 [0.4.4]: https://github.com/martin-papy/coc7-qol/compare/v0.4.3...v0.4.4

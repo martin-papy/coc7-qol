@@ -90,6 +90,12 @@ Hooks.on('preCreateChatMessage', (document, data) => {
   pendingRollMode = null
 
   const messageData = foundry.utils.deepClone(data)
+  // Foundry v13's ChatMessage.applyRollMode preserves any pre-existing whisper
+  // recipients for private/blind rolls. When the chat-box rollMode is 'selfroll',
+  // CoC7 has already populated whisper with [self.id], so applyRollMode keeps it
+  // instead of switching to GMs — the GM never sees the blind/private roll.
+  // Reset whisper first so the chosen mode determines recipients unambiguously.
+  messageData.whisper = []
   ChatMessage.applyRollMode(messageData, mode)
 
   const update = {

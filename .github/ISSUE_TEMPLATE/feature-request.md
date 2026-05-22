@@ -1,6 +1,6 @@
 ---
 name: Feature Request
-about: Suggest a new feature, a rule implementation, or an improvement for this project.
+about: Suggest a new feature, or an improvement for this project.
 title: ''
 labels: enhancement
 assignees: 'martin-papy'

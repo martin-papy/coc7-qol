@@ -6,7 +6,7 @@
 
 If there's a workflow that annoys you, a small thing that could be smoother, or a feature you keep wishing existed — feel free to open a [GitHub issue](https://github.com/martin-papy/coc7-qol/issues) and describe it. A short note is plenty.
 
-<p align="center"><a href="https://www.buymeacoffee.com/kheldar666"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy Me a Coffee" height="60" width="217"></a></p>
+<a href='https://ko-fi.com/E7O820GI4E' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://storage.ko-fi.com/cdn/kofi6.png?v=6' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
 
 ## What's inside
 

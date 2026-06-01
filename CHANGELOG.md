@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.4.9] - 2026-06-01
+
 ### Fixed
 
 - **AI generator dialogs unusable on small displays** — The AI NPC review dialog (and the weapon review dialog) could grow taller than the viewport, and because Foundry caps ApplicationV2 windows at the screen height while clipping `.window-content` overflow, the Accept / Regenerate / Cancel buttons fell off-screen with no scrollbar — making NPC creation impossible. The dialog content now fills the window and scrolls internally, the action footer is pinned so it stays visible while scrolling, and both dialogs are resizable. ([#8](https://github.com/martin-papy/coc7-qol/issues/8))
@@ -136,17 +138,3 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - **Item Image Popout** — Players can click on any item image to view the full-size illustration in a draggable, resizable popout window. GMs retain the default file picker behavior.
-
-[Unreleased]: https://github.com/martin-papy/coc7-qol/compare/v0.4.8...HEAD
-[0.4.8]: https://github.com/martin-papy/coc7-qol/compare/v0.4.7...v0.4.8
-[0.4.7]: https://github.com/martin-papy/coc7-qol/compare/v0.4.6...v0.4.7
-[0.4.6]: https://github.com/martin-papy/coc7-qol/compare/v0.4.5...v0.4.6
-[0.4.5]: https://github.com/martin-papy/coc7-qol/compare/v0.4.4...v0.4.5
-[0.4.4]: https://github.com/martin-papy/coc7-qol/compare/v0.4.3...v0.4.4
-[0.4.3]: https://github.com/martin-papy/coc7-qol/compare/v0.4.2...v0.4.3
-[0.4.2]: https://github.com/martin-papy/coc7-qol/compare/v0.4.1...v0.4.2
-[0.4.1]: https://github.com/martin-papy/coc7-qol/compare/v0.4.0...v0.4.1
-[0.4.0]: https://github.com/martin-papy/coc7-qol/compare/v0.3.0...v0.4.0
-[0.3.0]: https://github.com/martin-papy/coc7-qol/compare/v0.2.0...v0.3.0
-[0.2.0]: https://github.com/martin-papy/coc7-qol/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/martin-papy/coc7-qol/releases/tag/v0.1.0

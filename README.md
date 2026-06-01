@@ -94,6 +94,10 @@ Dialogs, buttons, settings, and notifications follow your configured Foundry lan
 - **FoundryVTT:** v13+
 - **System:** Call of Cthulhu 7th Edition (CoC7) — v8.x
 
+## AI Usage Disclaimer
+
+This module has been developped with the help of an AI Coding assistant (Claude Code). The code has been thoroughly reviewed and tested by a human (me).
+
 ## License
 
 [MIT](LICENSE)

@@ -7,7 +7,7 @@ import { CHARACTERISTIC_FORMULAS } from './mappers/npc.js'
 export default class CoC7NPCConfirmationDialog extends foundry.applications.api.ApplicationV2 {
   static DEFAULT_OPTIONS = {
     tag: 'div',
-    window: {},
+    window: { resizable: true },
     position: { width: 520, height: 'auto' },
     actions: {
       accept: CoC7NPCConfirmationDialog.#handleAccept,

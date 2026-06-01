@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- **AI generator dialogs unusable on small displays** — The AI NPC review dialog (and the weapon review dialog) could grow taller than the viewport, and because Foundry caps ApplicationV2 windows at the screen height while clipping `.window-content` overflow, the Accept / Regenerate / Cancel buttons fell off-screen with no scrollbar — making NPC creation impossible. The dialog content now fills the window and scrolls internally, the action footer is pinned so it stays visible while scrolling, and both dialogs are resizable. ([#8](https://github.com/martin-papy/coc7-qol/issues/8))
+
 ## [0.4.8] - 2026-05-22
 
 ### Fixed

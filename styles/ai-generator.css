@@ -57,11 +57,27 @@
 
 /* ─── Weapon review dialog ───────────────────────────────────────────────── */
 
+/* Foundry caps the window at `100vh - 1.5 * --hotbar-height` and gives
+   .window-content `overflow: hidden`, so content taller than the viewport is
+   clipped with no scrollbar (issue #8). Own the scroll here: fill the
+   resolved window-content height and scroll internally. */
+.coc7-ai-generation-dialog {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
 .coc7-ai-generation-dialog .form-footer {
   display: flex;
   flex-direction: row;
   gap: 0.5rem;
-  margin-top: 0.5rem;
+  padding: 0.75rem 1rem;
+  position: sticky;
+  bottom: 0;
+  background: var(--color-cool-5, #1a1a2e);
+  border-top: 1px solid var(--color-border-dark, #333);
 }
 
 /* ─── Image popout cursor ────────────────────────────────────────────────── */
@@ -71,6 +87,20 @@
 }
 
 /* ─── NPC review dialog ──────────────────────────────────────────────────── */
+
+/* The NPC preview is content-heavy (characteristics, skills, equipment,
+   narrative, warnings). Foundry caps the window at the viewport height and
+   clips overflow (.window-content is `overflow: hidden`), so on small displays
+   the action buttons fall off-screen with no scrollbar (issue #8). Own the
+   scroll here: fill the resolved window-content height and scroll internally;
+   the footer is pinned so Accept / Regenerate / Cancel stay visible. */
+.coc7-ai-npc-dialog {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
 
 .coc7-npc-identity {
   background: var(--color-cool-5, #1a1a2e);
@@ -167,6 +197,10 @@
   flex-direction: row;
   gap: 0.5rem;
   padding: 0.75rem 1rem;
+  position: sticky;
+  bottom: 0;
+  background: var(--color-cool-5, #1a1a2e);
+  border-top: 1px solid var(--color-border-dark, #333);
 }
 
 /* ─── NPC dialog: equipment rows (weapons + possessions) ─────────────────── */

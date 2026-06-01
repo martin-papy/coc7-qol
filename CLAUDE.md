@@ -79,6 +79,33 @@ Then submit the release to FoundryVTT by editing the package on foundryvtt.com (
 
 No automated tests. All features require manual testing in a running FoundryVTT instance with the CoC7 system. Test as both GM and player — most features behave differently per role.
 
+### Browser automation with Playwright
+
+If a FoundryVTT instance is running (typically `http://localhost:30000`) and the **Playwright MCP server** is available, use it to verify UI and behaviour against the real client instead of relying on synthetic reproductions. This is the closest thing to an automated check this project has.
+
+**When to use it:**
+
+- Verifying anything visual or layout-related: render-hook modifications to sheets, injected buttons, dialogs, and especially sizing/scroll/overflow issues (resize the viewport to reproduce small-display bugs).
+- Confirming a fix before committing — reproduce the broken state, apply the change, and re-measure.
+- Checking role-dependent behaviour: log in as `Gamemaster` and as a player and compare.
+
+**How to use it:**
+
+1. Navigate to `http://localhost:30000`. If at `/join`, set `select[name="userid"]` to the desired user and click `button[name="join"]`, then wait for `game.ready`.
+2. The module is installed as a **symlink** into the Foundry `Data/modules/coc7-qol` directory, so working-tree edits are live. JS changes apply on page reload; **CSS changes need a page reload** (or inject the rule via `browser_evaluate` for a quick visual check — but the file is the source of truth).
+3. To exercise a component directly without driving the whole UI, dynamically import its ES module and instantiate it with mock data inside `browser_evaluate`, e.g.:
+
+   ```js
+   const { default: Dialog } = await import('/modules/coc7-qol/scripts/ai-generator/npc-confirmation-dialog.js')
+   const dlg = new Dialog({ npcData: { /* mock llmData, weaponsData, … */ }, onAccept(){}, onRegenerate(){}, onCancel(){} })
+   await dlg.render(true)
+   ```
+
+4. Assert with real measurements — `getBoundingClientRect()`, `getComputedStyle()`, `scrollHeight` vs `clientHeight` — and capture a screenshot for visual confirmation. Resize with `browser_resize` to test breakpoints.
+5. Clean up after each check: `await dlg.close()` and remove any injected `<style>` elements.
+
+Foundry caps `ApplicationV2` windows at `calc(100vh - 1.5 * var(--hotbar-height))` and gives `.window-content` `overflow: hidden`, so content-heavy auto-height dialogs must own their own scroll region (see issue #8 / `styles/ai-generator.css`).
+
 ## Code Exploration
 
 If installed and available, use `codebase-memory-mcp` tools **first** for any structural code exploration:

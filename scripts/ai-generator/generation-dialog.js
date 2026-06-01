@@ -3,7 +3,7 @@ import { escapeHtml, t } from '../utils.js'
 export default class CoC7AIGenerationDialog extends foundry.applications.api.ApplicationV2 {
   static DEFAULT_OPTIONS = {
     tag: 'div',
-    window: {},
+    window: { resizable: true },
     position: { width: 480, height: 'auto' },
     actions: {
       accept: CoC7AIGenerationDialog.#handleAccept,

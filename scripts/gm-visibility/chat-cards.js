@@ -28,6 +28,7 @@ export function highlightChatCard (message, html) {
     looseControls.forEach(control => {
       // Controls inside a flagged block are already covered by the block styling.
       if (control.closest('.keeper-only-block')) return
+      if (control.classList.contains(MARKER_CLASS)) return
       control.classList.add(MARKER_CLASS)
     })
   } catch (err) {

@@ -25,7 +25,7 @@
 }
 
 /* Eye-slash badge */
-.coc7qol-gm-badge {
+.coc7qol-gm-highlight .coc7qol-gm-badge {
   margin-left: 0.35em;
   color: var(--coc7qol-gm-accent);
   font-size: 0.85em;

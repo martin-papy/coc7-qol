@@ -14,6 +14,7 @@ export function createGmBadge () {
   const tip = t('COC7QOL.GmVisibility.BadgeTooltip')
   badge.setAttribute('data-tooltip', tip)
   badge.setAttribute('aria-label', tip)
+  badge.setAttribute('role', 'img')
   return badge
 }
 

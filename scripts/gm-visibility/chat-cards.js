@@ -17,12 +17,12 @@ export function highlightChatCard (message, html) {
     const looseControls = html.querySelectorAll('.keeper-only-control')
     if (!blocks.length && !looseControls.length) return
 
-    html.classList.add(ROOT_CLASS)
-
+    let marked = false
     blocks.forEach(block => {
       if (block.classList.contains(MARKER_CLASS)) return
       block.classList.add(MARKER_CLASS)
       addBadgeOnce(block, 'prepend')
+      marked = true
     })
 
     looseControls.forEach(control => {
@@ -30,7 +30,10 @@ export function highlightChatCard (message, html) {
       if (control.closest('.keeper-only-block')) return
       if (control.classList.contains(MARKER_CLASS)) return
       control.classList.add(MARKER_CLASS)
+      marked = true
     })
+
+    if (marked) html.classList.add(ROOT_CLASS)
   } catch (err) {
     console.warn('[coc7-qol] GM-visibility chat highlight failed:', err)
   }

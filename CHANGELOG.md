@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **GM-only visibility highlighting** — For Keepers, a new world setting (on by default) highlights the parts of item sheets and chat cards that players cannot see: GM-only tabs (Keeper notes, Details, and a book's Content/Spells while unread) and GM-only chat-card sections get a crimson outline/tint plus an eye-slash badge. Toggle it in the module settings (page reload applies the change to existing chat messages).
+
 ## [0.4.9] - 2026-06-01
 
 ### Fixed

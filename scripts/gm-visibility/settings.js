@@ -17,7 +17,8 @@ export function registerGmVisibilitySettings () {
     scope: 'world',
     config: true,
     type: Boolean,
-    default: true
+    default: true,
+    requiresReload: true
   })
 }
 

@@ -1,0 +1,32 @@
+/* styles/gm-visibility.css */
+
+:root {
+  --coc7qol-gm-accent: crimson;
+  --coc7qol-gm-tint: rgb(220 20 60 / 0.08);
+}
+
+/* GM-only buttons / controls */
+.coc7qol-gm-highlight button.coc7qol-gm-only,
+.coc7qol-gm-highlight .keeper-only-control.coc7qol-gm-only {
+  outline: 2px solid var(--coc7qol-gm-accent);
+  outline-offset: 1px;
+}
+
+/* GM-only regions (chat blocks) and sheet tab panels */
+.coc7qol-gm-highlight .keeper-only-block.coc7qol-gm-only,
+.coc7qol-gm-highlight section.tab.coc7qol-gm-only {
+  border-left: 3px solid var(--coc7qol-gm-accent);
+  background-color: var(--coc7qol-gm-tint);
+}
+
+/* GM-only tab nav buttons */
+.coc7qol-gm-highlight nav.sheet-tabs a.coc7qol-gm-only {
+  color: var(--coc7qol-gm-accent);
+}
+
+/* Eye-slash badge */
+.coc7qol-gm-badge {
+  margin-left: 0.35em;
+  color: var(--coc7qol-gm-accent);
+  font-size: 0.85em;
+}

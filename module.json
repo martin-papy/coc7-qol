@@ -31,7 +31,8 @@
   "bugs": "https://github.com/martin-papy/coc7-qol/issues",
   "styles": [
     "styles/close-all-cards.css",
-    "styles/ai-generator.css"
+    "styles/ai-generator.css",
+    "styles/gm-visibility.css"
   ],
   "languages": [
     {

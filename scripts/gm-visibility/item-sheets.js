@@ -20,6 +20,7 @@ export function highlightItemSheet (application, element) {
       const nav = element.querySelector(`nav.sheet-tabs a[data-tab="${key}"]`)
       if (nav && !nav.classList.contains(MARKER_CLASS)) {
         nav.classList.add(MARKER_CLASS)
+        // Tab labels render inside a <span>; fall back to the <a> if a theme omits it.
         addBadgeOnce(nav.querySelector('span') ?? nav, 'append')
         marked = true
       }
@@ -30,6 +31,7 @@ export function highlightItemSheet (application, element) {
       }
     })
 
+    // No ROOT_CLASS removal needed: renderItemSheetV2 hands a freshly rebuilt element each render.
     if (marked) element.classList.add(ROOT_CLASS)
   } catch (err) {
     console.warn('[coc7-qol] GM-visibility item-sheet highlight failed:', err)

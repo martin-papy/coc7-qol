@@ -4,3 +4,4 @@ coc7-qol.code-workspace
 .superpowers/
 temp/
 module.json.tmp
+.playwright-mcp/

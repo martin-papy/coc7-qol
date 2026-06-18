@@ -16,6 +16,7 @@ If there's a workflow that annoys you, a small thing that could be smoother, or 
 | [🗂️ Close All Cards](#-close-all-cards) | Sweep stale chat cards out of the way in one click | GM |
 | [🖼️ Item Image Popouts](#-item-image-popouts) | Click any item portrait to see it full size, draggable, resizable | Everyone |
 | [✨ AI Generation](#-ai-generation) | Conjure fully-statted weapons and NPCs from a one-line description | GM |
+| [👁️ Keeper-Only Highlights](#-keeper-only-highlights) | See what players can't see vs can't change, on sheets and chat cards | GM |
 
 ---
 
@@ -60,6 +61,20 @@ Plug in your own key for **Anthropic Claude**, **OpenAI GPT**, or **Google Gemin
 ![Generated weapon stats](images/Create-Weapon-3.png)
 
 [**Read the full walkthrough →**](docs/features/ai-generation.md)
+
+---
+
+## 👁️ Keeper-Only Highlights
+
+See at a glance which parts of item sheets and chat cards your players **can't see** — and which they **can see but can't change**. Content hidden from players gets a solid crimson outline and an 👁️ badge; read-only controls (visible to players but locked) get a dashed amber outline and a 🔒 badge. Keeper-only and on by default; toggle it under **Settings → Module Settings → CoC7 QoL Improvements**.
+
+| Keeper's view | The same card, player's view |
+|---|---|
+| ![Chat card, Keeper view](images/ChatCard-Keeper.png) | ![Chat card, player view](images/ChatCard-Player.png) |
+
+Item sheets follow the same idea — the non-obvious Keeper-only tabs are marked, while the self-explanatory Keeper's Notes tab is left alone:
+
+![Book sheet, Keeper view](images/Book-Keeper.png)
 
 ---
 

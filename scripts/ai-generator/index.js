@@ -1,4 +1,3 @@
-// scripts/ai-generator/index.js
 // Entry point for the AI Generator feature.
 // All other files in this directory are imported from here.
 // Only this file is listed in module.json esmodules.

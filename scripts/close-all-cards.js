@@ -1,5 +1,3 @@
-// scripts/close-all-cards.js
-
 import { escapeHtml, t, tf } from './utils.js'
 
 // Maps CoC7 card template class names to i18n keys.

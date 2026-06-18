@@ -1,4 +1,3 @@
-// scripts/ai-generator/npc-confirmation-dialog.js
 // Rich read-only preview dialog for AI-generated NPC actors.
 
 import { escapeHtml, t, tf } from '../utils.js'
@@ -31,10 +30,6 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
     this.#acceptCallback = onAccept ?? (() => {})
     this.#regenerateCallback = onRegenerate ?? (() => {})
     this.#cancelCallback = onCancel ?? (() => {})
-  }
-
-  get npcData () {
-    return this.#npcData
   }
 
   async _renderHTML (_context, _options) {

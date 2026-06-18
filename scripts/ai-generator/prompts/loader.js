@@ -1,4 +1,3 @@
-// scripts/ai-generator/prompts/loader.js
 // Loads AI system-prompt Markdown files at runtime and caches them per session.
 
 const cache = new Map()

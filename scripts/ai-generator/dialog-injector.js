@@ -1,4 +1,3 @@
-// scripts/ai-generator/dialog-injector.js
 import * as providers from './providers/registry.js'
 import * as mappers from './mappers/registry.js'
 import CoC7AIGenerationDialog from './generation-dialog.js'

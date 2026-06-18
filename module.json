@@ -31,7 +31,8 @@
   "bugs": "https://github.com/martin-papy/coc7-qol/issues",
   "styles": [
     "styles/close-all-cards.css",
-    "styles/ai-generator.css"
+    "styles/ai-generator.css",
+    "styles/gm-visibility.css"
   ],
   "languages": [
     {
@@ -51,6 +52,7 @@
     "scripts/possession-item-image-popout.js",
     "scripts/ai-generator/index.js",
     "scripts/close-all-cards.js",
-    "scripts/roll-visibility.js"
+    "scripts/roll-visibility.js",
+    "scripts/gm-visibility/index.js"
   ]
 }

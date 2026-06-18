@@ -1,5 +1,3 @@
-// scripts/gm-visibility/tab-rules.js
-
 /**
  * A book's Content/Spells tabs are GM-only only while the owning actor has not
  * read the book. World items (no actor) and any lookup failure are treated as
@@ -33,12 +31,9 @@ function bookHasGmSpells (doc) {
   return (type?.mythos === true || type?.occult === true) && bookUnread(doc)
 }
 
-// Applied to every item type. The Keeper-notes tab is deliberately NOT included:
+// GM-only tab rules per item.type. The Keeper-notes tab is deliberately absent:
 // its skull icon already makes it self-evidently GM-only, so highlighting it adds
 // noise rather than signal. Only the non-obvious GM-only tabs are flagged.
-const DEFAULT_RULES = []
-
-// Additional GM-only tab rules per item.type.
 const TYPE_RULES = {
   book: [
     { key: 'details', always: true },
@@ -56,7 +51,7 @@ const TYPE_RULES = {
  * @returns {string[]}
  */
 export function gmOnlyTabKeys (doc) {
-  const rules = [...DEFAULT_RULES, ...(TYPE_RULES[doc?.type] ?? [])]
+  const rules = TYPE_RULES[doc?.type] ?? []
   return rules
     .filter(rule => rule.always === true || (typeof rule.when === 'function' && rule.when(doc)))
     .map(rule => rule.key)

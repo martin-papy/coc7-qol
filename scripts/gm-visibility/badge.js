@@ -1,5 +1,3 @@
-// scripts/gm-visibility/badge.js
-
 import { t } from '../utils.js'
 
 const BADGE_CLASS = 'coc7qol-gm-badge'
@@ -10,7 +8,7 @@ const BADGE_CLASS = 'coc7qol-gm-badge'
  * @param {string} tooltipKey i18n key for the tooltip / aria-label.
  * @returns {HTMLElement}
  */
-export function createGmBadge (iconClass, tooltipKey) {
+function createGmBadge (iconClass, tooltipKey) {
   const badge = document.createElement('i')
   badge.className = `fa-solid ${iconClass} ${BADGE_CLASS}`
   const tip = t(tooltipKey)

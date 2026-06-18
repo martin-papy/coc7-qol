@@ -1,4 +1,3 @@
-// scripts/ai-generator/mappers/npc.js
 // NPC mapper — converts LLM output into CoC7 NPC actor data.
 // Skill resolution (compendium lookup) is handled by resolveSkills() called from the injector
 // after the mapper produces the base actor data.

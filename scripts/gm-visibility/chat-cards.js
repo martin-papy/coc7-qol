@@ -1,5 +1,3 @@
-// scripts/gm-visibility/chat-cards.js
-
 import { isHighlightEnabled, ROOT_CLASS, MARKER_CLASS, READONLY_CLASS } from './settings.js'
 import { addBadgeOnce } from './badge.js'
 

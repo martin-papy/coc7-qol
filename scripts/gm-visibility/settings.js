@@ -1,5 +1,3 @@
-// scripts/gm-visibility/settings.js
-
 const MODULE = 'coc7-qol'
 
 export const SETTING_KEY = 'highlight-gm-only'

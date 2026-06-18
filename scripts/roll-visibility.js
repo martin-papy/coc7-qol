@@ -1,5 +1,3 @@
-// scripts/roll-visibility.js
-
 import { t } from './utils.js'
 
 const MODULE = 'coc7-qol'

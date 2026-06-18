@@ -1,5 +1,3 @@
-// scripts/gm-visibility/item-sheets.js
-
 import { isHighlightEnabled, ROOT_CLASS, MARKER_CLASS } from './settings.js'
 import { gmOnlyTabKeys } from './tab-rules.js'
 

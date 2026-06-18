@@ -2,7 +2,6 @@
 
 import { isHighlightEnabled, ROOT_CLASS, MARKER_CLASS } from './settings.js'
 import { gmOnlyTabKeys } from './tab-rules.js'
-import { addBadgeOnce } from './badge.js'
 
 /**
  * Mark GM-only tabs (nav button + panel) on a rendered item sheet.
@@ -19,9 +18,9 @@ export function highlightItemSheet (application, element) {
     keys.forEach(key => {
       const nav = element.querySelector(`nav.sheet-tabs a[data-tab="${key}"]`)
       if (nav && !nav.classList.contains(MARKER_CLASS)) {
+        // The crimson tab label is the only cue here — no badge (kept for chat cards,
+        // whose GM-only blocks have no inherent label).
         nav.classList.add(MARKER_CLASS)
-        // Tab labels render inside a <span>; fall back to the <a> if a theme omits it.
-        addBadgeOnce(nav.querySelector('span') ?? nav, 'append')
         marked = true
       }
       const panel = element.querySelector(`section.tab[data-tab="${key}"]`)

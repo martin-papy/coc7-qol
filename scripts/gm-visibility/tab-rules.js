@@ -33,8 +33,10 @@ function bookHasGmSpells (doc) {
   return (type?.mythos === true || type?.occult === true) && bookUnread(doc)
 }
 
-// Applied to every item type.
-const DEFAULT_RULES = [{ key: 'keeper', always: true }]
+// Applied to every item type. The Keeper-notes tab is deliberately NOT included:
+// its skull icon already makes it self-evidently GM-only, so highlighting it adds
+// noise rather than signal. Only the non-obvious GM-only tabs are flagged.
+const DEFAULT_RULES = []
 
 // Additional GM-only tab rules per item.type.
 const TYPE_RULES = {

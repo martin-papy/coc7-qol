@@ -1,4 +1,8 @@
 {
+  "COC7QOL.GmVisibility.SettingName": "Highlight GM-only sections",
+  "COC7QOL.GmVisibility.SettingHint": "When enabled, the Keeper sees a red outline, tint, and badge marking the parts of item sheets and chat cards that players cannot see.",
+  "COC7QOL.GmVisibility.BadgeTooltip": "Only the Keeper can see this.",
+  "COC7QOL.GmVisibility.ReadOnlyTooltip": "Players can see this but cannot change it.",
   "COC7QOL.CloseAllCards.Title": "Close All Cards",
   "COC7QOL.CloseAllCards.UnknownActor": "Unknown",
   "COC7QOL.CloseAllCards.UnknownCardType": "Card",

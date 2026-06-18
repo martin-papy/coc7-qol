@@ -1,4 +1,3 @@
-// scripts/ai-generator/dialog-injector.js
 import * as providers from './providers/registry.js'
 import * as mappers from './mappers/registry.js'
 import CoC7AIGenerationDialog from './generation-dialog.js'
@@ -275,7 +274,7 @@ async function _run (dialog, html, form, buttonRow, promptArea, originalFieldNod
     if (!ProviderClass) throw new Error(`Unknown provider: ${providerId}`)
 
     const mapper = mappers.get(config.mapperKey)
-    const systemPrompt = mapper.buildSystemPrompt()
+    const systemPrompt = await mapper.buildSystemPrompt()
 
     const provider = new ProviderClass()
     const llmData = await provider.generate(systemPrompt, userPrompt)

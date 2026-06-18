@@ -1,4 +1,8 @@
 {
+  "COC7QOL.GmVisibility.SettingName": "Surligner les sections réservées au Gardien",
+  "COC7QOL.GmVisibility.SettingHint": "Lorsque cette option est activée, le Gardien voit un contour rouge, une teinte et un badge indiquant les parties des fiches d'objets et des cartes de chat que les joueurs ne peuvent pas voir.",
+  "COC7QOL.GmVisibility.BadgeTooltip": "Seul le Gardien peut voir ceci.",
+  "COC7QOL.GmVisibility.ReadOnlyTooltip": "Les joueurs voient ceci mais ne peuvent pas le modifier.",
   "COC7QOL.CloseAllCards.Title": "Fermer Toutes les Cartes",
   "COC7QOL.CloseAllCards.UnknownActor": "Inconnu",
   "COC7QOL.CloseAllCards.UnknownCardType": "Carte",

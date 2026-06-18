@@ -1,0 +1,35 @@
+/* styles/gm-visibility.css */
+
+:root {
+  --coc7qol-gm-accent: crimson;
+  --coc7qol-gm-tint: rgb(220 20 60 / 0.08);
+  --coc7qol-gm-readonly-accent: darkgoldenrod;
+}
+
+/* Hidden from players — GM-only chat regions and item-sheet tab panels */
+.coc7qol-gm-highlight .keeper-only-block.coc7qol-gm-only,
+.coc7qol-gm-highlight section.tab.coc7qol-gm-only {
+  border-left: 3px solid var(--coc7qol-gm-accent);
+  background-color: var(--coc7qol-gm-tint);
+}
+
+/* Hidden from players — GM-only item-sheet tab nav labels */
+.coc7qol-gm-highlight nav.sheet-tabs a.coc7qol-gm-only {
+  color: var(--coc7qol-gm-accent);
+}
+
+/* Read-only for players — chat controls they can see but cannot change */
+.coc7qol-gm-highlight .coc7qol-gm-readonly {
+  outline: 2px dashed var(--coc7qol-gm-readonly-accent);
+  outline-offset: 1px;
+}
+
+/* Badges: eye-slash (hidden) inherits the crimson accent; lock (read-only) the amber */
+.coc7qol-gm-highlight .coc7qol-gm-badge {
+  margin-left: 0.35em;
+  font-size: 0.85em;
+  color: var(--coc7qol-gm-accent);
+}
+.coc7qol-gm-highlight .coc7qol-gm-readonly .coc7qol-gm-badge {
+  color: var(--coc7qol-gm-readonly-accent);
+}

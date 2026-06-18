@@ -35,12 +35,16 @@ function bookHasGmSpells (doc) {
 // its skull icon already makes it self-evidently GM-only, so highlighting it adds
 // noise rather than signal. Only the non-obvious GM-only tabs are flagged.
 const TYPE_RULES = {
+  // Items
   book: [
     { key: 'details', always: true },
     { key: 'content', when: bookUnread },
     { key: 'spells', when: bookHasGmSpells }
   ],
-  spell: [{ key: 'details', always: true }]
+  spell: [{ key: 'details', always: true }],
+  // Actors
+  vehicle: [{ key: 'details', always: true }],
+  character: [{ key: 'activeEffects', always: true }]
 }
 
 /**

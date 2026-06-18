@@ -4,7 +4,10 @@ const MODULE = 'coc7-qol'
 
 export const SETTING_KEY = 'highlight-gm-only'
 export const ROOT_CLASS = 'coc7qol-gm-highlight'
+// Hidden-from-players elements (removed from the player's DOM by the system).
 export const MARKER_CLASS = 'coc7qol-gm-only'
+// Read-only-for-players controls (visible to players but disabled by the system).
+export const READONLY_CLASS = 'coc7qol-gm-readonly'
 
 /**
  * Register the world-scoped on/off setting for GM-visibility highlighting.

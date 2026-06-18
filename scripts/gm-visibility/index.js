@@ -7,5 +7,3 @@ Hooks.once('init', registerGmVisibilitySettings)
 Hooks.on('renderChatMessageHTML', (message, html) => highlightChatCard(message, html))
 
 Hooks.on('renderItemSheetV2', (application, element) => highlightSheetTabs(application, element))
-
-Hooks.on('renderActorSheetV2', (application, element) => highlightSheetTabs(application, element))

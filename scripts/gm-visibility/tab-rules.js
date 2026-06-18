@@ -42,9 +42,9 @@ const TYPE_RULES = {
     { key: 'spells', when: bookHasGmSpells }
   ],
   spell: [{ key: 'details', always: true }],
-  // Actors
-  vehicle: [{ key: 'details', always: true }],
-  character: [{ key: 'activeEffects', always: true }]
+  // Actors (the v3 character sheet shows Active Effects to players, so only the
+  // vehicle's GM-gated Details tab qualifies here)
+  vehicle: [{ key: 'details', always: true }]
 }
 
 /**

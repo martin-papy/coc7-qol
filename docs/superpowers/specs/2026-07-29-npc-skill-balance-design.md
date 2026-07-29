@@ -1,11 +1,14 @@
 # NPC Skill Balance — Design
 
 Date: 2026-07-29
-Status: approved (pending spec review)
-Scope: `scripts/ai-generator/prompts/npc-system-prompt.md`, `scripts/ai-generator/mappers/npc.js`, `scripts/ai-generator/npc-confirmation-dialog.js`, `styles/ai-generator.css`
+Status: implemented on `bugfix-npc-skill-balance`
+Scope: `scripts/ai-generator/prompts/npc-system-prompt.md`, `scripts/ai-generator/skill-tiers.js` (new), `scripts/ai-generator/mappers/npc.js`, `scripts/ai-generator/npc-confirmation-dialog.js`, `scripts/ai-generator/dialog-injector.js`, `styles/ai-generator.css`, `lang/en.json`
 
-The bulk of the change is prompt text. Code changes are limited to one required
-field in `validate()`, one constant, and the review dialog's rendering.
+The bulk of the change is prompt text. The original draft of this spec claimed
+code changes would be limited to one validation field, one constant and the
+dialog's rendering; that held until Task 5 verification found that no skill value
+was reaching the actor intact (see D10), which added the base/excess model and a
+new ladder module.
 
 ## Problem
 
@@ -31,8 +34,8 @@ is raw textarea text (`dialog-injector.js:250`), so nothing else contributes.
 | 1 | No expertise scale. The prompt says only `Values 1–99 as percentages`. The model has no basis for knowing 60% means "earns a living at this". | prompt line 25 |
 | 2 | The only numeric anchors in the whole prompt are high: `a thug with a knife → "Fighting (Brawl)" at 30–60` and `a soldier with a rifle → "Firearms (Rifle/Shotgun)" at 50+`. This is the model's entire calibration reference and it biases upward. | prompt line 53 |
 | 3 | No guidance on distribution, so the model defaults to a flat competent band. | prompt line 26 |
-| 4 | No mention of CoC7 base values, so the model cannot reason about trained-above-baseline versus untrained — nothing tells it Law starts at 5% and First Aid at 30%. | `npc.js:147-155` |
-| 5 | **The mapper's numbers never survived to the actor.** See D10 — every skill arrived on the sheet inflated by its own base value. Discovered during Task 5 verification, after D6 had been decided on the opposite assumption. | `npc.js:147-155` |
+| 4 | No mention of CoC7 base values, so the model cannot reason about trained-above-baseline versus untrained — nothing tells it Law starts at 5% and First Aid at 30%. | `npc.js` `_resolveOneSkill` |
+| 5 | **The mapper's numbers never survived to the actor.** See D10 — every skill arrived on the sheet inflated by its own base value. Discovered during Task 5 verification, after D6 had been decided on the opposite assumption. | `npc.js` `_resolveOneSkill` |
 
 Cause 4 cuts both ways. Tightening the ceiling without stating the floor makes
 the opposite error *more* likely: First Aid at 15% when its base is 30%, which
@@ -50,6 +53,25 @@ is not a legal CoC7 value.
 | 90–99% | Master | Elite; among the best in the world |
 
 ## Design decisions
+
+The sections below are not in numeric order — D9 and D10 were added during
+implementation, next to the decisions they affect. Read them in this order:
+
+| # | Decision | Status |
+|---|---|---|
+| D1 | Tier is the NPC's peak; only occupation skills may reach it | current |
+| D2 | Combat skills are not occupation skills by default | current |
+| D3 | Base values are a hard floor, stated in the prompt | current, and made structural by D10 |
+| D4 | Fourteen core skills are always present | current |
+| D5 | Beyond the core fourteen, list a skill only when trained above base | current |
+| D6 | The LLM computes the two derived skills | prompt half current; **mapper half superseded by D10** |
+| D7 | `_ensureWeaponSkills` fallback raised from 20 to 25 | current |
+| D10 | `personal` holds the trained excess; the base value stands | current — supersedes D6's mapper half |
+| D9 | The native language is named concretely, built from the Own template | current, with one corrected detail |
+| D8 | Review dialog shows tiers and flags above-tier skills | current, revised after implementation |
+
+Base-derived values do not count toward the declared peak — see the note at the
+end of D4.
 
 ### D1 — Tier is the NPC's peak, and only occupation skills may reach it
 
@@ -112,6 +134,18 @@ fits the character):
 
 Era-inappropriate entries stay: an 1890s NPC keeps Drive Auto at 20 because it
 is the sheet default.
+
+**Base-derived values do not count toward the declared peak.** Added after the
+final review. The native language equals EDU, which rolls 40-90, so for a
+professor, doctor or librarian it is the NPC's single highest skill and lands in
+the Expert band. Since D1 defines the tier as the band of the best skill, that
+left two bad outcomes: declaring `professional` and having D8's callout flag a
+value the prompt *required*, or declaring `expert` and thereby licensing 2-4
+occupation skills at 75-89% — the over-skilling this spec exists to prevent. The
+peak is therefore judged from TRAINED skills only, and the review dialog exempts
+the native language from labelling, flagging and the above-tier count. Dodge
+needs no exemption: at DEX 90 it is 45, inside the Amateur band, so it cannot
+exceed the ceiling of any tier an NPC may declare.
 
 ### D5 — Beyond the core fourteen, list a skill only when trained above base
 

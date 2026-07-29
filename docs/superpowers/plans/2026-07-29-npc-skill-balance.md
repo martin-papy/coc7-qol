@@ -117,6 +117,14 @@ Expected at this point: `IMPORT FAILED: ...` — the file does not exist yet.
 
 - [ ] **Step 3: Create `scripts/ai-generator/skill-tiers.js`**
 
+> **SUPERSEDED — do not copy the `tierForValue` body below verbatim.** As
+> written it requires BOTH tier bounds to match, so a fractional value in a
+> gap between tiers (5.5, 49.5, 89.5) matches nothing and falls through to
+> the top-tier fallback, reading as `master`. This was caught in review and
+> fixed in commit 9a8ccfe: scan the ladder from the top and return the first
+> tier whose `min` is at or below the value. See `scripts/ai-generator/skill-tiers.js`
+> for the shipped version.
+
 ```js
 // The CoC7 skill expertise ladder (Call of Cthulhu 7th Edition rulebook).
 //

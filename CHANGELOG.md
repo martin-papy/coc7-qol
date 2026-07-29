@@ -2,7 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [0.5.1] - 2026-07-29
+
+### Fixed
+
+- **GM-only highlighting missed the damage/heal buttons on plain roll cards** — The Keeper's-view highlight never marked the `Set as damage/heal` and `Remove from <resource>` buttons, so the Keeper had no cue that players see neither. 
 
 ## [0.5.0] - 2026-06-18
 

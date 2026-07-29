@@ -6,8 +6,11 @@
   --coc7qol-gm-readonly-accent: darkgoldenrod;
 }
 
-/* Hidden from players — GM-only chat regions and item-sheet tab panels */
+/* Hidden from players — GM-only chat regions and item-sheet tab panels.
+   .coc7-card-buttons covers button rows the system builds for the Keeper only, which
+   reach the DOM without a .keeper-only-block marker (see chat-rules.js). */
 .coc7qol-gm-highlight .keeper-only-block.coc7qol-gm-only,
+.coc7qol-gm-highlight .coc7-card-buttons.coc7qol-gm-only,
 .coc7qol-gm-highlight section.tab.coc7qol-gm-only {
   border-left: 3px solid var(--coc7qol-gm-accent);
   background-color: var(--coc7qol-gm-tint);

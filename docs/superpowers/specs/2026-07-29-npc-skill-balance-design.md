@@ -101,7 +101,7 @@ fits the character):
 
 | Skill | Base | Skill | Base |
 |-------|------|-------|------|
-| Climb | 20 | Language (Own) | = EDU |
+| Climb | 20 | Language (native) | = EDU |
 | Dodge | = DEX ÷ 2 | Library Use | 20 |
 | Drive Auto | 20 | Listen | 20 |
 | Fighting (Brawl) | 25 | Spot Hidden | 25 |
@@ -119,12 +119,14 @@ to the 14 core plus roughly 3–8 others.
 
 ### D6 — The LLM computes the two derived skills; the mapper is left alone
 
-Dodge and Language (Own) are the only core skills whose base is a formula rather
-than a number (`1/2*@DEX` and `@EDU` in `en-skills.yaml`). The prompt instructs
-the model to compute them from the characteristics it just assigned:
+Dodge and the native language are the only core skills whose base is a formula
+rather than a number (`1/2*@DEX` and `@EDU` in `en-skills.yaml`). The prompt
+instructs the model to compute them from the characteristics it just assigned:
 
-    Dodge          = DEX ÷ 2, rounded down
-    Language (Own) = EDU exactly
+    Dodge             = DEX ÷ 2, rounded down
+    Language (native) = EDU exactly
+
+The native language's *name* is covered separately by D9.
 
 The mapper's existing behaviour is unchanged: `adjustments.base = 0`, the LLM's
 number goes to `adjustments.personal`, and CoC7 sums the adjustments so the
@@ -150,6 +152,53 @@ code. 25 is the highest base among weapon skills (Fighting (Brawl) 25, Firearms
 (Rifle/Shotgun) 25), so a flat 25 is at or above base for every weapon skill and
 is legal in all cases. A one-line constant change; no per-skill base table
 needed.
+
+### D9 — The native language is named concretely, built from the Own template
+
+Added 2026-07-29 after review of the first draft. The original spec said the
+NPC carries a skill literally named `Language (Own)`. That is wrong: in
+`en-skills.yaml` those are two different things.
+
+| Compendium entry | base | properties |
+|---|---|---|
+| `Language (Own)` | `'@EDU'` | `special`, `requiresname`, `keepbasevalue`, `own` |
+| `Language (English)` | `1` | `special` |
+
+`Language (Own)` is a **template**. `requiresname: true` means it must be given
+a concrete language before it is a usable skill; `keepbasevalue: true` means
+that once named it retains base `@EDU` rather than adopting the named
+language's base of 1; `own: true` marks it as the character's native tongue.
+`Language (English)` is the *foreign*-language skill — what someone who studied
+English has.
+
+Emitting the literal `Language (Own)` therefore leaves an unnamed template on
+the sheet with `requiresname` still set. Emitting a bare `Language (English)`
+silently resolves to the foreign-language entry, recording a native speaker as
+though they had studied their own mother tongue. `properties.own` is not
+cosmetic: `character-sheet-v2.js:140` appends an "own" marker to the displayed
+name, and the shared skill sort at `utilities.js:1067` groups own-languages
+apart from foreign ones.
+
+**Decision.** The LLM emits a new top-level `nativeLanguage` field holding the
+plain language name (`"English"`), and lists the skill under its concrete name
+(`Language (English)`) at EDU. `toFoundryData()` tags that one skill entry with
+`own: true`; `resolveSkills()` then builds it from the `Language (Own)`
+compendium template rather than by direct name lookup — renaming it, clearing
+`requiresname` and `picknameonly`, and preserving `own: true`. This mirrors
+CoC7's own naming flow at `document-class.js:645-658`.
+
+Because the mapper zeroes `adjustments.base` (D6), the retained `@EDU` base
+formula does not affect the displayed total — the value is the LLM's number
+either way. What the template buys is correct semantics and correct display.
+
+A `nativeLanguage` that matches no `Language (<name>)` entry in `skills[]`
+records a warning rather than failing, and the skill resolves by the ordinary
+path.
+
+Rejected alternative: keeping `Language (Own)` in `skills[]` and renaming only
+during resolution. Same end state on the actor, but the review dialog reads
+`llmData.skills` directly and would display the placeholder name — moving the
+labelling problem rather than fixing it.
 
 ### D8 — Review dialog shows tiers and flags above-tier skills
 
@@ -216,8 +265,8 @@ ANTI-PATTERN: a flat profile with every skill in the same 35–60% band. That is
 
 Plus a `BASE VALUES AND MANDATORY CORE SKILLS` section carrying D3, D4, D5 and
 D6 — including the explicit instruction to compute `Dodge` as half the assigned
-DEX rounded down and `Language (Own)` as the assigned EDU — and the
-`expertiseTier` field added to the required-fields list.
+DEX rounded down and the native language as the assigned EDU — and the
+`expertiseTier` and `nativeLanguage` fields added to the required-fields list.
 
 ## Worked example — the reported constable
 
@@ -235,7 +284,8 @@ Occupation Police Officer, age 34, DEX 50, EDU 55. Declared tier
 | Persuade | 45 | 25 | Amateur | non-occupation, near base 10 |
 | First Aid | 40 | 30 | Amateur | at base |
 | Dodge | 35 | 25 | Amateur | = DEX ÷ 2, computed by the LLM |
-| Climb, Drive Auto, Firearms (Handgun), Jump, Library Use, Language (Own), Stealth, Swim, Throw | absent | base | — | D4 core set |
+| Language (English) | 55 | 55 | — | = EDU; native, per D9 |
+| Climb, Drive Auto, Firearms (Handgun), Jump, Library Use, Stealth, Swim, Throw | absent | base | — | D4 core set |
 
 Before: nine skills, every one between 35% and 60% — peak 60, median 45, spread
 25. After: a peak of 55% held by two occupation skills, a middle group in the
@@ -255,9 +305,13 @@ possible (see CLAUDE.md).
    is the check most worth repeating across several generations and across
    providers.
 3. **Derived skills.** With the random-characteristics checkbox **off**, assert
-   Dodge equals ⌊DEX ÷ 2⌋ and Language (Own) equals EDU. With it **on**, confirm
-   the known limitation below is the only discrepancy — no crash, no validation
-   error.
+   Dodge equals ⌊DEX ÷ 2⌋ and the native language equals EDU. With it **on**,
+   confirm the known limitation below is the only discrepancy — no crash, no
+   validation error.
+3b. **Native language (D9).** On the created actor, assert the language skill is
+   named for a real language (never `Language (Own)`), and that its
+   `system.properties` has `own: true` and `requiresname: false`. Assert a
+   foreign language the NPC also speaks does *not* carry `own: true`.
 4. **Tier spread.** Across roughly five varied prompts (librarian, dockworker,
    professor, gangster enforcer, doctor), confirm profiles are not flat and that
    only genuine combat roles carry tier-level combat skills.
@@ -276,7 +330,7 @@ possible (see CLAUDE.md).
 **Derived skills go stale under random characteristics.** The opt-in
 random-characteristics checkbox (`dialog-injector.js:69`) replaces the LLM's
 characteristics with dice formulas, so the DEX and EDU the model used to compute
-Dodge and Language (Own) are discarded. A rolled DEX of 80 leaves Dodge reading
+Dodge and the native language are discarded. A rolled DEX of 80 leaves Dodge reading
 25% where it should read 40%. Accepted as a consequence of D6: the mode is
 opt-in, the two values are visible in the review dialog, and the Keeper can
 correct them on the sheet. The rejected alternative in D6 is the fix if this

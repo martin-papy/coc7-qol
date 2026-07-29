@@ -16,6 +16,7 @@
 - **Expertise ladder — exact boundaries** (from the rulebook, D-reference table):
   `novice` 1–5, `neophyte` 6–19, `amateur` 20–49, `professional` 50–74, `expert` 75–89, `master` 90–99.
 - **Base values are authoritative** from `../CoC7-FoundryVTT-8.x/compendiums/en-skills.yaml`. Do not invent them.
+- **The native language is named, never a placeholder** (spec D9). `Language (Own)` in the compendium is a *template* (`base: '@EDU'`, `requiresname`, `keepbasevalue`, `own`); `Language (English)` is the *foreign*-language skill (`base: 1`). The LLM emits a `nativeLanguage` field plus a concretely named skill; the mapper builds that one skill from the template. The literal string `Language (Own)` must never reach an actor or the review dialog.
 - **Branch:** `bugfix-npc-skill-balance`, already created off `develop`. Ships as bugfix → `develop`, then `develop` → `main`.
 - **Immutability:** follow the codebase style — build new objects, never mutate inputs.
 - **Escaping:** all LLM-derived strings rendered into HTML go through `escapeHtml()` from `../utils.js`.
@@ -235,6 +236,7 @@ In the `Required fields (must always be present):` block, insert immediately aft
 
 ```markdown
 - expertiseTier: string — the NPC's PEAK competence band, exactly one of: "novice", "neophyte", "amateur", "professional", "expert", "master". See SKILL CALIBRATION below.
+- nativeLanguage: string — the plain English name of the NPC's mother tongue, with no "Language" prefix and no parentheses (e.g. "English", "French", "Arabic"). ALWAYS in English regardless of prompt language. See BASE VALUES AND MANDATORY CORE SKILLS below.
 ```
 
 - [ ] **Step 2: Replace the `skills:` bullet**
@@ -314,8 +316,9 @@ Worked example — "a police constable in 1920s London", DEX 50, EDU 55:
     Intimidate 45, Listen 40          (occupation, below peak)
     Fighting (Brawl) 40               (NOT an occupation skill — Amateur band)
     Psychology 20, Persuade 25        (non-occupation, near base)
+    Language (English) 55             (native tongue = EDU; nativeLanguage "English")
     First Aid 30, Dodge 25, Climb 20, Drive Auto 20, Firearms (Handgun) 20,
-    Jump 20, Library Use 20, Language (Own) 55, Stealth 20, Swim 20, Throw 20
+    Jump 20, Library Use 20, Stealth 20, Swim 20, Throw 20
                                       (core skills at base)
 
 BASE VALUES AND MANDATORY CORE SKILLS:
@@ -326,7 +329,7 @@ a completely untrained person already has, so it is a hard floor.
 These 14 skills are ALWAYS present in skills[], at their base value or higher
 (higher only when it genuinely fits the character):
 
-  Climb 20                 Language (Own) = EDU
+  Climb 20                 Language (native tongue) = EDU
   Dodge = DEX ÷ 2          Library Use 20
   Drive Auto 20            Listen 20
   Fighting (Brawl) 25      Spot Hidden 25
@@ -337,7 +340,20 @@ These 14 skills are ALWAYS present in skills[], at their base value or higher
 Two of these are derived — compute them yourself from the characteristics you
 assigned to THIS NPC:
   - Dodge = DEX ÷ 2, rounded DOWN (DEX 50 → 25, DEX 65 → 32)
-  - Language (Own) = exactly the EDU value (EDU 55 → 55)
+  - The native language = exactly the EDU value (EDU 55 → 55)
+
+THE NATIVE LANGUAGE — name the actual language, never a placeholder:
+  Set "nativeLanguage" to the plain language name ("English"), and list the
+  skill under its real name, "Language (English)". A London constable gets
+  nativeLanguage "English" and a skill "Language (English)" at EDU. A Parisian
+  gets nativeLanguage "French" and "Language (French)" at EDU.
+  NEVER write the literal string "Language (Own)" — that is an internal
+  placeholder, not a skill name, and it renders as an unnamed skill on the
+  sheet.
+  Any ADDITIONAL language the NPC learned is a separate entry at its own
+  trained value, well below EDU — e.g. a London constable who studied a little
+  French lists "Language (French)" at 15. Only the mother tongue equals EDU,
+  and only the mother tongue goes in "nativeLanguage".
 
 Keep era-inappropriate entries anyway: an 1890s NPC still lists Drive Auto at
 20, because that is the character-sheet default.
@@ -386,7 +402,8 @@ In the review dialog, check:
 - The response validated — no error notification.
 - No combat skill (`Fighting (*)`, `Firearms (*)`) exceeds 49%. **This is the reported defect.**
 - All 14 mandatory core skills are present.
-- `Dodge` equals ⌊DEX ÷ 2⌋ and `Language (Own)` equals EDU, read off the characteristics shown in the same dialog.
+- `Dodge` equals ⌊DEX ÷ 2⌋ and the native-language skill equals EDU, read off the characteristics shown in the same dialog.
+- `nativeLanguage` is a bare language name (`"English"`, no parentheses), `skills[]` contains `Language (<that name>)`, and the literal string `Language (Own)` appears nowhere.
 - Skill count is roughly 17–22, and the profile is not flat: the top skill should sit clearly above the median.
 
 If a combat skill still exceeds 49%, do not weaken the check — regenerate twice more to see whether it is systematic or a one-off. If systematic, the Step 3 CRITICAL paragraph needs strengthening (e.g. naming the specific occupation that failed), not the verification loosening.
@@ -410,23 +427,28 @@ combat skills are not occupation skills unless the role is about
 violence.
 
 Also adds CoC7 base values as a hard floor, the 14 mandatory core
-skills, and instructions to derive Dodge from DEX and Language (Own)
-from EDU.
+skills, and instructions to derive Dodge from DEX and the native
+language from EDU. The mother tongue is named concretely
+('Language (English)') with a new nativeLanguage field, never the
+internal 'Language (Own)' placeholder.
 
 Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 ```
 
 ---
 
-### Task 3: Require a valid tier, and fix the weapon-skill fallback floor
+### Task 3: Mapper — tier validation, weapon-skill floor, and native-language resolution
 
 **Files:**
-- Modify: `scripts/ai-generator/mappers/npc.js:11` (constant), `scripts/ai-generator/mappers/npc.js:49-68` (`validate`)
-- Test: none — verified via `browser_evaluate` (see Step 2)
+- Modify: `scripts/ai-generator/mappers/npc.js:11` (constant), `:49-68` (`validate`), `:70-118` (`toFoundryData`), `:120-135` (`resolveSkills`), `:137-185` (`_resolveOneSkill`)
+- Test: none — verified via `browser_evaluate` (see Steps 1, 4, 5 and 7)
 
 **Interfaces:**
-- Consumes: `SKILL_TIER_KEYS` from `scripts/ai-generator/skill-tiers.js` (Task 1)
-- Produces: `validate()` throws when `expertiseTier` is missing or not one of the six keys. No change to `toFoundryData()`'s return shape — `expertiseTier` already reaches the dialog inside the existing `llmData: data` passthrough, so no plumbing is needed.
+- Consumes: `SKILL_TIER_KEYS` from `scripts/ai-generator/skill-tiers.js` (Task 1); the `expertiseTier` and `nativeLanguage` fields the prompt produces (Task 2)
+- Produces:
+  - `validate()` throws when `expertiseTier` is missing or not one of the six keys.
+  - `skillsRaw` entries may carry an extra `own: true` flag marking the native language. `resolveSkills()` builds those from the `Language (Own)` compendium template. No signature change to `resolveSkills()`, so `dialog-injector.js` needs no edit.
+  - No change to `toFoundryData()`'s outer return shape — `expertiseTier` and `nativeLanguage` already reach the dialog inside the existing `llmData: data` passthrough.
 
 - [ ] **Step 1: Write the verification check and run it to confirm it fails**
 
@@ -522,7 +544,172 @@ async () => {
 
 Expected: `PASS: auto-added at 25 with warning — Auto-added skill "Fighting (Brawl)" at 25% …`
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 6: Tag the native-language skill in `toFoundryData`**
+
+Per spec decision D9. In `en-skills.yaml`, `Language (Own)` is a *template* —
+`base: '@EDU'` with `requiresname: true`, `keepbasevalue: true`, `own: true` —
+while `Language (English)` is the *foreign*-language skill with `base: 1`. The
+NPC's mother tongue must be named concretely but built from the template, or it
+is recorded as a language the NPC merely studied. `properties.own` is not
+cosmetic: `character-sheet-v2.js:140` appends an "own" marker to the displayed
+name and `utilities.js:1067` sorts own-languages separately.
+
+In `toFoundryData`, replace this line:
+
+```js
+    const skillsRaw = this._ensureWeaponSkills(data.skills, weaponsData, warnings)
+```
+
+with:
+
+```js
+    const skillsRaw = this._tagNativeLanguage(
+      this._ensureWeaponSkills(data.skills, weaponsData, warnings),
+      data.nativeLanguage,
+      warnings
+    )
+```
+
+Then add this method next to `_ensureWeaponSkills`:
+
+```js
+  /**
+   * Mark the NPC's mother tongue so resolveSkills() can build it from the
+   * `Language (Own)` compendium template rather than the foreign-language
+   * entry of the same name. Only the first match is tagged — an NPC has one
+   * native language.
+   */
+  _tagNativeLanguage (skills, nativeLanguage, warnings) {
+    const language = (nativeLanguage ?? '').trim()
+    if (!language) return skills
+    const target = `language (${language})`.toLowerCase()
+    let tagged = false
+    const result = skills.map(skill => {
+      if (tagged) return skill
+      if ((skill?.name ?? '').trim().toLowerCase() !== target) return skill
+      tagged = true
+      return { ...skill, own: true }
+    })
+    if (!tagged) {
+      warnings.push(`Native language "${language}" has no matching skill — expected an entry named "Language (${language})"`)
+    }
+    return result
+  }
+```
+
+- [ ] **Step 7: Resolve the tagged skill from the `Language (Own)` template**
+
+In `resolveSkills`, widen the destructuring to carry the flag through:
+
+```js
+    for (const { name, value } of skillsRaw) {
+      const normalized = name.trim().replace(/\s+/g, ' ')
+      const skillData = await this._resolveOneSkill(normalized, value, pack, compendiumIndex)
+```
+
+becomes:
+
+```js
+    for (const { name, value, own } of skillsRaw) {
+      const normalized = name.trim().replace(/\s+/g, ' ')
+      const skillData = await this._resolveOneSkill(normalized, value, pack, compendiumIndex, own === true)
+```
+
+Change `_resolveOneSkill`'s signature to accept the flag:
+
+```js
+  async _resolveOneSkill (skillName, targetValue, pack, compendiumIndex, isNativeLanguage = false) {
+```
+
+and insert this as the FIRST thing in its body, before the existing compendium
+lookup. It mirrors CoC7's own naming flow at `document-class.js:645-658`:
+
+```js
+    // The mother tongue is built from the `Language (Own)` template, then named.
+    // keepbasevalue is true on that template, so `base` stays '@EDU' — CoC7
+    // clears the naming flags once a concrete language is chosen.
+    if (isNativeLanguage && pack && compendiumIndex) {
+      const template = compendiumIndex.find(
+        entry => entry.name.toLowerCase() === 'language (own)'
+      )
+      const templateDoc = template ? await pack.getDocument(template._id) : null
+      if (templateDoc) {
+        const data = templateDoc.toObject()
+        const parts = CONFIG.Item.dataModels.skill.guessNameParts(skillName)
+        data.name = parts.name
+        data.system.skillName = parts.system.skillName
+        data.system.specialization = parts.system.specialization
+        data.system.properties = {
+          ...data.system.properties,
+          requiresname: false,
+          picknameonly: false,
+          keepbasevalue: false,
+          own: true
+        }
+        data.system.adjustments = {
+          personal: targetValue,
+          base: 0,
+          occupation: 0,
+          archetype: 0,
+          experiencePackage: 0,
+          experience: 0
+        }
+        foundry.utils.setProperty(
+          data,
+          'flags.CoC7.cocidFlag.id',
+          'i.skill.' + parts.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+        )
+        delete data._id
+        return data
+      }
+    }
+```
+
+- [ ] **Step 8: Verify the native-language resolution against the real compendium**
+
+Reload the page, then run via `browser_evaluate`. This exercises the real
+`CoC7.skills` pack, so it catches a wrong template name or a schema mismatch:
+
+```js
+async () => {
+  const { default: mapper } = await import('/modules/coc7-qol/scripts/ai-generator/mappers/npc.js')
+  const out = mapper.toFoundryData({
+    name: 'Test Subject',
+    expertiseTier: 'professional',
+    nativeLanguage: 'English',
+    characteristics: { str: 50, con: 50, siz: 50, dex: 50, app: 50, int: 50, pow: 50, edu: 55 },
+    skills: [
+      { name: 'Language (English)', value: 55 },
+      { name: 'Language (French)', value: 15 },
+      { name: 'Dodge', value: 25 }
+    ]
+  })
+  const tagged = out.skillsRaw.filter(s => s.own === true).map(s => s.name)
+  const resolved = await mapper.resolveSkills(out.skillsRaw)
+  const byName = Object.fromEntries(resolved.map(s => [s.name, s]))
+  const native = byName['Language (English)']
+  const foreign = byName['Language (French)']
+  const total = s => Object.values(s.system.adjustments).reduce((c, v) => c + Number(v), 0)
+  const fails = []
+  if (JSON.stringify(tagged) !== JSON.stringify(['Language (English)'])) fails.push(`tagged = ${JSON.stringify(tagged)}, want ["Language (English)"]`)
+  if (!native) fails.push('native language skill missing from resolved output')
+  if (native && native.system.properties.own !== true) fails.push('native: own !== true')
+  if (native && native.system.properties.requiresname !== false) fails.push('native: requiresname not cleared')
+  if (native && native.system.base !== '@EDU') fails.push(`native: base = ${JSON.stringify(native?.system.base)}, want "@EDU"`)
+  if (native && native.system.skillName !== 'English') fails.push(`native: skillName = ${native.system.skillName}, want English`)
+  if (native && total(native) !== 55) fails.push(`native: total = ${total(native)}, want 55`)
+  if (foreign && foreign.system.properties.own === true) fails.push('foreign language wrongly marked own')
+  if (foreign && total(foreign) !== 15) fails.push(`foreign: total = ${total(foreign)}, want 15`)
+  if (resolved.some(s => s.name === 'Language (Own)')) fails.push('a skill literally named "Language (Own)" reached the actor')
+  return fails.length
+    ? 'FAIL:\n  ' + fails.join('\n  ')
+    : `PASS — native ${native.name} own=${native.system.properties.own} base=${native.system.base} total=${total(native)}; foreign ${foreign.name} total=${total(foreign)}`
+}
+```
+
+Expected: `PASS`. Also confirm the mismatch path warns rather than throwing — re-run with `nativeLanguage: 'Klingon'` and check `out.warnings` contains a "has no matching skill" entry and that `resolveSkills` still returns all three skills.
+
+- [ ] **Step 9: Commit**
 
 ```bash
 git add scripts/ai-generator/mappers/npc.js
@@ -536,6 +723,16 @@ WEAPON_SKILL_FALLBACK_VALUE goes 20 -> 25. A CoC7 skill may never sit
 below its base value, and Fighting (Brawl)'s base is 25, so the old
 fallback wrote an illegal value. 25 is the highest base among weapon
 skills, so it is legal for all of them.
+
+The NPC's mother tongue is now built from the `Language (Own)`
+compendium template and named concretely. That entry is a template
+(base '@EDU', requiresname, keepbasevalue, own), whereas
+`Language (English)` is the foreign-language skill with base 1 —
+so resolving the mother tongue by plain name recorded a native speaker
+as having merely studied their own language, losing properties.own,
+which drives both the sheet's own-language marker and skill sorting.
+toFoundryData tags the entry named for `nativeLanguage`; resolveSkills
+builds it from the template, clears the naming flags, and keeps own.
 
 Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 ```
@@ -702,7 +899,7 @@ async () => {
           { name: 'Fighting (Brawl)', value: 60 },
           { name: 'Spot Hidden', value: 45 },
           { name: 'Law', value: 30 },
-          { name: 'Language (Own)', value: 55 },
+          { name: 'Language (English)', value: 55 },
           { name: 'Dodge', value: 25 }
         ]
       },
@@ -729,8 +926,8 @@ async () => {
   // visually, but text-transform never reaches the DOM text.
   if (brawl?.tier !== 'Professional') fails.push(`Fighting (Brawl) tier = ${brawl?.tier}, want Professional`)
   if (!brawl?.flagged) fails.push('Fighting (Brawl) at 60 was not flagged above the amateur tier')
-  const lang = report.find(r => r.name === 'Language (Own)')
-  if (!lang?.flagged) fails.push('Language (Own) at 55 was not flagged above the amateur tier')
+  const lang = report.find(r => r.name === 'Language (English)')
+  if (!lang?.flagged) fails.push('Language (English) at 55 was not flagged above the amateur tier')
   if (report.find(r => r.name === 'Spot Hidden')?.flagged) fails.push('Spot Hidden at 45 was wrongly flagged')
   if (report.find(r => r.name === 'Dodge')?.flagged) fails.push('Dodge at 25 was wrongly flagged')
   if (report.some(r => r.overflows)) fails.push('a skill row overflows its column')
@@ -807,7 +1004,8 @@ Reload the page. For each prompt, generate an NPC and record: declared tier, pea
 - **Tier restraint (D1):** none of prompts 1, 2, 5 should self-declare `expert` or `master`. Prompt 3 declaring `expert` is defensible for a tenured academic.
 - **Floors (D3):** no skill below its base value. Spot-check `First Aid ≥ 30`, `Fighting (Brawl) ≥ 25`, `Spot Hidden ≥ 25`, `Listen ≥ 20`.
 - **Core set (D4):** all 14 present on every NPC.
-- **Derived (D6):** `Dodge` = ⌊DEX ÷ 2⌋ and `Language (Own)` = EDU against the characteristics in the same dialog.
+- **Derived (D6):** `Dodge` = ⌊DEX ÷ 2⌋ and the native language = EDU against the characteristics in the same dialog.
+- **Native language (D9):** `nativeLanguage` is a bare language name with no parentheses; `skills[]` carries `Language (<that name>)` and NOT the literal `Language (Own)`. On at least one accepted actor, confirm the created skill has `properties.own === true` and `properties.requiresname === false`, and that any additional foreign language is well below EDU and not marked `own`.
 - **No padding (D5):** roughly 17–22 skills; a run of non-core skills sitting exactly at base means D5 is being ignored.
 
 - [ ] **Step 3: Check the random-characteristics known limitation is benign**

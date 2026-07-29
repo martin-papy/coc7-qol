@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- **GM-only highlighting missed the damage/heal buttons on plain roll cards** — The Keeper's-view highlight never marked the `Set as damage/heal` and `Remove from <resource>` buttons, so the Keeper had no cue that players see neither. Two causes: the system appends those buttons *after* the render hook returns (its own handler awaits `canModifyActor()` and `renderTemplate()`, and Foundry's `Hooks.callAll` does not await handlers), so the single synchronous pass ran against a card that did not have them yet; and the apply damage/heal row carries no `.keeper-only-block` marker at all — it is Keeper-only only because the code that builds it runs behind `if (game.user.isGM)`. Chat cards that can still grow are now watched briefly for late content, and Keeper-only regions the system leaves unmarked are resolved by rule.
+
 ## [0.5.0] - 2026-06-18
 
 ### Added

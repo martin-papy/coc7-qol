@@ -31,7 +31,8 @@ is raw textarea text (`dialog-injector.js:250`), so nothing else contributes.
 | 1 | No expertise scale. The prompt says only `Values 1–99 as percentages`. The model has no basis for knowing 60% means "earns a living at this". | prompt line 25 |
 | 2 | The only numeric anchors in the whole prompt are high: `a thug with a knife → "Fighting (Brawl)" at 30–60` and `a soldier with a rifle → "Firearms (Rifle/Shotgun)" at 50+`. This is the model's entire calibration reference and it biases upward. | prompt line 53 |
 | 3 | No guidance on distribution, so the model defaults to a flat competent band. | prompt line 26 |
-| 4 | No mention of CoC7 base values. The mapper writes the LLM number to `adjustments.personal` and zeroes `adjustments.base`; CoC7 computes `value` as the sum of all adjustments (`skill-system.js:277`). The LLM's number therefore *is* the final displayed percentage, base included — but nothing tells the model that Law starts at 5% and First Aid at 30%, so it cannot reason about trained-above-baseline versus untrained. | `npc.js:147-155` |
+| 4 | No mention of CoC7 base values, so the model cannot reason about trained-above-baseline versus untrained — nothing tells it Law starts at 5% and First Aid at 30%. | `npc.js:147-155` |
+| 5 | **The mapper's numbers never survived to the actor.** See D10 — every skill arrived on the sheet inflated by its own base value. Discovered during Task 5 verification, after D6 had been decided on the opposite assumption. | `npc.js:147-155` |
 
 Cause 4 cuts both ways. Tightening the ceiling without stating the floor makes
 the opposite error *more* likely: First Aid at 15% when its base is 30%, which
@@ -128,21 +129,18 @@ instructs the model to compute them from the characteristics it just assigned:
 
 The native language's *name* is covered separately by D9.
 
-The mapper's existing behaviour is unchanged: `adjustments.base = 0`, the LLM's
-number goes to `adjustments.personal`, and CoC7 sums the adjustments so the
-final displayed percentage is exactly what the model produced.
+**The mapper half of this decision was WRONG and is superseded by D10.** It
+assumed `adjustments.base = 0` held and that the LLM's number was therefore the
+final displayed value. Task 5 measured otherwise. The *prompt* half stands — the
+LLM still computes Dodge and the native language from the characteristics it
+assigns, which is what gives the mapper a value to subtract the base from.
 
-Rejected alternative: resolving base formulas in code via the system's
-`CoC7Utilities.setMultipleSkillBases()`
-(`../CoC7-FoundryVTT-8.x/coc7/apps/utilities.js:991`), setting
-`personal = max(0, llmValue - base)`. That would enforce every floor
-structurally instead of trusting the prompt, and would keep the two derived
-skills correct in both characteristic modes. It was rejected as
-disproportionate: it requires reordering `onAccept` to create the actor *before*
-resolving skills so that rolled characteristics can be read back, which is a
-substantially riskier change than the balance problem being fixed warrants.
-Floors are therefore prompt-enforced (D3), with the review dialog (D8) as the
-human check.
+The alternative this decision rejected — `personal = max(0, llmValue - base)` —
+turned out to be necessary, and is now D10. The reason it was rejected (that it
+would require reordering `onAccept` to read rolled characteristics back off a
+created actor) proved unfounded: resolving the base from the LLM's own
+characteristics at mapping time is sufficient, because CoC7 re-resolves the
+formula on the actor anyway.
 
 ### D7 — Raise `_ensureWeaponSkills` fallback from 20 to 25
 
@@ -152,6 +150,53 @@ code. 25 is the highest base among weapon skills (Fighting (Brawl) 25, Firearms
 (Rifle/Shotgun) 25), so a flat 25 is at or above base for every weapon skill and
 is legal in all cases. A one-line constant change; no per-skill base table
 needed.
+
+### D10 — `personal` holds the trained excess; the base value stands (supersedes D6's mapper decision)
+
+Added 2026-07-29 during Task 5 verification. **This reverses the choice made in
+D6 and adopts the alternative D6 rejected.** The evidence that forced it:
+
+D6 assumed the mapper's `adjustments.base = 0` held, so that the LLM's number
+*was* the final displayed value. It does not hold. CoC7 re-resolves
+`system.base` into `adjustments.base` when a skill is created on an actor, and
+`value` is the sum of all adjustments (`skill-system.js:262,277`). Measured on a
+real actor at DEX 54, EDU 55:
+
+| Skill | LLM value | On the actor | `adjustments.base` | `personal` |
+|---|---|---|---|---|
+| Spot Hidden | 40 | **65** | 25 | 40 |
+| Dodge | 27 | **54** | 27 | 27 |
+| Language (English) | 55 | **110** | 55 | 55 |
+
+Every skill arrived inflated by its base; the two formula-based ones doubled.
+This predates the branch — `Spot Hidden` travels the long-standing compendium
+path — and it silently defeated the entire calibration effort: a constable
+reviewed at `Fighting (Brawl) 40` reached the sheet at 65.
+
+**Decision.** Resolve each skill's base at mapping time and store only the
+trained excess:
+
+    resolvedBase = evaluate(system.base, the LLM's characteristics)   // 0 if unparseable
+    adjustments.base     = resolvedBase
+    adjustments.personal = max(0, llmValue - resolvedBase)
+
+The total is then exactly the LLM's number. If CoC7 re-resolves the base it
+writes the same figure, so the total is unchanged either way — the fix is robust
+to whether that resolution happens or not.
+
+`CoC7Utilities.setMultipleSkillBases()` is *not* reachable from module code —
+`CoC7Utilities` is an internal ES module and is absent from `game.CoC7`
+(verified). The mapper therefore resolves the formula itself, mirroring CoC7's
+approach at `utilities.js:995-1021`: substitute `@term` from a lowercased
+characteristics map, then evaluate with Foundry's `Roll` and floor the result.
+
+Two consequences beyond correctness, both previously listed as weaknesses:
+
+- **Floors become structural.** `personal` can never be negative, so the total
+  can never fall below base. D3's floor no longer depends on model compliance.
+- **The random-characteristics limitation disappears.** With the base formula
+  left intact, a rolled DEX of 80 resolves Dodge to 40 on its own. The trained
+  excess rides on top, which is the correct CoC7 semantics.
 
 ### D9 — The native language is named concretely, built from the Own template
 
@@ -339,19 +384,18 @@ possible (see CLAUDE.md).
 
 ## Known limitations
 
-**Derived skills go stale under random characteristics.** The opt-in
-random-characteristics checkbox (`dialog-injector.js:69`) replaces the LLM's
-characteristics with dice formulas, so the DEX and EDU the model used to compute
-Dodge and the native language are discarded. A rolled DEX of 80 leaves Dodge reading
-25% where it should read 40%. Accepted as a consequence of D6: the mode is
-opt-in, the two values are visible in the review dialog, and the Keeper can
-correct them on the sheet. The rejected alternative in D6 is the fix if this
-proves annoying in play.
+Both limitations originally recorded here — derived skills going stale under
+random characteristics, and floors depending on model compliance — were
+**resolved by D10**, which keeps the base formula intact and stores only the
+trained excess. A rolled DEX now resolves Dodge correctly on its own, and
+`personal` can never be negative, so no skill can land below its base.
 
-**Floors depend on model compliance.** Nothing in code prevents a provider from
-returning First Aid at 15% (base 30%). The prompt states the floor and the
-review dialog surfaces the values, but a determined bad response can still write
-an illegal skill value to an actor.
+**The review dialog shows the LLM's numbers, which are the actor's totals.**
+With D10 the dialog and the sheet agree, since the total is `base + excess =
+llmValue`. Under random characteristics the two derived skills are the exception:
+the dialog shows the value computed from the LLM's characteristics, while the
+actor will show the value recomputed from the rolled ones. That is now a display
+difference rather than a wrong actor.
 
 ## Out of scope
 

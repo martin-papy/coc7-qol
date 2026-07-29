@@ -1057,6 +1057,265 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 
 ---
 
+### Task 7: Store the trained excess so totals survive to the actor
+
+Added after Task 5 verification found that none of the mapper's numbers reached
+the sheet intact. Implements spec decision **D10**, which supersedes D6's mapper
+half. Do this BEFORE Task 6.
+
+**Files:**
+- Modify: `scripts/ai-generator/mappers/npc.js` (`_resolveOneSkill`, `resolveSkills`)
+- Test: none — verified by creating a real actor and reading its skill totals back
+
+**Interfaces:**
+- Consumes: the LLM's `characteristics` object, which must reach `resolveSkills` so base formulas can be resolved
+- Produces: skill data whose `adjustments.base + adjustments.personal` equals the LLM's value. `resolveSkills` gains a second parameter, so `dialog-injector.js` DOES need a one-line change this time.
+
+**The defect, measured on a real actor at DEX 54 / EDU 55:**
+
+| Skill | LLM value | On the actor | `adjustments.base` | `personal` |
+|---|---|---|---|---|
+| Spot Hidden | 40 | **65** | 25 | 40 |
+| Dodge | 27 | **54** | 27 | 27 |
+| Language (English) | 55 | **110** | 55 | 55 |
+
+CoC7 re-resolves `system.base` into `adjustments.base` on creation, overwriting
+the mapper's `= 0`, and `value` is the sum of all adjustments
+(`skill-system.js:262,277`). `CoC7Utilities` is not on `game.CoC7` (verified), so
+the system's own resolver cannot be called — the mapper must resolve the formula.
+
+- [ ] **Step 1: Write the failing check and run it to confirm it fails**
+
+Run via `browser_evaluate`. It creates a real actor, reads the totals back, and
+deletes it:
+
+```js
+async () => {
+  const { default: mapper } = await import('/modules/coc7-qol/scripts/ai-generator/mappers/npc.js')
+  const llm = {
+    name: 'ZZ Base Probe', expertiseTier: 'professional', nativeLanguage: 'English',
+    characteristics: { str: 50, con: 50, siz: 50, dex: 54, app: 50, int: 50, pow: 50, edu: 55 },
+    skills: [
+      { name: 'Dodge', value: 27 }, { name: 'Language (English)', value: 55 },
+      { name: 'Spot Hidden', value: 40 }, { name: 'First Aid', value: 30 },
+      { name: 'Law', value: 50 }, { name: 'Cthulhu Mythos', value: 5 }
+    ]
+  }
+  mapper.validate(llm)
+  const out = mapper.toFoundryData(llm)
+  const skills = await mapper.resolveSkills(out.skillsRaw, llm.characteristics)
+  const actor = await Actor.create(out.actorData)
+  await actor.createEmbeddedDocuments('Item', skills)
+  const got = {}
+  for (const it of actor.items) got[it.name] = it.system.value
+  await actor.delete()
+  const want = { Dodge: 27, 'Language (English)': 55, 'Spot Hidden': 40, 'First Aid': 30, Law: 50, 'Cthulhu Mythos': 5 }
+  const fails = Object.entries(want).filter(([k, v]) => got[k] !== v).map(([k, v]) => `${k}: actor ${got[k]}, want ${v}`)
+  return fails.length ? 'FAIL:\n  ' + fails.join('\n  ') : `PASS — all six totals match (${JSON.stringify(got)})`
+}
+```
+
+Expected now: `FAIL`, with Spot Hidden 65, Dodge 54, Language (English) 110,
+First Aid 60, Law 55.
+
+Note `Cthulhu Mythos` has base 0 and `Law` base 5 — they cover the zero-base and
+small-base cases. The second argument to `resolveSkills` does not exist yet; it
+is simply ignored on this first run.
+
+- [ ] **Step 2: Add the base resolver**
+
+Add near the top of `scripts/ai-generator/mappers/npc.js`:
+
+```js
+/**
+ * Resolve a CoC7 skill's base value. `system.base` is either a plain number
+ * ("25"), a characteristic reference ("@EDU"), or an expression over one
+ * ("1/2*@DEX"). Mirrors the system's own approach at
+ * ../CoC7-FoundryVTT-8.x/coc7/apps/utilities.js:995-1021 — substitute @terms
+ * from the characteristics, then evaluate and floor.
+ *
+ * Returns 0 for an absent or unresolvable base, so an unknown formula degrades
+ * to "the LLM's value stands" rather than throwing.
+ *
+ * @param {string|number|undefined} base
+ * @param {object} characteristics lowercase-keyed, e.g. { dex: 54, edu: 55 }
+ * @returns {Promise<number>}
+ */
+async function resolveBaseValue (base, characteristics) {
+  const raw = String(base ?? '').trim()
+  if (raw === '') return 0
+  const chars = characteristics ?? {}
+  let unresolved = false
+  const substituted = raw.replace(/@([a-z.0-9_-]+)/gi, (_match, term) => {
+    const value = chars[term.toLowerCase()]
+    if (typeof value !== 'number') { unresolved = true; return '0' }
+    return String(value)
+  })
+  if (unresolved) return 0
+  try {
+    const roll = await new Roll(`(${substituted})`).evaluate()
+    const total = Math.floor(Number(roll.total))
+    return Number.isFinite(total) && total > 0 ? total : 0
+  } catch (err) {
+    return 0
+  }
+}
+```
+
+- [ ] **Step 3: Thread the characteristics through `resolveSkills`**
+
+```js
+  async resolveSkills (skillsRaw, characteristics) {
+```
+
+and pass them down to each `_resolveOneSkill` call:
+
+```js
+      const skillData = await this._resolveOneSkill(normalized, value, pack, compendiumIndex, own === true, characteristics)
+```
+
+- [ ] **Step 4: Store the trained excess in both resolution paths**
+
+Change `_resolveOneSkill`'s signature:
+
+```js
+  async _resolveOneSkill (skillName, targetValue, pack, compendiumIndex, isNativeLanguage = false, characteristics = {}) {
+```
+
+In the NATIVE-LANGUAGE branch, replace its `adjustments` assignment with:
+
+```js
+        const nativeBase = await resolveBaseValue(data.system.base, characteristics)
+        data.system.adjustments = {
+          personal: Math.max(0, targetValue - nativeBase),
+          base: nativeBase,
+          occupation: 0,
+          archetype: 0,
+          experiencePackage: 0,
+          experience: 0
+        }
+```
+
+In the ORDINARY COMPENDIUM branch, replace the block that zeroes the adjustments
+with:
+
+```js
+          const resolvedBase = await resolveBaseValue(data.system.base, characteristics)
+          data.system.adjustments = {
+            personal: Math.max(0, targetValue - resolvedBase),
+            base: resolvedBase,
+            occupation: 0,
+            archetype: 0,
+            experiencePackage: 0,
+            experience: 0
+          }
+```
+
+Leave the `guessNameParts` FALLBACK path as it is — a skill absent from the
+compendium has no base to resolve, so `personal = targetValue` is already right.
+
+- [ ] **Step 5: Update the one caller**
+
+In `scripts/ai-generator/dialog-injector.js`, the `onAccept` handler calls
+`mapper.resolveSkills(data.skillsRaw)`. Pass the characteristics the LLM
+produced, which are on `data.llmData`:
+
+```js
+      const resolvedSkills = await mapper.resolveSkills(data.skillsRaw, data.llmData?.characteristics)
+```
+
+- [ ] **Step 6: Re-run the Step 1 check**
+
+Reload the page first. Expected: `PASS — all six totals match`.
+
+- [ ] **Step 7: Confirm the floor is now structural**
+
+This is the property D10 buys beyond correctness — verify it rather than assume:
+
+```js
+async () => {
+  const { default: mapper } = await import('/modules/coc7-qol/scripts/ai-generator/mappers/npc.js')
+  const chars = { str: 50, con: 50, siz: 50, dex: 54, app: 50, int: 50, pow: 50, edu: 55 }
+  const skills = await mapper.resolveSkills([
+    { name: 'First Aid', value: 5 },        // base 30 — LLM undershot badly
+    { name: 'Spot Hidden', value: 1 },      // base 25
+    { name: 'Dodge', value: 2 }             // base 27 (DEX 54)
+  ], chars)
+  const actor = await Actor.create({ name: 'ZZ Floor Probe', type: 'npc' })
+  await actor.createEmbeddedDocuments('Item', skills)
+  const got = {}
+  for (const it of actor.items) got[it.name] = it.system.value
+  await actor.delete()
+  const want = { 'First Aid': 30, 'Spot Hidden': 25, Dodge: 27 }
+  const fails = Object.entries(want).filter(([k, v]) => got[k] !== v).map(([k, v]) => `${k}: ${got[k]}, want floor ${v}`)
+  return fails.length ? 'FAIL:\n  ' + fails.join('\n  ') : `PASS — clamped to base (${JSON.stringify(got)})`
+}
+```
+
+Expected: `PASS`. A value below base is raised to exactly the base, because
+`personal` cannot go negative.
+
+- [ ] **Step 8: Confirm the random-characteristics limitation is gone**
+
+```js
+async () => {
+  const npc = await import('/modules/coc7-qol/scripts/ai-generator/mappers/npc.js')
+  const mapper = npc.default
+  const llm = {
+    name: 'ZZ Random Probe', expertiseTier: 'professional', nativeLanguage: 'English',
+    characteristics: { str: 50, con: 50, siz: 50, dex: 54, app: 50, int: 50, pow: 50, edu: 55 },
+    skills: [{ name: 'Dodge', value: 27 }, { name: 'Language (English)', value: 55 }]
+  }
+  const randomised = npc.applyRandomCharacteristics(mapper.toFoundryData(llm))
+  const skills = await mapper.resolveSkills(randomised.skillsRaw, llm.characteristics)
+  const actor = await Actor.create(randomised.actorData)
+  await actor.createEmbeddedDocuments('Item', skills)
+  const dex = actor.system.characteristics.dex.value
+  const edu = actor.system.characteristics.edu.value
+  const got = {}
+  for (const it of actor.items) got[it.name] = it.system.value
+  await actor.delete()
+  return { rolledDex: dex, rolledEdu: edu, expectedDodge: Math.floor(dex / 2), expectedLanguage: edu, got }
+}
+```
+
+Report the numbers. Dodge should track the ROLLED DEX (not the LLM's 54), and the
+native language the rolled EDU. If the rolled characteristics come back as 0 or
+as formula strings, say so — that means Foundry had not evaluated them at read
+time, which is itself worth reporting and does not fail this task.
+
+- [ ] **Step 9: Commit**
+
+```bash
+git add scripts/ai-generator/mappers/npc.js scripts/ai-generator/dialog-injector.js
+git commit -m "fix: store the trained excess so skill totals reach the actor
+
+None of the generator's skill values survived to the sheet. The mapper
+zeroed adjustments.base and put the whole value in personal, but CoC7
+re-resolves system.base into adjustments.base when a skill is created
+on an actor, and value is the sum of all adjustments. Every skill
+therefore arrived inflated by its own base: Spot Hidden 40 -> 65,
+First Aid 30 -> 60, and the formula-based Dodge and native language
+doubled outright (27 -> 54, 55 -> 110).
+
+This silently defeated the whole calibration effort — a constable
+reviewed at Fighting (Brawl) 40 reached the sheet at 65.
+
+The mapper now resolves each skill's base from the LLM's own
+characteristics and stores only the trained excess, so
+base + personal is exactly the value the model produced. CoC7
+re-resolving the base writes the same figure, making the result
+correct whether or not that resolution happens.
+
+Two consequences: the base floor is now structural, since personal
+can never be negative; and the random-characteristics limitation is
+gone, because a rolled DEX resolves Dodge on its own.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
+```
+
+---
+
 ### Task 6: Ship it
 
 - [ ] **Step 1: Re-run the three isolated checks once more on a fresh page load**

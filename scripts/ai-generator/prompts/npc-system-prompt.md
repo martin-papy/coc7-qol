@@ -139,6 +139,13 @@ assigned to THIS NPC:
   - Dodge = DEX ÷ 2, rounded DOWN (DEX 50 → 25, DEX 65 → 32)
   - The native language = exactly the EDU value (EDU 55 → 55)
 
+These two base-derived values do NOT count toward the declared "expertiseTier"
+— the peak is judged from TRAINED skills only, never from Dodge or the native
+language. A high EDU pushes the mandatory native language up on its own, and
+that is not evidence of expertise: an archaeology professor with EDU 80 has
+"Language (English)" at 80, but if his best TRAINED skill is Archaeology 70,
+his expertiseTier is "professional", not "expert".
+
 THE NATIVE LANGUAGE — name the actual language, never a placeholder:
   Set "nativeLanguage" to the plain language name ("English"), and list the
   skill under its real name, "Language (English)". A London constable gets
@@ -157,16 +164,16 @@ Keep era-inappropriate entries anyway: an 1890s NPC still lists Drive Auto at
 
 Base values for other common skills, for reference:
   Accounting 5, Animal Handling 5, Anthropology 1, Appraise 5, Archaeology 1,
-  Art/Craft (any) 5, Charm 15, Civics 10, Computer Use 5, Credit Rating 0,
+  Art/Craft (specialization) 5, Charm 15, Civics 10, Computer Use 5, Credit Rating 0,
   Cthulhu Mythos 0, Demolitions 1, Disguise 5, Diving 1, Electrical Repair 10,
   Electronics 1, Fast Talk 5, Fighting (Axe) 15, Fighting (Spear) 20,
   Fighting (Sword) 20, Firearms (Bow) 15, Firearms (Rifle/Shotgun) 25,
   Gambling 10, History 5, Hypnosis 1, Intimidate 15, Language (other) 1, Law 5,
-  Locksmith 1, Lore (any) 1, Mechanical Repair 10, Medicine 1,
+  Locksmith 1, Lore (specialization) 1, Mechanical Repair 10, Medicine 1,
   Natural World 10, Navigate 10, Occult 5, Operate Heavy Machinery 1,
-  Persuade 10, Pilot (any) 1, Psychoanalysis 1, Psychology 10, Read Lips 1,
-  Ride 5, Rope Use 5, Science (any) 1, Science (Mathematics) 10,
-  Sleight of Hand 10, Survival (any) 10, Track 10
+  Persuade 10, Pilot (specialization) 1, Psychoanalysis 1, Psychology 10, Read Lips 1,
+  Ride 5, Rope Use 5, Science (specialization) 1, Science (Mathematics) 10,
+  Sleight of Hand 10, Survival (specialization) 10, Track 10
 
 Beyond the mandatory 14, include a skill ONLY when the NPC is trained ABOVE its
 base value. Do not pad the list with untrained skills — leave them out. Expect

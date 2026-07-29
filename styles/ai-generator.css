@@ -216,6 +216,13 @@
 }
 
 .coc7-npc-skill-value {
+  /* Grid auto-placement fills cells in DOM order: on a row with no tier
+     label there are only two children (name, value), so the value would
+     otherwise land in track 2 instead of track 3, landing a few pixels left
+     of where a labelled row's value sits. Pin it to the last track and
+     right-align so labelled and unlabelled rows agree. */
+  grid-column: 3;
+  text-align: right;
   color: var(--color-warm-2, #c9a96e);
   font-weight: bold;
 }
@@ -224,6 +231,8 @@
   font-size: 0.82rem;
   color: var(--color-text-light-5, #bbb);
   margin: 0;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .coc7-ai-npc-dialog .form-footer {

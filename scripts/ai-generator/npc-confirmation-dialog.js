@@ -75,12 +75,25 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
 
     // --- Skills list ---
     const declaredTier = llm.expertiseTier
+    // The mandatory native language equals EDU (a base-derived value, never a
+    // trained one), so it must not be judged against the declared tier: for a
+    // high-EDU NPC it is routinely the single highest skill and would either
+    // raise a false above-tier flag on a value the prompt required, or (if the
+    // GM ignored the flag) push the model to over-declare its tier. Dodge is
+    // not exempted here — its ceiling (DEX 90 ÷ 2 = 45) sits inside Amateur,
+    // so it can never exceed any tier the prompt allows an NPC to declare.
+    const nativeLanguageTarget = `language (${(llm.nativeLanguage ?? '').trim()})`.toLowerCase()
+    const isNativeLanguageSkill = (skill) => {
+      if (!(llm.nativeLanguage ?? '').trim()) return false
+      return (skill?.name ?? '').trim().toLowerCase() === nativeLanguageTarget
+    }
     const aboveTierTitle = tf('COC7QOL.AIGenerator.NPCDialog.AboveTierTitle', {
       tier: tierLabel(declaredTier)
     })
     const skillRows = skills.map(s => {
-      const above = isAboveTier(s.value, declaredTier)
-      const atOrAbove = isAtOrAboveTier(s.value, declaredTier)
+      const exempt = isNativeLanguageSkill(s)
+      const above = !exempt && isAboveTier(s.value, declaredTier)
+      const atOrAbove = !exempt && isAtOrAboveTier(s.value, declaredTier)
       const tierText = atOrAbove
         ? `<span class="coc7-npc-skill-tier">${escapeHtml(tierLabel(tierForValue(s.value)))}</span>`
         : ''
@@ -95,7 +108,7 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
       </div>`
     }).join('')
 
-    const aboveTierCount = skills.filter(s => isAboveTier(s.value, declaredTier)).length
+    const aboveTierCount = skills.filter(s => !isNativeLanguageSkill(s) && isAboveTier(s.value, declaredTier)).length
 
     const skillsHtml = skills.length ? `
       <div class="coc7-npc-section">

@@ -15,6 +15,13 @@ const REQUIRED_CHARACTERISTICS = ['str', 'con', 'siz', 'dex', 'app', 'int', 'pow
 // 20 was illegal for a brawler.
 const WEAPON_SKILL_FALLBACK_VALUE = 25
 
+// Matches an unnamed specialization template, e.g. "Survival (any)",
+// "Science ( Any )". CoC7's isAnySpec (document-class.js) matches these on
+// the NAME ALONE — even a non-compendium fallback skill with this exact name
+// trips it — and opens a blocking CoC7SkillSpecializationSelectDialog that
+// DROPS the skill if the GM dismisses it. Must never reach an actor.
+const ANY_SPEC_PATTERN = /\(\s*any\s*\)\s*$/i
+
 export const CHARACTERISTIC_FORMULAS = {
   str: '5*(3d6)',
   con: '5*(3d6)',
@@ -103,6 +110,14 @@ export default {
 
     if (!Array.isArray(data.skills) || data.skills.length === 0) {
       errors.push('skills (must be a non-empty array)')
+    } else {
+      data.skills.forEach((entry, index) => {
+        const hasName = typeof entry?.name === 'string' && entry.name.trim() !== ''
+        const hasValue = typeof entry?.value === 'number' && Number.isFinite(entry.value)
+        if (!hasName || !hasValue) {
+          errors.push(`skills[${index}] (must have a non-empty string "name" and a finite numeric "value")`)
+        }
+      })
     }
 
     if (errors.length) {
@@ -121,9 +136,12 @@ export default {
     const warnings = []
     const weaponsData = this._validateAndMapWeapons(data.weapons, warnings)
     const possessionsData = this._mapPossessions(data.possessions)
-    const skillsRaw = this._tagNativeLanguage(
-      this._ensureWeaponSkills(data.skills, weaponsData, warnings),
-      data.nativeLanguage,
+    const skillsRaw = this._dropAnySpecializationSkills(
+      this._tagNativeLanguage(
+        this._ensureWeaponSkills(data.skills, weaponsData, warnings),
+        data.nativeLanguage,
+        warnings
+      ),
       warnings
     )
 
@@ -173,53 +191,97 @@ export default {
     }
 
     const resolved = []
+    // Collected here rather than passed in from the caller — resolveSkills
+    // runs after the confirmation dialog has already closed (see
+    // dialog-injector.js onAccept), so toFoundryData's warnings array can no
+    // longer reach that dialog by the time resolution happens. resolveSkills's
+    // signature and return value (a plain array, spread directly by the
+    // injector) must not change, so ui.notifications is the only remaining
+    // channel to surface a resolution failure to the GM.
+    const resolutionWarnings = []
     for (const { name, value, own } of skillsRaw) {
       const normalized = name.trim().replace(/\s+/g, ' ')
-      const skillData = await this._resolveOneSkill(normalized, value, pack, compendiumIndex, own === true, characteristics)
+      const skillData = await this._resolveOneSkill(normalized, value, pack, compendiumIndex, own === true, characteristics, resolutionWarnings)
       if (skillData) resolved.push(skillData)
     }
+    resolutionWarnings.forEach(message => {
+      console.warn(`[coc7-qol] ${message}`)
+      ui.notifications?.warn(message)
+    })
     return resolved
   },
 
-  async _resolveOneSkill (skillName, targetValue, pack, compendiumIndex, isNativeLanguage = false, characteristics = {}) {
-    // The mother tongue is built from the `Language (Own)` template, then named.
-    // keepbasevalue is true on that template, so `base` stays '@EDU' — CoC7
-    // clears the naming flags once a concrete language is chosen.
-    if (isNativeLanguage && pack && compendiumIndex) {
-      const template = compendiumIndex.find(
-        entry => entry.name.toLowerCase() === 'language (own)'
-      )
-      const templateDoc = template ? await pack.getDocument(template._id) : null
-      if (templateDoc) {
-        const data = templateDoc.toObject()
-        const parts = CONFIG.Item.dataModels.skill.guessNameParts(skillName)
-        data.name = parts.name
-        data.system.skillName = parts.system.skillName
-        data.system.specialization = parts.system.specialization
-        data.system.properties = {
-          ...data.system.properties,
-          requiresname: false,
-          picknameonly: false,
-          keepbasevalue: false,
-          own: true
-        }
-        const nativeBase = await resolveBaseValue(data.system.base, characteristics)
-        data.system.base = String(nativeBase)
-        data.system.adjustments = {
-          personal: Math.max(0, targetValue - nativeBase),
-          base: nativeBase,
-          occupation: 0,
-          archetype: 0,
-          experiencePackage: 0,
-          experience: 0
-        }
-        foundry.utils.setProperty(
-          data,
-          'flags.CoC7.cocidFlag.id',
-          'i.skill.' + parts.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+  /**
+   * Resolve a skill's base value against the given characteristics and store
+   * only the trained excess as `personal`, so base + personal reproduces the
+   * LLM's target value regardless of whether CoC7 re-resolves the base at
+   * embed time. Pins `system.base` to the resolved plain number too — CoC7
+   * re-resolves a "@DEX"-style formula against the actor's OWN
+   * characteristics at embed time, which under the random-characteristics
+   * option are 0 until a token is dropped; pinning makes that re-resolution
+   * a no-op regardless of what the actor's characteristics happen to be.
+   *
+   * Mutates and returns `data`'s `system.base` / `system.adjustments` in
+   * place — `data` is always a fresh `Item#toObject()` copy owned by the
+   * caller, never a shared document, so this does not touch original state.
+   *
+   * @param {object} data plain skill data (from Item#toObject())
+   * @param {number} targetValue the LLM's declared skill value
+   * @param {object} characteristics lowercase-keyed characteristics
+   * @returns {Promise<object>} data, for chaining
+   */
+  async _applyResolvedBase (data, targetValue, characteristics) {
+    const resolvedBase = await resolveBaseValue(data.system.base, characteristics)
+    data.system.base = String(resolvedBase)
+    data.system.adjustments = {
+      personal: Math.max(0, targetValue - resolvedBase),
+      base: resolvedBase,
+      occupation: 0,
+      archetype: 0,
+      experiencePackage: 0,
+      experience: 0
+    }
+    return data
+  },
+
+  async _resolveOneSkill (skillName, targetValue, pack, compendiumIndex, isNativeLanguage = false, characteristics = {}, warnings = []) {
+    // The mother tongue is built from the `Language (Own)` template, then
+    // named. keepbasevalue is set to FALSE below (not left true, despite the
+    // template's own default) because _applyResolvedBase pins system.base to
+    // a resolved plain number itself; leaving keepbasevalue true would fight
+    // that pin. The naming flags (requiresname/picknameonly) are cleared here
+    // too, once the concrete language has been chosen.
+    if (isNativeLanguage) {
+      if (pack && compendiumIndex) {
+        const template = compendiumIndex.find(
+          entry => entry.name.toLowerCase() === 'language (own)'
         )
-        delete data._id
-        return data
+        const templateDoc = template ? await pack.getDocument(template._id) : null
+        if (templateDoc) {
+          const data = templateDoc.toObject()
+          const parts = CONFIG.Item.dataModels.skill.guessNameParts(skillName)
+          data.name = parts.name
+          data.system.skillName = parts.system.skillName
+          data.system.specialization = parts.system.specialization
+          data.system.properties = {
+            ...data.system.properties,
+            requiresname: false,
+            picknameonly: false,
+            keepbasevalue: false,
+            own: true
+          }
+          await this._applyResolvedBase(data, targetValue, characteristics)
+          foundry.utils.setProperty(
+            data,
+            'flags.CoC7.cocidFlag.id',
+            'i.skill.' + parts.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+          )
+          delete data._id
+          return data
+        }
+        warnings.push(`Native language "${skillName}" could not be built from the "Language (Own)" template — it was not found in the CoC7.skills compendium, so it will be added as an ordinary foreign-language skill instead`)
+      } else {
+        warnings.push(`Native language "${skillName}" could not be built from the "Language (Own)" template — the CoC7.skills compendium is unavailable, so it will be added as an ordinary foreign-language skill instead`)
       }
     }
 
@@ -232,25 +294,7 @@ export default {
         const doc = await pack.getDocument(match._id)
         if (doc) {
           const data = doc.toObject()
-          // Resolve the skill's base from the LLM's own characteristics and store
-          // only the trained excess, so base + personal equals the LLM's value
-          // regardless of whether CoC7 re-resolves the base on creation. Pin
-          // system.base to the resolved number too — CoC7 re-resolves it against
-          // the actor's OWN characteristics at embed time, which under the
-          // random-characteristics option are 0 until a token is dropped, so an
-          // unpinned "@DEX"-style formula would evaluate to 0 there. Pinning
-          // makes that re-resolution a no-op regardless of what the actor's
-          // characteristics happen to be.
-          const resolvedBase = await resolveBaseValue(data.system.base, characteristics)
-          data.system.base = String(resolvedBase)
-          data.system.adjustments = {
-            personal: Math.max(0, targetValue - resolvedBase),
-            base: resolvedBase,
-            occupation: 0,
-            archetype: 0,
-            experiencePackage: 0,
-            experience: 0
-          }
+          await this._applyResolvedBase(data, targetValue, characteristics)
           // Remove _id so Foundry creates a new embedded document
           delete data._id
           return data
@@ -298,6 +342,28 @@ export default {
       warnings.push(`Auto-added skill "${skillName}" at ${WEAPON_SKILL_FALLBACK_VALUE}% (referenced by a weapon but missing from skills)`)
     }
     return existing
+  },
+
+  /**
+   * Drop any skill whose name is an unnamed specialization template (e.g.
+   * "Survival (any)", "Science ( Any )"). CoC7's isAnySpec matches these on
+   * the name alone and opens a blocking specialization-select dialog that
+   * drops the skill entirely if the GM dismisses it — that modal has already
+   * wedged a browser session during this feature's development, so these
+   * must never reach toFoundryData's output. Builds a new array; the input
+   * is left untouched.
+   */
+  _dropAnySpecializationSkills (skills, warnings) {
+    const kept = []
+    for (const skill of skills) {
+      const name = (skill?.name ?? '').trim()
+      if (ANY_SPEC_PATTERN.test(name)) {
+        warnings.push(`Dropped skill "${name}" — it is an unnamed specialization template, not a usable skill`)
+        continue
+      }
+      kept.push(skill)
+    }
+    return kept
   },
 
   /**

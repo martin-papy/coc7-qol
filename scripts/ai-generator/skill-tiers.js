@@ -19,12 +19,16 @@ export const SKILL_TIERS = Object.freeze([
 export const SKILL_TIER_KEYS = Object.freeze(SKILL_TIERS.map(tier => tier.key))
 
 const LOWEST_TIER = SKILL_TIERS[0]
-const HIGHEST_TIER = SKILL_TIERS[SKILL_TIERS.length - 1]
 
 /**
  * The tier a skill percentage falls in. Values below the ladder (0, as with
- * Credit Rating or Cthulhu Mythos) read as novice; values above it read as
- * master.
+ * Credit Rating or Cthulhu Mythos) read as novice; values at or above 100
+ * read as master. The ladder is contiguous over the integers 1-99 but not
+ * over the reals, so a fractional value can land in the gap between one
+ * tier's max and the next tier's min (e.g. 5.5, between novice's max of 5
+ * and neophyte's min of 6). Such values resolve to the lower of the two
+ * tiers, never the higher: 5.5 reads as novice, 49.5 as amateur, 89.5 as
+ * expert.
  *
  * @param {number} value
  * @returns {string} tier key
@@ -33,8 +37,8 @@ export function tierForValue (value) {
   const n = Number(value)
   if (!Number.isFinite(n)) return LOWEST_TIER.key
   if (n < LOWEST_TIER.min) return LOWEST_TIER.key
-  const tier = SKILL_TIERS.find(candidate => n >= candidate.min && n <= candidate.max)
-  return tier ? tier.key : HIGHEST_TIER.key
+  const tier = [...SKILL_TIERS].reverse().find(candidate => n >= candidate.min)
+  return tier ? tier.key : LOWEST_TIER.key
 }
 
 /**

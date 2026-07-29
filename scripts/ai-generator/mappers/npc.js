@@ -204,6 +204,7 @@ export default {
           own: true
         }
         const nativeBase = await resolveBaseValue(data.system.base, characteristics)
+        data.system.base = String(nativeBase)
         data.system.adjustments = {
           personal: Math.max(0, targetValue - nativeBase),
           base: nativeBase,
@@ -233,8 +234,15 @@ export default {
           const data = doc.toObject()
           // Resolve the skill's base from the LLM's own characteristics and store
           // only the trained excess, so base + personal equals the LLM's value
-          // regardless of whether CoC7 re-resolves the base on creation.
+          // regardless of whether CoC7 re-resolves the base on creation. Pin
+          // system.base to the resolved number too — CoC7 re-resolves it against
+          // the actor's OWN characteristics at embed time, which under the
+          // random-characteristics option are 0 until a token is dropped, so an
+          // unpinned "@DEX"-style formula would evaluate to 0 there. Pinning
+          // makes that re-resolution a no-op regardless of what the actor's
+          // characteristics happen to be.
           const resolvedBase = await resolveBaseValue(data.system.base, characteristics)
+          data.system.base = String(resolvedBase)
           data.system.adjustments = {
             personal: Math.max(0, targetValue - resolvedBase),
             base: resolvedBase,

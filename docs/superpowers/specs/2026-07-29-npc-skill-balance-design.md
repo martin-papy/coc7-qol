@@ -190,13 +190,40 @@ to whether that resolution happens or not.
 approach at `utilities.js:995-1021`: substitute `@term` from a lowercased
 characteristics map, then evaluate with Foundry's `Roll` and floor the result.
 
-Two consequences beyond correctness, both previously listed as weaknesses:
+The resolved figure is also **pinned back into `system.base`** as a plain number.
+This is required, not cosmetic. CoC7 re-resolves that string at embed time and
+the mapper cannot prevent it; if the string is left as a formula, an actor whose
+characteristics are not yet populated resolves it to 0. That is exactly what the
+random-characteristics option produces — it stores `{ formula, value: 0 }` and
+the values are only rolled on token drop — so `1/2*@DEX` re-resolved against
+DEX 0 and Dodge landed at **0**, worse than the stale value it replaced.
+Measured, Dodge only:
+
+| `system.base` | actor DEX | resulting value |
+|---|---|---|
+| `1/2*@DEX` | 0 | 0 |
+| `1/2*@DEX` | 54 | 27 |
+| `27` (pinned) | 0 | 27 |
+| `27` (pinned) | 54 | 27 |
+
+Pinning makes CoC7's re-resolution a no-op that writes the same figure back, so
+the total is correct whatever the actor's characteristics are at embed time. It
+also removes a crash when a formula base met an actor with null characteristics.
+
+**One consequence beyond correctness:**
 
 - **Floors become structural.** `personal` can never be negative, so the total
   can never fall below base. D3's floor no longer depends on model compliance.
-- **The random-characteristics limitation disappears.** With the base formula
-  left intact, a rolled DEX of 80 resolves Dodge to 40 on its own. The trained
-  excess rides on top, which is the correct CoC7 semantics.
+
+**Correction.** An earlier draft of this decision claimed it also eliminated the
+random-characteristics limitation, by leaving the base formula intact so a rolled
+DEX would resolve Dodge on its own. That was wrong — the measurement above is
+why. The limitation stands in its original form: under random characteristics the
+two derived skills hold the value the model intended from the characteristics it
+assigned, not one derived from the roll. Pinning is what keeps that value correct
+rather than zero. The trade-off accepted with it is that Dodge no longer tracks a
+later change to DEX — which it never did before this branch either, since the
+mapper zeroed the base outright.
 
 ### D9 — The native language is named concretely, built from the Own template
 
@@ -384,18 +411,22 @@ possible (see CLAUDE.md).
 
 ## Known limitations
 
-Both limitations originally recorded here — derived skills going stale under
-random characteristics, and floors depending on model compliance — were
-**resolved by D10**, which keeps the base formula intact and stores only the
-trained excess. A rolled DEX now resolves Dodge correctly on its own, and
-`personal` can never be negative, so no skill can land below its base.
+**Floors depending on model compliance — resolved by D10.** `personal` can never
+be negative, so no skill can land below its base. A response returning First Aid
+at 5% now produces exactly 30 on the actor.
 
-**The review dialog shows the LLM's numbers, which are the actor's totals.**
-With D10 the dialog and the sheet agree, since the total is `base + excess =
-llmValue`. Under random characteristics the two derived skills are the exception:
-the dialog shows the value computed from the LLM's characteristics, while the
-actor will show the value recomputed from the rolled ones. That is now a display
-difference rather than a wrong actor.
+**Derived skills still go stale under random characteristics.** The opt-in
+checkbox (`dialog-injector.js:69`) replaces the LLM's characteristics with dice
+formulas rolled on token drop, so Dodge and the native language hold the values
+the model computed from the characteristics it assigned. A rolled DEX of 80
+leaves Dodge at the model's figure rather than 40. D10's base pinning is what
+keeps those values correct rather than zero; see the correction note in D10 for
+why the alternative was worse. The mode is opt-in, both values are visible in the
+review dialog, and the Keeper can adjust them on the sheet.
+
+**The review dialog's numbers are the actor's totals.** With D10 the dialog and
+the sheet agree, since the total is `base + excess = llmValue`. Before D10 they
+disagreed silently, by the size of each skill's base value.
 
 ## Out of scope
 

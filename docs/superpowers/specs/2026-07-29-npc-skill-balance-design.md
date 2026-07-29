@@ -2,7 +2,10 @@
 
 Date: 2026-07-29
 Status: approved (pending spec review)
-Scope: `scripts/ai-generator/prompts/npc-system-prompt.md`, `scripts/ai-generator/mappers/npc.js`, `scripts/ai-generator/npc-confirmation-dialog.js`, `scripts/ai-generator/dialog-injector.js`, `styles/ai-generator.css`
+Scope: `scripts/ai-generator/prompts/npc-system-prompt.md`, `scripts/ai-generator/mappers/npc.js`, `scripts/ai-generator/npc-confirmation-dialog.js`, `styles/ai-generator.css`
+
+The bulk of the change is prompt text. Code changes are limited to one required
+field in `validate()`, one constant, and the review dialog's rendering.
 
 ## Problem
 
@@ -114,51 +117,39 @@ is the sheet default.
 No padding with untrained entries. Total skill count moves from "typically 5–12"
 to the 14 core plus roughly 3–8 others.
 
-### D6 — Resolve base values in code and derive `personal` as the trained excess
+### D6 — The LLM computes the two derived skills; the mapper is left alone
 
-Supersedes the mapper's current unconditional `adjustments.base = 0`.
+Dodge and Language (Own) are the only core skills whose base is a formula rather
+than a number (`1/2*@DEX` and `@EDU` in `en-skills.yaml`). The prompt instructs
+the model to compute them from the characteristics it just assigned:
 
-The CoC7 system already ships
-`CoC7Utilities.setMultipleSkillBases(parsedValues, skills)`
-(`../CoC7-FoundryVTT-8.x/coc7/apps/utilities.js:991`). Given a map of
-characteristic values it resolves each skill's `system.base` formula —
-`1/2*@DEX`, `@EDU`, or a plain number — into `system.adjustments.base`,
-including inter-skill references.
+    Dodge          = DEX ÷ 2, rounded down
+    Language (Own) = EDU exactly
 
-`resolveSkills()` calls it, then sets
+The mapper's existing behaviour is unchanged: `adjustments.base = 0`, the LLM's
+number goes to `adjustments.personal`, and CoC7 sums the adjustments so the
+final displayed percentage is exactly what the model produced.
 
-    adjustments.personal = max(0, llmValue - adjustments.base)
+Rejected alternative: resolving base formulas in code via the system's
+`CoC7Utilities.setMultipleSkillBases()`
+(`../CoC7-FoundryVTT-8.x/coc7/apps/utilities.js:991`), setting
+`personal = max(0, llmValue - base)`. That would enforce every floor
+structurally instead of trusting the prompt, and would keep the two derived
+skills correct in both characteristic modes. It was rejected as
+disproportionate: it requires reordering `onAccept` to create the actor *before*
+resolving skills so that rolled characteristics can be read back, which is a
+substantially riskier change than the balance problem being fixed warrants.
+Floors are therefore prompt-enforced (D3), with the review dialog (D8) as the
+human check.
 
-so the final total is `llmValue` when the LLM respects the floor, and exactly
-`base` when it undershoots. Three consequences:
-
-- Every floor is enforced structurally, for every skill, instead of being
-  trusted to the prompt.
-- Dodge and Language (Own) track the actor's real DEX and EDU rather than a
-  number the LLM computed by hand.
-- It generalizes the approved Dodge/Language handling for less code than
-  special-casing those two skills.
-
-**Ordering.** The optional random-characteristics checkbox
-(`dialog-injector.js:69`) replaces the LLM's characteristics with dice formulas,
-so DEX and EDU are unknown until Foundry rolls them. `onAccept` currently calls
-`resolveSkills()` *before* `Actor.create()`. It must be reordered: create the
-actor, read the resolved characteristics back off it, then resolve skill bases
-against those actual values. This makes both modes correct with one code path.
-
-**Verification required at implementation time.** Confirm in a live Foundry
-instance that (a) `applyRandomCharacteristics` formulas are evaluated to numbers
-by the time `Actor.create()` resolves, and (b) `setMultipleSkillBases` is
-reachable at the expected path and accepts plain skill-data objects rather than
-documents. If (a) fails, fall back to resolving bases from `llmData`'s
-characteristics and accept staleness only in random mode.
-
-### D7 — `_ensureWeaponSkills` fallback sits at base, not 20
+### D7 — Raise `_ensureWeaponSkills` fallback from 20 to 25
 
 `WEAPON_SKILL_FALLBACK_VALUE = 20` (`npc.js:11`) is below Fighting (Brawl)'s base
-of 25 — the same floor bug in code. Under D6 the auto-add passes `0`, and the
-resolved base becomes the value. The warning text changes to say the skill was
-added at its base value.
+of 25, so the auto-add can produce an illegal value — the same floor bug, in
+code. 25 is the highest base among weapon skills (Fighting (Brawl) 25, Firearms
+(Rifle/Shotgun) 25), so a flat 25 is at or above base for every weapon skill and
+is legal in all cases. A one-line constant change; no per-skill base table
+needed.
 
 ### D8 — Review dialog shows tiers and flags above-tier skills
 
@@ -223,8 +214,10 @@ ANTI-PATTERN: a flat profile with every skill in the same 35–60% band. That is
   define them, a few they are passably trained in, and the rest at baseline.
 ```
 
-Plus a `BASE VALUES AND MANDATORY CORE SKILLS` section carrying D3, D4 and D5,
-and the `expertiseTier` field added to the required-fields list.
+Plus a `BASE VALUES AND MANDATORY CORE SKILLS` section carrying D3, D4, D5 and
+D6 — including the explicit instruction to compute `Dodge` as half the assigned
+DEX rounded down and `Language (Own)` as the assigned EDU — and the
+`expertiseTier` field added to the required-fields list.
 
 ## Worked example — the reported constable
 
@@ -241,7 +234,7 @@ Occupation Police Officer, age 34, DEX 50, EDU 55. Declared tier
 | Psychology | 40 | 20 | Amateur | non-occupation, near base 10 |
 | Persuade | 45 | 25 | Amateur | non-occupation, near base 10 |
 | First Aid | 40 | 30 | Amateur | at base |
-| Dodge | 35 | 25 | Amateur | = DEX ÷ 2, derived in code |
+| Dodge | 35 | 25 | Amateur | = DEX ÷ 2, computed by the LLM |
 | Climb, Drive Auto, Firearms (Handgun), Jump, Library Use, Language (Own), Stealth, Swim, Throw | absent | base | — | D4 core set |
 
 Before: nine skills, every one between 35% and 60% — peak 60, median 45, spread
@@ -258,10 +251,13 @@ possible (see CLAUDE.md).
    London". Assert no combat skill above 49%, all 14 core skills present, and
    peak ≤ the declared tier's ceiling.
 2. **Floor enforcement.** Assert no skill on the created actor falls below its
-   compendium base — the check that D6 exists to guarantee.
-3. **Derived skills, both modes.** With the random-characteristics checkbox off
-   and on: assert Dodge equals ⌊DEX ÷ 2⌋ and Language (Own) equals EDU against
-   the actor's *final* characteristics.
+   compendium base. This is prompt-enforced (D3), not guaranteed by code, so it
+   is the check most worth repeating across several generations and across
+   providers.
+3. **Derived skills.** With the random-characteristics checkbox **off**, assert
+   Dodge equals ⌊DEX ÷ 2⌋ and Language (Own) equals EDU. With it **on**, confirm
+   the known limitation below is the only discrepancy — no crash, no validation
+   error.
 4. **Tier spread.** Across roughly five varied prompts (librarian, dockworker,
    professor, gangster enforcer, doctor), confirm profiles are not flat and that
    only genuine combat roles carry tier-level combat skills.
@@ -274,6 +270,22 @@ possible (see CLAUDE.md).
    a valid `expertiseTier`, per the existing LANGUAGE RULES.
 8. **Missing-field handling.** An LLM response without `expertiseTier` surfaces
    a clear validation error rather than throwing deep in the dialog.
+
+## Known limitations
+
+**Derived skills go stale under random characteristics.** The opt-in
+random-characteristics checkbox (`dialog-injector.js:69`) replaces the LLM's
+characteristics with dice formulas, so the DEX and EDU the model used to compute
+Dodge and Language (Own) are discarded. A rolled DEX of 80 leaves Dodge reading
+25% where it should read 40%. Accepted as a consequence of D6: the mode is
+opt-in, the two values are visible in the review dialog, and the Keeper can
+correct them on the sheet. The rejected alternative in D6 is the fix if this
+proves annoying in play.
+
+**Floors depend on model compliance.** Nothing in code prevents a provider from
+returning First Aid at 15% (base 30%). The prompt states the floor and the
+review dialog surfaces the values, but a determined bad response can still write
+an illegal skill value to an actor.
 
 ## Out of scope
 

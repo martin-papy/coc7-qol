@@ -259,9 +259,14 @@ compendium template rather than by direct name lookup — renaming it, clearing
 `requiresname` and `picknameonly`, and preserving `own: true`. This mirrors
 CoC7's own naming flow at `document-class.js:645-658`.
 
-Because the mapper zeroes `adjustments.base` (D6), the retained `@EDU` base
-formula does not affect the displayed total — the value is the LLM's number
-either way. What the template buys is correct semantics and correct display.
+**Superseded detail (corrected after D10).** This decision originally reasoned
+that the template's `@EDU` base formula was harmless because the mapper zeroed
+`adjustments.base`. Both halves of that are no longer true: D10 stopped zeroing
+the base, and it pins the resolved figure into `system.base`, so the native
+language ends up with a plain number there rather than `@EDU`. D9's actual
+guarantees are unaffected — the concrete name, `own: true`, `requiresname:
+false`, and no `Language (Own)` placeholder reaching an actor — and all four are
+verified. Only the incidental claim about the formula was wrong.
 
 A `nativeLanguage` that matches no `Language (<name>)` entry in `skills[]`
 records a warning rather than failing, and the skill resolves by the ordinary

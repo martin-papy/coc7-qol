@@ -74,6 +74,13 @@
   "COC7QOL.AIGenerator.NPC.Preview.PossessionRowQuantity": "×{quantity}",
   "COC7QOL.AIGenerator.NPC.Button.RemoveItem": "Remove from NPC",
 
+  "COC7QOL.AIGenerator.Tier.novice": "Novice",
+  "COC7QOL.AIGenerator.Tier.neophyte": "Neophyte",
+  "COC7QOL.AIGenerator.Tier.amateur": "Amateur",
+  "COC7QOL.AIGenerator.Tier.professional": "Professional",
+  "COC7QOL.AIGenerator.Tier.expert": "Expert",
+  "COC7QOL.AIGenerator.Tier.master": "Master",
+
   "COC7QOL.Settings.AIProvider.Name": "AI Generator: Provider",
   "COC7QOL.Settings.AIProvider.Hint": "LLM provider used for item generation. Changing this auto-updates the endpoint and model to provider defaults.",
   "COC7QOL.Settings.AIProvider.Anthropic": "Anthropic (Claude)",

@@ -2,13 +2,25 @@
 // Skill resolution (compendium lookup) is handled by resolveSkills() called from the injector
 // after the mapper produces the base actor data.
 
-import { escapeHtml } from '../../utils.js'
+import { escapeHtml, tf } from '../../utils.js'
 import { loadPrompt } from '../prompts/loader.js'
 import weaponMapper from './weapon.js'
+import { SKILL_TIER_KEYS } from '../skill-tiers.js'
 
 const REQUIRED_CHARACTERISTICS = ['str', 'con', 'siz', 'dex', 'app', 'int', 'pow', 'edu']
 
-const WEAPON_SKILL_FALLBACK_VALUE = 20
+// 25 is the highest base value among weapon skills (Fighting (Brawl) 25,
+// Firearms (Rifle/Shotgun) 25), so this fallback is at or above base for every
+// weapon skill. A CoC7 skill may never sit below its base value; the previous
+// 20 was illegal for a brawler.
+const WEAPON_SKILL_FALLBACK_VALUE = 25
+
+// Matches an unnamed specialization template, e.g. "Survival (any)",
+// "Science ( Any )". CoC7's isAnySpec (document-class.js) matches these on
+// the NAME ALONE — even a non-compendium fallback skill with this exact name
+// trips it — and opens a blocking CoC7SkillSpecializationSelectDialog that
+// DROPS the skill if the GM dismisses it. Must never reach an actor.
+const ANY_SPEC_PATTERN = /\(\s*any\s*\)\s*$/i
 
 export const CHARACTERISTIC_FORMULAS = {
   str: '5*(3d6)',
@@ -19,6 +31,40 @@ export const CHARACTERISTIC_FORMULAS = {
   int: '5*(2d6+6)',
   siz: '5*(2d6+6)',
   edu: '5*(2d6+6)'
+}
+
+/**
+ * Resolve a CoC7 skill's base value. `system.base` is either a plain number
+ * ("25"), a characteristic reference ("@EDU"), or an expression over one
+ * ("1/2*@DEX"). Mirrors the system's own approach at
+ * ../CoC7-FoundryVTT-8.x/coc7/apps/utilities.js:995-1021 — substitute @terms
+ * from the characteristics, then evaluate and floor.
+ *
+ * Returns 0 for an absent or unresolvable base, so an unknown formula degrades
+ * to "the LLM's value stands" rather than throwing.
+ *
+ * @param {string|number|undefined} base
+ * @param {object} characteristics lowercase-keyed, e.g. { dex: 54, edu: 55 }
+ * @returns {Promise<number>}
+ */
+async function resolveBaseValue (base, characteristics) {
+  const raw = String(base ?? '').trim()
+  if (raw === '') return 0
+  const chars = characteristics ?? {}
+  let unresolved = false
+  const substituted = raw.replace(/@([a-z.0-9_-]+)/gi, (_match, term) => {
+    const value = chars[term.toLowerCase()]
+    if (typeof value !== 'number') { unresolved = true; return '0' }
+    return String(value)
+  })
+  if (unresolved) return 0
+  try {
+    const roll = await new Roll(`(${substituted})`).evaluate()
+    const total = Math.floor(Number(roll.total))
+    return Number.isFinite(total) && total > 0 ? total : 0
+  } catch (err) {
+    return 0
+  }
 }
 
 export function applyRandomCharacteristics (npcData) {
@@ -51,6 +97,10 @@ export default {
 
     if (!data.name) errors.push('name')
 
+    if (!SKILL_TIER_KEYS.includes(data.expertiseTier)) {
+      errors.push(`expertiseTier (must be one of: ${SKILL_TIER_KEYS.join(', ')})`)
+    }
+
     if (!data.characteristics || typeof data.characteristics !== 'object') {
       errors.push('characteristics')
     } else {
@@ -60,6 +110,14 @@ export default {
 
     if (!Array.isArray(data.skills) || data.skills.length === 0) {
       errors.push('skills (must be a non-empty array)')
+    } else {
+      data.skills.forEach((entry, index) => {
+        const hasName = typeof entry?.name === 'string' && entry.name.trim() !== ''
+        const hasValue = typeof entry?.value === 'number' && Number.isFinite(entry.value)
+        if (!hasName || !hasValue) {
+          errors.push(`skills[${index}] (must have a non-empty string "name" and a finite numeric "value")`)
+        }
+      })
     }
 
     if (errors.length) {
@@ -78,7 +136,14 @@ export default {
     const warnings = []
     const weaponsData = this._validateAndMapWeapons(data.weapons, warnings)
     const possessionsData = this._mapPossessions(data.possessions)
-    const skillsRaw = this._ensureWeaponSkills(data.skills, weaponsData, warnings)
+    const skillsRaw = this._dropAnySpecializationSkills(
+      this._tagNativeLanguage(
+        this._ensureWeaponSkills(data.skills, weaponsData, warnings),
+        data.nativeLanguage,
+        warnings
+      ),
+      warnings
+    )
 
     return {
       actorData: {
@@ -117,7 +182,7 @@ export default {
     }
   },
 
-  async resolveSkills (skillsRaw) {
+  async resolveSkills (skillsRaw, characteristics) {
     const pack = game.packs.get('CoC7.skills')
     let compendiumIndex = null
     if (pack) {
@@ -126,15 +191,100 @@ export default {
     }
 
     const resolved = []
-    for (const { name, value } of skillsRaw) {
+    // Collected here rather than passed in from the caller. The dialog is still
+    // open at this point, but its HTML was built once in _renderHTML and is
+    // never re-rendered before close, so toFoundryData's warnings array can no
+    // longer reach the visible list. resolveSkills's signature and return value
+    // (a plain array, spread directly by dialog-injector.js) must not change,
+    // which leaves ui.notifications as the only channel for a resolution
+    // failure.
+    const resolutionWarnings = []
+    for (const { name, value, own } of skillsRaw) {
       const normalized = name.trim().replace(/\s+/g, ' ')
-      const skillData = await this._resolveOneSkill(normalized, value, pack, compendiumIndex)
+      const skillData = await this._resolveOneSkill(normalized, value, pack, compendiumIndex, own === true, characteristics, resolutionWarnings)
       if (skillData) resolved.push(skillData)
     }
+    resolutionWarnings.forEach(message => {
+      console.warn(`[coc7-qol] ${message}`)
+      ui.notifications?.warn(message)
+    })
     return resolved
   },
 
-  async _resolveOneSkill (skillName, targetValue, pack, compendiumIndex) {
+  /**
+   * Resolve a skill's base value against the given characteristics and store
+   * only the trained excess as `personal`, so base + personal reproduces the
+   * LLM's target value regardless of whether CoC7 re-resolves the base at
+   * embed time. Pins `system.base` to the resolved plain number too — CoC7
+   * re-resolves a "@DEX"-style formula against the actor's OWN
+   * characteristics at embed time, which under the random-characteristics
+   * option are 0 until a token is dropped; pinning makes that re-resolution
+   * a no-op regardless of what the actor's characteristics happen to be.
+   *
+   * Mutates and returns `data`'s `system.base` / `system.adjustments` in
+   * place — `data` is always a fresh `Item#toObject()` copy owned by the
+   * caller, never a shared document, so this does not touch original state.
+   *
+   * @param {object} data plain skill data (from Item#toObject())
+   * @param {number} targetValue the LLM's declared skill value
+   * @param {object} characteristics lowercase-keyed characteristics
+   * @returns {Promise<object>} data, for chaining
+   */
+  async _applyResolvedBase (data, targetValue, characteristics) {
+    const resolvedBase = await resolveBaseValue(data.system.base, characteristics)
+    data.system.base = String(resolvedBase)
+    data.system.adjustments = {
+      personal: Math.max(0, targetValue - resolvedBase),
+      base: resolvedBase,
+      occupation: 0,
+      archetype: 0,
+      experiencePackage: 0,
+      experience: 0
+    }
+    return data
+  },
+
+  async _resolveOneSkill (skillName, targetValue, pack, compendiumIndex, isNativeLanguage = false, characteristics = {}, warnings = []) {
+    // The mother tongue is built from the `Language (Own)` template, then
+    // named. keepbasevalue is set to FALSE below (not left true, despite the
+    // template's own default) because _applyResolvedBase pins system.base to
+    // a resolved plain number itself; leaving keepbasevalue true would fight
+    // that pin. The naming flags (requiresname/picknameonly) are cleared here
+    // too, once the concrete language has been chosen.
+    if (isNativeLanguage) {
+      if (pack && compendiumIndex) {
+        const template = compendiumIndex.find(
+          entry => entry.name.toLowerCase() === 'language (own)'
+        )
+        const templateDoc = template ? await pack.getDocument(template._id) : null
+        if (templateDoc) {
+          const data = templateDoc.toObject()
+          const parts = CONFIG.Item.dataModels.skill.guessNameParts(skillName)
+          data.name = parts.name
+          data.system.skillName = parts.system.skillName
+          data.system.specialization = parts.system.specialization
+          data.system.properties = {
+            ...data.system.properties,
+            requiresname: false,
+            picknameonly: false,
+            keepbasevalue: false,
+            own: true
+          }
+          await this._applyResolvedBase(data, targetValue, characteristics)
+          foundry.utils.setProperty(
+            data,
+            'flags.CoC7.cocidFlag.id',
+            'i.skill.' + parts.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+          )
+          delete data._id
+          return data
+        }
+        warnings.push(tf('COC7QOL.AIGenerator.Warning.NativeLanguageTemplateMissing', { name: skillName }))
+      } else {
+        warnings.push(tf('COC7QOL.AIGenerator.Warning.NativeLanguageNoCompendium', { name: skillName }))
+      }
+    }
+
     // Attempt compendium lookup
     if (compendiumIndex) {
       const match = compendiumIndex.find(
@@ -144,15 +294,7 @@ export default {
         const doc = await pack.getDocument(match._id)
         if (doc) {
           const data = doc.toObject()
-          // Set adjustments.personal to the target value so personal alone determines the skill value
-          data.system.adjustments = data.system.adjustments ?? {}
-          data.system.adjustments.personal = targetValue
-          // Zero out other adjustment fields so the total is deterministic
-          data.system.adjustments.base = 0
-          data.system.adjustments.occupation = 0
-          data.system.adjustments.experience = 0
-          data.system.adjustments.archetype = 0
-          data.system.adjustments.experiencePackage = 0
+          await this._applyResolvedBase(data, targetValue, characteristics)
           // Remove _id so Foundry creates a new embedded document
           delete data._id
           return data
@@ -200,6 +342,51 @@ export default {
       warnings.push(`Auto-added skill "${skillName}" at ${WEAPON_SKILL_FALLBACK_VALUE}% (referenced by a weapon but missing from skills)`)
     }
     return existing
+  },
+
+  /**
+   * Drop any skill whose name is an unnamed specialization template (e.g.
+   * "Survival (any)", "Science ( Any )"). CoC7's isAnySpec matches these on
+   * the name alone and opens a blocking specialization-select dialog that
+   * drops the skill entirely if the GM dismisses it — that modal has already
+   * wedged a browser session during this feature's development, so these
+   * must never reach toFoundryData's output. Builds a new array; the input
+   * is left untouched.
+   */
+  _dropAnySpecializationSkills (skills, warnings) {
+    const kept = []
+    for (const skill of skills) {
+      const name = (skill?.name ?? '').trim()
+      if (ANY_SPEC_PATTERN.test(name)) {
+        warnings.push(`Dropped skill "${name}" — it is an unnamed specialization template, not a usable skill`)
+        continue
+      }
+      kept.push(skill)
+    }
+    return kept
+  },
+
+  /**
+   * Mark the NPC's mother tongue so resolveSkills() can build it from the
+   * `Language (Own)` compendium template rather than the foreign-language
+   * entry of the same name. Only the first match is tagged — an NPC has one
+   * native language.
+   */
+  _tagNativeLanguage (skills, nativeLanguage, warnings) {
+    const language = (nativeLanguage ?? '').trim()
+    if (!language) return skills
+    const target = `language (${language})`.toLowerCase()
+    let tagged = false
+    const result = skills.map(skill => {
+      if (tagged) return skill
+      if ((skill?.name ?? '').trim().toLowerCase() !== target) return skill
+      tagged = true
+      return { ...skill, own: true }
+    })
+    if (!tagged) {
+      warnings.push(`Native language "${language}" has no matching skill — expected an entry named "Language (${language})"`)
+    }
+    return result
   },
 
   _validateAndMapWeapons (rawWeapons, warnings) {

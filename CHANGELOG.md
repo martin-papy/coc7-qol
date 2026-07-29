@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.0] - 2026-07-29
+
+### Fixed
+
+- **AI-generated NPCs were systematically over-skilled** — A beat constable came out with Fighting (Brawl) at 60%, the range for someone who fights for a living, with every other skill bunched in the same band. The generator now follows the rulebook's expertise ladder: an NPC declares its peak competence, only the two-to-four skills its occupation is actually built on may reach it, and combat skills stay amateur unless the role is genuinely violent. Base values act as a floor, and the 14 core skills are always present.
+- **Skill values did not survive to the NPC sheet** — Every generated skill arrived inflated by its own base value (Spot Hidden 40% became 65%; Dodge and the native language doubled), so the sheet disagreed with the review dialog. They now match.
+- **The NPC's native language was a placeholder** — A native English speaker now gets `Language (English)` at EDU, marked as their own tongue, instead of the unnamed `Language (Own)` template.
+- **Auto-added weapon skills could sit below their base value** — The 20% fallback was illegal for Fighting (Brawl), whose base is 25%.
+
+### Added
+
+- **Expertise tiers in the NPC review dialog** — Skills at or above the NPC's declared peak are labelled with their tier, anything overshooting it is flagged, and the count appears in the warnings box, so an over-tuned skill is visible before you accept.
+
 ## [0.5.1] - 2026-07-29
 
 ### Fixed

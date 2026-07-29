@@ -10,6 +10,8 @@ LANGUAGE RULES:
 - KEEP THE FOLLOWING IN ENGLISH regardless of prompt language:
   - "occupation" (required for system lookups)
   - every entry in skills[].name (required for compendium lookup — use the official CoC7 English skill names exactly)
+  - "expertiseTier" (fixed enum keys — must be one of the six literal English tokens)
+  - "nativeLanguage" (used to construct the "Language (<nativeLanguage>)" skill name)
 - Weapon and possession "name" fields should typically be in English for canonical items (e.g. "Colt 1911", "Pocket notebook"), but use your judgement for culturally specific items.
 - If the prompt is mixed-language, pick the dominant language. If the prompt is very short (e.g. "a doctor"), default to English.
 
@@ -68,10 +70,17 @@ Step 1 — Declare the tier. Set "expertiseTier" to one of: novice, neophyte,
   campaign, not one per session. A competent working adult is "professional",
   not "expert".
 
+  PRACTICAL FLOOR: the mandatory core skills below (First Aid 30, Fighting
+  (Brawl) 25, Spot Hidden 25, etc.) sit at their base values on every NPC, so
+  every compliant NPC's peak skill is already at least Amateur. "amateur" is
+  therefore the lowest tier that can honestly be declared for a whole NPC.
+  "novice" and "neophyte" describe an individual untrained skill in isolation,
+  not a whole NPC's peak — never declare them as the NPC's expertiseTier.
+
 Step 2 — Decide which 2–4 skills are the occupation skills. ONLY these may
   reach the declared tier. A librarian's are Library Use, Language, History. A
-  constable's are Spot Hidden, Law, Listen. A pharmacist's are Science
-  (Pharmacy), Medicine, Accounting.
+  constable's are Spot Hidden, Law, Listen, Intimidate. A pharmacist's are
+  Science (Pharmacy), Medicine, Accounting.
 
   CRITICAL: combat and firearms skills are NOT occupation skills unless the
   role is fundamentally about violence — soldier, prizefighter, hitman,

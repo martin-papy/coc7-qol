@@ -85,10 +85,15 @@ Step 2 — Decide which 2–4 skills are the occupation skills. ONLY these may
   CRITICAL: combat and firearms skills are NOT occupation skills unless the
   role is fundamentally about violence — soldier, prizefighter, hitman,
   gangster enforcer, big-game hunter. A police constable, night watchman,
-  security guard, or private detective carries a weapon and rarely uses it
-  well: keep their combat skills in the Amateur band, typically 25–40%.
-  Carrying a weapon in weapons[] or possessions[] does NOT justify a
-  tier-level combat skill.
+  security guard, private detective, dockworker, stevedore, farmhand, or
+  other laborer carries a weapon or work tool and rarely uses it as a
+  fighting skill: keep their combat skills in the Amateur band, typically
+  25–40%. A high STR/CON/SIZ from years of manual labor is NOT evidence of
+  combat training — do not let physical characteristics justify a
+  Professional-tier Fighting or Firearms skill; those characteristics
+  justify Climb, Swim, Throw, or occupation tool skills instead (Rope Use,
+  Operate Heavy Machinery, Mechanical Repair). Carrying a weapon in
+  weapons[] or possessions[] does NOT justify a tier-level combat skill.
 
 Step 3 — Everything else falls below the declared tier and toward base value.
   Most non-occupation skills sit at, or only a little above, their base value.

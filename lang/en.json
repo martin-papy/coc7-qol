@@ -70,6 +70,8 @@
   "COC7QOL.AIGenerator.NPC.Preview.PossessionsHeader": "Possessions ({count})",
   "COC7QOL.AIGenerator.NPC.Preview.PossessionsHeaderPartial": "Possessions ({kept} / {count})",
   "COC7QOL.AIGenerator.NPC.Preview.WarningsHeader": "Warnings",
+  "COC7QOL.AIGenerator.Warning.NativeLanguageTemplateMissing": "Native language \"{name}\" could not be built from the \"Language (Own)\" template — it is missing from the CoC7.skills compendium, so it was added as an ordinary foreign-language skill instead.",
+  "COC7QOL.AIGenerator.Warning.NativeLanguageNoCompendium": "Native language \"{name}\" could not be built from the \"Language (Own)\" template — the CoC7.skills compendium is unavailable, so it was added as an ordinary foreign-language skill instead.",
   "COC7QOL.AIGenerator.NPC.Preview.WeaponRowDamage": "{damage} • {skill}",
   "COC7QOL.AIGenerator.NPC.Preview.PossessionRowQuantity": "×{quantity}",
   "COC7QOL.AIGenerator.NPC.Button.RemoveItem": "Remove from NPC",

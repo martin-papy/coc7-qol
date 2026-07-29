@@ -2,7 +2,7 @@
 // Skill resolution (compendium lookup) is handled by resolveSkills() called from the injector
 // after the mapper produces the base actor data.
 
-import { escapeHtml } from '../../utils.js'
+import { escapeHtml, tf } from '../../utils.js'
 import { loadPrompt } from '../prompts/loader.js'
 import weaponMapper from './weapon.js'
 import { SKILL_TIER_KEYS } from '../skill-tiers.js'
@@ -191,13 +191,13 @@ export default {
     }
 
     const resolved = []
-    // Collected here rather than passed in from the caller — resolveSkills
-    // runs after the confirmation dialog has already closed (see
-    // dialog-injector.js onAccept), so toFoundryData's warnings array can no
-    // longer reach that dialog by the time resolution happens. resolveSkills's
-    // signature and return value (a plain array, spread directly by the
-    // injector) must not change, so ui.notifications is the only remaining
-    // channel to surface a resolution failure to the GM.
+    // Collected here rather than passed in from the caller. The dialog is still
+    // open at this point, but its HTML was built once in _renderHTML and is
+    // never re-rendered before close, so toFoundryData's warnings array can no
+    // longer reach the visible list. resolveSkills's signature and return value
+    // (a plain array, spread directly by dialog-injector.js) must not change,
+    // which leaves ui.notifications as the only channel for a resolution
+    // failure.
     const resolutionWarnings = []
     for (const { name, value, own } of skillsRaw) {
       const normalized = name.trim().replace(/\s+/g, ' ')
@@ -279,9 +279,9 @@ export default {
           delete data._id
           return data
         }
-        warnings.push(`Native language "${skillName}" could not be built from the "Language (Own)" template — it was not found in the CoC7.skills compendium, so it will be added as an ordinary foreign-language skill instead`)
+        warnings.push(tf('COC7QOL.AIGenerator.Warning.NativeLanguageTemplateMissing', { name: skillName }))
       } else {
-        warnings.push(`Native language "${skillName}" could not be built from the "Language (Own)" template — the CoC7.skills compendium is unavailable, so it will be added as an ordinary foreign-language skill instead`)
+        warnings.push(tf('COC7QOL.AIGenerator.Warning.NativeLanguageNoCompendium', { name: skillName }))
       }
     }
 

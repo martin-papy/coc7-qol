@@ -26,6 +26,40 @@ export const CHARACTERISTIC_FORMULAS = {
   edu: '5*(2d6+6)'
 }
 
+/**
+ * Resolve a CoC7 skill's base value. `system.base` is either a plain number
+ * ("25"), a characteristic reference ("@EDU"), or an expression over one
+ * ("1/2*@DEX"). Mirrors the system's own approach at
+ * ../CoC7-FoundryVTT-8.x/coc7/apps/utilities.js:995-1021 — substitute @terms
+ * from the characteristics, then evaluate and floor.
+ *
+ * Returns 0 for an absent or unresolvable base, so an unknown formula degrades
+ * to "the LLM's value stands" rather than throwing.
+ *
+ * @param {string|number|undefined} base
+ * @param {object} characteristics lowercase-keyed, e.g. { dex: 54, edu: 55 }
+ * @returns {Promise<number>}
+ */
+async function resolveBaseValue (base, characteristics) {
+  const raw = String(base ?? '').trim()
+  if (raw === '') return 0
+  const chars = characteristics ?? {}
+  let unresolved = false
+  const substituted = raw.replace(/@([a-z.0-9_-]+)/gi, (_match, term) => {
+    const value = chars[term.toLowerCase()]
+    if (typeof value !== 'number') { unresolved = true; return '0' }
+    return String(value)
+  })
+  if (unresolved) return 0
+  try {
+    const roll = await new Roll(`(${substituted})`).evaluate()
+    const total = Math.floor(Number(roll.total))
+    return Number.isFinite(total) && total > 0 ? total : 0
+  } catch (err) {
+    return 0
+  }
+}
+
 export function applyRandomCharacteristics (npcData) {
   const chars = npcData?.actorData?.system?.characteristics
   if (!chars) return npcData
@@ -130,7 +164,7 @@ export default {
     }
   },
 
-  async resolveSkills (skillsRaw) {
+  async resolveSkills (skillsRaw, characteristics) {
     const pack = game.packs.get('CoC7.skills')
     let compendiumIndex = null
     if (pack) {
@@ -141,13 +175,13 @@ export default {
     const resolved = []
     for (const { name, value, own } of skillsRaw) {
       const normalized = name.trim().replace(/\s+/g, ' ')
-      const skillData = await this._resolveOneSkill(normalized, value, pack, compendiumIndex, own === true)
+      const skillData = await this._resolveOneSkill(normalized, value, pack, compendiumIndex, own === true, characteristics)
       if (skillData) resolved.push(skillData)
     }
     return resolved
   },
 
-  async _resolveOneSkill (skillName, targetValue, pack, compendiumIndex, isNativeLanguage = false) {
+  async _resolveOneSkill (skillName, targetValue, pack, compendiumIndex, isNativeLanguage = false, characteristics = {}) {
     // The mother tongue is built from the `Language (Own)` template, then named.
     // keepbasevalue is true on that template, so `base` stays '@EDU' — CoC7
     // clears the naming flags once a concrete language is chosen.
@@ -169,9 +203,10 @@ export default {
           keepbasevalue: false,
           own: true
         }
+        const nativeBase = await resolveBaseValue(data.system.base, characteristics)
         data.system.adjustments = {
-          personal: targetValue,
-          base: 0,
+          personal: Math.max(0, targetValue - nativeBase),
+          base: nativeBase,
           occupation: 0,
           archetype: 0,
           experiencePackage: 0,
@@ -196,15 +231,18 @@ export default {
         const doc = await pack.getDocument(match._id)
         if (doc) {
           const data = doc.toObject()
-          // Set adjustments.personal to the target value so personal alone determines the skill value
-          data.system.adjustments = data.system.adjustments ?? {}
-          data.system.adjustments.personal = targetValue
-          // Zero out other adjustment fields so the total is deterministic
-          data.system.adjustments.base = 0
-          data.system.adjustments.occupation = 0
-          data.system.adjustments.experience = 0
-          data.system.adjustments.archetype = 0
-          data.system.adjustments.experiencePackage = 0
+          // Resolve the skill's base from the LLM's own characteristics and store
+          // only the trained excess, so base + personal equals the LLM's value
+          // regardless of whether CoC7 re-resolves the base on creation.
+          const resolvedBase = await resolveBaseValue(data.system.base, characteristics)
+          data.system.adjustments = {
+            personal: Math.max(0, targetValue - resolvedBase),
+            base: resolvedBase,
+            occupation: 0,
+            archetype: 0,
+            experiencePackage: 0,
+            experience: 0
+          }
           // Remove _id so Foundry creates a new embedded document
           delete data._id
           return data

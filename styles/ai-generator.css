@@ -170,15 +170,46 @@
   font-size: 0.85rem;
 }
 
+/* Three columns: name (shrinkable), tier, value. The tier text is the
+   at-a-glance calibration cue — a beat constable showing "Professional" next
+   to a combat skill is the bug this dialog exists to surface. */
 .coc7-npc-skill-row {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: baseline;
+  column-gap: 0.4rem;
   border-bottom: 1px solid var(--color-cool-5-75, #1f1f1f);
   padding: 0.15rem 0;
 }
 
 .coc7-npc-skill-name {
   color: var(--color-text-light-3, #ccc);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.coc7-npc-skill-tier {
+  font-size: 0.68rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-text-dark-5, #7a7a7a);
+}
+
+.coc7-npc-skill-above-tier {
+  background: rgba(212, 160, 23, 0.1);
+  border-bottom-color: var(--color-warm-2, #d4a017);
+}
+
+.coc7-npc-skill-above-tier .coc7-npc-skill-tier {
+  color: var(--color-warm-2, #d4a017);
+}
+
+.coc7-npc-skill-flag {
+  color: var(--color-warm-2, #d4a017);
+  font-weight: bold;
+  margin-right: 0.25rem;
+  cursor: help;
 }
 
 .coc7-npc-skill-value {

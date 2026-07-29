@@ -2,6 +2,7 @@
 
 import { escapeHtml, t, tf } from '../utils.js'
 import { CHARACTERISTIC_FORMULAS } from './mappers/npc.js'
+import { tierForValue, isAboveTier, tierLabel } from './skill-tiers.js'
 
 export default class CoC7NPCConfirmationDialog extends foundry.applications.api.ApplicationV2 {
   static DEFAULT_OPTIONS = {
@@ -47,6 +48,7 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
         <div class="coc7-npc-identity-meta">
           ${llm.occupation ? `<span><span class="coc7-npc-identity-meta-label">${t('CoC7.Occupation')}</span>&nbsp;${escapeHtml(llm.occupation)}</span>` : ''}
           ${llm.age ? `<span><span class="coc7-npc-identity-meta-label">${t('CoC7.Age')}</span>&nbsp;${escapeHtml(String(llm.age))}</span>` : ''}
+          ${llm.expertiseTier ? `<span><span class="coc7-npc-identity-meta-label">${t('COC7QOL.AIGenerator.NPCDialog.TierLabel')}</span>&nbsp;${escapeHtml(tierLabel(llm.expertiseTier))}</span>` : ''}
         </div>
       </div>`
 
@@ -72,11 +74,22 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
       </div>`
 
     // --- Skills list ---
-    const skillRows = skills.map(s => `
-      <div class="coc7-npc-skill-row">
+    const declaredTier = llm.expertiseTier
+    const aboveTierTitle = tf('COC7QOL.AIGenerator.NPCDialog.AboveTierTitle', {
+      tier: tierLabel(declaredTier)
+    })
+    const skillRows = skills.map(s => {
+      const above = isAboveTier(s.value, declaredTier)
+      const flag = above
+        ? `<span class="coc7-npc-skill-flag" title="${escapeHtml(aboveTierTitle)}">${t('COC7QOL.AIGenerator.NPCDialog.AboveTierBadge')}</span>`
+        : ''
+      return `
+      <div class="coc7-npc-skill-row${above ? ' coc7-npc-skill-above-tier' : ''}">
         <span class="coc7-npc-skill-name">${escapeHtml(s.name)}</span>
-        <span class="coc7-npc-skill-value">${escapeHtml(String(s.value))}%</span>
-      </div>`).join('')
+        <span class="coc7-npc-skill-tier">${escapeHtml(tierLabel(tierForValue(s.value)))}</span>
+        <span class="coc7-npc-skill-value">${flag}${escapeHtml(String(s.value))}%</span>
+      </div>`
+    }).join('')
 
     const skillsHtml = skills.length ? `
       <div class="coc7-npc-section">

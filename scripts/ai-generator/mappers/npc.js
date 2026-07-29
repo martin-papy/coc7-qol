@@ -5,10 +5,15 @@
 import { escapeHtml } from '../../utils.js'
 import { loadPrompt } from '../prompts/loader.js'
 import weaponMapper from './weapon.js'
+import { SKILL_TIER_KEYS } from '../skill-tiers.js'
 
 const REQUIRED_CHARACTERISTICS = ['str', 'con', 'siz', 'dex', 'app', 'int', 'pow', 'edu']
 
-const WEAPON_SKILL_FALLBACK_VALUE = 20
+// 25 is the highest base value among weapon skills (Fighting (Brawl) 25,
+// Firearms (Rifle/Shotgun) 25), so this fallback is at or above base for every
+// weapon skill. A CoC7 skill may never sit below its base value; the previous
+// 20 was illegal for a brawler.
+const WEAPON_SKILL_FALLBACK_VALUE = 25
 
 export const CHARACTERISTIC_FORMULAS = {
   str: '5*(3d6)',
@@ -51,6 +56,10 @@ export default {
 
     if (!data.name) errors.push('name')
 
+    if (!SKILL_TIER_KEYS.includes(data.expertiseTier)) {
+      errors.push(`expertiseTier (must be one of: ${SKILL_TIER_KEYS.join(', ')})`)
+    }
+
     if (!data.characteristics || typeof data.characteristics !== 'object') {
       errors.push('characteristics')
     } else {
@@ -78,7 +87,11 @@ export default {
     const warnings = []
     const weaponsData = this._validateAndMapWeapons(data.weapons, warnings)
     const possessionsData = this._mapPossessions(data.possessions)
-    const skillsRaw = this._ensureWeaponSkills(data.skills, weaponsData, warnings)
+    const skillsRaw = this._tagNativeLanguage(
+      this._ensureWeaponSkills(data.skills, weaponsData, warnings),
+      data.nativeLanguage,
+      warnings
+    )
 
     return {
       actorData: {
@@ -126,15 +139,54 @@ export default {
     }
 
     const resolved = []
-    for (const { name, value } of skillsRaw) {
+    for (const { name, value, own } of skillsRaw) {
       const normalized = name.trim().replace(/\s+/g, ' ')
-      const skillData = await this._resolveOneSkill(normalized, value, pack, compendiumIndex)
+      const skillData = await this._resolveOneSkill(normalized, value, pack, compendiumIndex, own === true)
       if (skillData) resolved.push(skillData)
     }
     return resolved
   },
 
-  async _resolveOneSkill (skillName, targetValue, pack, compendiumIndex) {
+  async _resolveOneSkill (skillName, targetValue, pack, compendiumIndex, isNativeLanguage = false) {
+    // The mother tongue is built from the `Language (Own)` template, then named.
+    // keepbasevalue is true on that template, so `base` stays '@EDU' — CoC7
+    // clears the naming flags once a concrete language is chosen.
+    if (isNativeLanguage && pack && compendiumIndex) {
+      const template = compendiumIndex.find(
+        entry => entry.name.toLowerCase() === 'language (own)'
+      )
+      const templateDoc = template ? await pack.getDocument(template._id) : null
+      if (templateDoc) {
+        const data = templateDoc.toObject()
+        const parts = CONFIG.Item.dataModels.skill.guessNameParts(skillName)
+        data.name = parts.name
+        data.system.skillName = parts.system.skillName
+        data.system.specialization = parts.system.specialization
+        data.system.properties = {
+          ...data.system.properties,
+          requiresname: false,
+          picknameonly: false,
+          keepbasevalue: false,
+          own: true
+        }
+        data.system.adjustments = {
+          personal: targetValue,
+          base: 0,
+          occupation: 0,
+          archetype: 0,
+          experiencePackage: 0,
+          experience: 0
+        }
+        foundry.utils.setProperty(
+          data,
+          'flags.CoC7.cocidFlag.id',
+          'i.skill.' + parts.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+        )
+        delete data._id
+        return data
+      }
+    }
+
     // Attempt compendium lookup
     if (compendiumIndex) {
       const match = compendiumIndex.find(
@@ -200,6 +252,29 @@ export default {
       warnings.push(`Auto-added skill "${skillName}" at ${WEAPON_SKILL_FALLBACK_VALUE}% (referenced by a weapon but missing from skills)`)
     }
     return existing
+  },
+
+  /**
+   * Mark the NPC's mother tongue so resolveSkills() can build it from the
+   * `Language (Own)` compendium template rather than the foreign-language
+   * entry of the same name. Only the first match is tagged — an NPC has one
+   * native language.
+   */
+  _tagNativeLanguage (skills, nativeLanguage, warnings) {
+    const language = (nativeLanguage ?? '').trim()
+    if (!language) return skills
+    const target = `language (${language})`.toLowerCase()
+    let tagged = false
+    const result = skills.map(skill => {
+      if (tagged) return skill
+      if ((skill?.name ?? '').trim().toLowerCase() !== target) return skill
+      tagged = true
+      return { ...skill, own: true }
+    })
+    if (!tagged) {
+      warnings.push(`Native language "${language}" has no matching skill — expected an entry named "Language (${language})"`)
+    }
+    return result
   },
 
   _validateAndMapWeapons (rawWeapons, warnings) {

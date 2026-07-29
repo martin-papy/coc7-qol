@@ -203,9 +203,21 @@ labelling problem rather than fixing it.
 ### D8 — Review dialog shows tiers and flags above-tier skills
 
 `expertiseTier` becomes required in `validate()` (`npc.js:49`). The dialog shows
-it in the header, labels each skill row with its tier, and marks rows above the
-declared tier with a warning affordance. A stray Expert-level skill is then
-visible before Accept.
+it in the header and marks rows above the declared tier with a warning
+affordance, so a stray Expert-level skill is visible before Accept.
+
+**Revised 2026-07-29 after implementation review.** The first draft printed a
+tier label on *every* skill row. In practice that was 15 of 18 rows reading
+"AMATEUR" on a realistic constable, and the label's column stole enough width
+that `Language (English)` truncated to `Language (Eng…` — a skill's identity
+sacrificed for a near-uniform label. The tier label is therefore shown only on
+rows at or above the declared tier, where it carries information; lower rows
+leave the space to the skill name.
+
+Because the flag's only explanation was a hover-only `title` tooltip — useless
+on touch and unreliable for assistive tech — the count of above-tier skills
+also appears as one aggregate line in the dialog's existing warnings callout.
+That callout is always visible and already the place a Keeper looks.
 
 Skills stay read-only in the dialog. This is a review affordance, not an editor —
 the GM adjusts on the sheet afterwards.

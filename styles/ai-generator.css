@@ -188,7 +188,6 @@
 .coc7-npc-skill-name {
   color: var(--color-text-light-3, #ccc);
   overflow-wrap: break-word;
-  word-break: break-word;
 }
 
 .coc7-npc-skill-tier {
@@ -232,7 +231,6 @@
   color: var(--color-text-light-5, #bbb);
   margin: 0;
   overflow-wrap: break-word;
-  word-break: break-word;
 }
 
 .coc7-ai-npc-dialog .form-footer {

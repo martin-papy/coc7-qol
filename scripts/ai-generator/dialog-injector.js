@@ -71,7 +71,7 @@ const NPC_PROMPT_CONFIG = {
   },
   onAccept: async (data, { mapper, dialog }) => {
     try {
-      const resolvedSkills = await mapper.resolveSkills(data.skillsRaw)
+      const resolvedSkills = await mapper.resolveSkills(data.skillsRaw, data.llmData?.characteristics)
       const actor = await Actor.create(data.actorData)
       if (!actor) {
         ui.notifications.error(t('COC7QOL.AIGenerator.Error.NPCCreationCancelled'))

@@ -170,18 +170,58 @@
   font-size: 0.85rem;
 }
 
+/* Three columns: name (shrinkable, wraps rather than truncating), tier
+   (only rendered when the skill's own tier is at or above the NPC's declared
+   tier — see isAtOrAboveTier), value. Tier text is capped so it can never
+   claim more than its column before the name track sees any content: a long
+   name (e.g. "Language (English)") must keep every character, so the name
+   wraps to a second line instead of losing text to an ellipsis. */
 .coc7-npc-skill-row {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: start;
+  column-gap: 0.4rem;
   border-bottom: 1px solid var(--color-cool-5-75, #1f1f1f);
   padding: 0.15rem 0;
 }
 
 .coc7-npc-skill-name {
   color: var(--color-text-light-3, #ccc);
+  overflow-wrap: break-word;
+}
+
+.coc7-npc-skill-tier {
+  font-size: 0.62rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-text-dark-5, #7a7a7a);
+  white-space: nowrap;
+}
+
+.coc7-npc-skill-above-tier {
+  background: rgba(212, 160, 23, 0.1);
+  border-bottom-color: var(--color-warm-2, #d4a017);
+}
+
+.coc7-npc-skill-above-tier .coc7-npc-skill-tier {
+  color: var(--color-warm-2, #d4a017);
+}
+
+.coc7-npc-skill-flag {
+  color: var(--color-warm-2, #d4a017);
+  font-weight: bold;
+  margin-right: 0.25rem;
+  cursor: help;
 }
 
 .coc7-npc-skill-value {
+  /* Grid auto-placement fills cells in DOM order: on a row with no tier
+     label there are only two children (name, value), so the value would
+     otherwise land in track 2 instead of track 3, landing a few pixels left
+     of where a labelled row's value sits. Pin it to the last track and
+     right-align so labelled and unlabelled rows agree. */
+  grid-column: 3;
+  text-align: right;
   color: var(--color-warm-2, #c9a96e);
   font-weight: bold;
 }
@@ -190,6 +230,7 @@
   font-size: 0.82rem;
   color: var(--color-text-light-5, #bbb);
   margin: 0;
+  overflow-wrap: break-word;
 }
 
 .coc7-ai-npc-dialog .form-footer {

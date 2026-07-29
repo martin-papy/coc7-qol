@@ -69,6 +69,24 @@ export function isAboveTier (value, tierKey) {
 }
 
 /**
+ * Whether a value's own tier sits at or above a declared tier. Unlike
+ * isAboveTier (which compares the raw percentage to a ceiling), this compares
+ * tier positions on the ladder, so a value anywhere inside the declared tier
+ * counts as "at" it. An unrecognised tierKey never matches, degrading safely
+ * to "not at or above" rather than throwing or matching everything.
+ *
+ * @param {number} value
+ * @param {string} tierKey
+ * @returns {boolean}
+ */
+export function isAtOrAboveTier (value, tierKey) {
+  const declaredIndex = SKILL_TIER_KEYS.indexOf(tierKey)
+  if (declaredIndex === -1) return false
+  const valueIndex = SKILL_TIER_KEYS.indexOf(tierForValue(value))
+  return valueIndex >= declaredIndex
+}
+
+/**
  * Localized tier name for display. Falls back to the raw key so an unexpected
  * value is visible rather than blank.
  *

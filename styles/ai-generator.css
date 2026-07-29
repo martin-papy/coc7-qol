@@ -170,13 +170,16 @@
   font-size: 0.85rem;
 }
 
-/* Three columns: name (shrinkable), tier, value. The tier text is the
-   at-a-glance calibration cue — a beat constable showing "Professional" next
-   to a combat skill is the bug this dialog exists to surface. */
+/* Three columns: name (shrinkable, wraps rather than truncating), tier
+   (only rendered when the skill's own tier is at or above the NPC's declared
+   tier — see isAtOrAboveTier), value. Tier text is capped so it can never
+   claim more than its column before the name track sees any content: a long
+   name (e.g. "Language (English)") must keep every character, so the name
+   wraps to a second line instead of losing text to an ellipsis. */
 .coc7-npc-skill-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
-  align-items: baseline;
+  align-items: start;
   column-gap: 0.4rem;
   border-bottom: 1px solid var(--color-cool-5-75, #1f1f1f);
   padding: 0.15rem 0;
@@ -184,16 +187,16 @@
 
 .coc7-npc-skill-name {
   color: var(--color-text-light-3, #ccc);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .coc7-npc-skill-tier {
-  font-size: 0.68rem;
-  letter-spacing: 0.03em;
+  font-size: 0.62rem;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
   color: var(--color-text-dark-5, #7a7a7a);
+  white-space: nowrap;
 }
 
 .coc7-npc-skill-above-tier {

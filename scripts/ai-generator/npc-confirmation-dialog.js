@@ -2,7 +2,7 @@
 
 import { escapeHtml, t, tf } from '../utils.js'
 import { CHARACTERISTIC_FORMULAS } from './mappers/npc.js'
-import { tierForValue, isAboveTier, tierLabel } from './skill-tiers.js'
+import { tierForValue, isAboveTier, isAtOrAboveTier, tierLabel } from './skill-tiers.js'
 
 export default class CoC7NPCConfirmationDialog extends foundry.applications.api.ApplicationV2 {
   static DEFAULT_OPTIONS = {
@@ -80,16 +80,22 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
     })
     const skillRows = skills.map(s => {
       const above = isAboveTier(s.value, declaredTier)
+      const atOrAbove = isAtOrAboveTier(s.value, declaredTier)
+      const tierText = atOrAbove
+        ? `<span class="coc7-npc-skill-tier">${escapeHtml(tierLabel(tierForValue(s.value)))}</span>`
+        : ''
       const flag = above
         ? `<span class="coc7-npc-skill-flag" title="${escapeHtml(aboveTierTitle)}">${t('COC7QOL.AIGenerator.NPCDialog.AboveTierBadge')}</span>`
         : ''
       return `
       <div class="coc7-npc-skill-row${above ? ' coc7-npc-skill-above-tier' : ''}">
         <span class="coc7-npc-skill-name">${escapeHtml(s.name)}</span>
-        <span class="coc7-npc-skill-tier">${escapeHtml(tierLabel(tierForValue(s.value)))}</span>
+        ${tierText}
         <span class="coc7-npc-skill-value">${flag}${escapeHtml(String(s.value))}%</span>
       </div>`
     }).join('')
+
+    const aboveTierCount = skills.filter(s => isAboveTier(s.value, declaredTier)).length
 
     const skillsHtml = skills.length ? `
       <div class="coc7-npc-section">
@@ -117,7 +123,10 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
 
     // --- Warnings ---
     const warnings = this.#npcData.warnings ?? []
-    const warningsHtml = this.#renderWarningsSection(warnings)
+    const aboveTierSummary = aboveTierCount > 0
+      ? [tf('COC7QOL.AIGenerator.NPCDialog.AboveTierSummary', { tier: tierLabel(declaredTier), count: aboveTierCount })]
+      : []
+    const warningsHtml = this.#renderWarningsSection([...warnings, ...aboveTierSummary])
 
     // --- Buttons ---
     const buttonsHtml = `

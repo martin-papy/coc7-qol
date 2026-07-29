@@ -76,6 +76,7 @@
   "COC7QOL.AIGenerator.NPCDialog.TierLabel": "Peak",
   "COC7QOL.AIGenerator.NPCDialog.AboveTierTitle": "Above the declared {tier} tier — check this is deliberate",
   "COC7QOL.AIGenerator.NPCDialog.AboveTierBadge": "!",
+  "COC7QOL.AIGenerator.NPCDialog.AboveTierSummary": "Skills above the declared {tier} tier: {count}",
 
   "COC7QOL.AIGenerator.Tier.novice": "Novice",
   "COC7QOL.AIGenerator.Tier.neophyte": "Neophyte",

@@ -9,8 +9,10 @@
  * Upstream issue: https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT/issues/2149
  *
  * Designed to coexist with (and be removed after) the upstream fix:
- *  - It only ever TIGHTENS visibility: a message that already arrives non-public
- *    (whispered or blind) is left untouched, whatever made it so.
+ *  - It only ever TIGHTENS visibility: a card that already reaches only the GMs
+ *    (GM whisper or blind roll) is left untouched, whatever made it so. A card
+ *    players would see — public, or whispered to them by CoC7's Self Roll with
+ *    "whisper target: owners/everyone" — is narrowed to the GMs.
  *  - UPSTREAM_FIXED_IN is a one-constant kill switch: set it to the CoC7 version
  *    that ships the fix and the hook disables itself from that version on.
  *  - Full removal = delete this folder + its "esmodules" entry in module.json
@@ -67,24 +69,24 @@ function defaultRollMode () {
 }
 
 /**
- * A hidden combatant's initiative card arrived already private although the
- * user's roll mode is public: something else (most likely the upstream fix)
+ * A hidden combatant's initiative card already reached only the GMs although
+ * the user's roll mode is public: something else (most likely the upstream fix)
  * now handles it. Say so once per session so the workaround can be retired.
  */
 function reportRedundancy () {
   if (redundancyReported) return
   redundancyReported = true
-  console.info('[coc7-qol] A hidden combatant\'s initiative roll already arrived private while the roll mode is public. '
+  console.info('[coc7-qol] A hidden combatant\'s initiative roll already reached only the GMs while the roll mode is public. '
     + 'CoC7 (or another module) now hides these itself — the coc7-qol workaround in scripts/hidden-initiative/ can probably be removed.')
 }
 
 /**
- * Nobody to whisper to: the roll stays public. Say so once so it is not silent.
+ * Nobody to whisper to: the roll is left as is. Say so once so it is not silent.
  */
 function reportNoGm () {
   if (noGmReported) return
   noGmReported = true
-  console.warn('[coc7-qol] A hidden combatant rolled initiative but no user has the Gamemaster role — the roll was left public.')
+  console.warn('[coc7-qol] A hidden combatant rolled initiative but no user has the Gamemaster role — the roll was left as is.')
 }
 
 Hooks.on('preCreateChatMessage', (document) => {

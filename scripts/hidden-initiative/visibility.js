@@ -7,22 +7,44 @@
 /** Roll-mode keys meaning "everyone sees it": 'publicroll' on v13, 'public' on v14. */
 export const PUBLIC_MODES = ['public', 'publicroll']
 
+const UUID_TOKEN = /(?:^|\.)Token\.([^.]+)/
+const UUID_ACTOR = /(?:^|\.)Actor\.([^.]+)/
+
 /**
- * Resolve the combatant a chat speaker refers to. Prefers the token match
+ * Who the initiative card is about: the speaker's token/actor when CoC7 kept
+ * a speaker, otherwise the actor UUID CoC7 stores in its own flags. The latter
+ * is the only identity left when CoC7 strips the speaker (Self Roll mode with
+ * a "whisper target" of owners/everyone), e.g.
+ *   Scene.<scene>.Token.<token>.Actor.<actor>   (unlinked token actor)
+ *   Actor.<actor>                               (linked actor)
+ * @param {object} message
+ * @returns {{token: string|null, actor: string|null}|null}
+ */
+export function resolveIdentity (message) {
+  const speaker = message?.speaker ?? {}
+  const uuid = message?.flags?.CoC7?.load?.actorUuid
+  const fromUuid = re => (typeof uuid === 'string' ? uuid.match(re)?.[1] : null) ?? null
+  const token = speaker.token ?? fromUuid(UUID_TOKEN)
+  const actor = speaker.actor ?? fromUuid(UUID_ACTOR)
+  return token || actor ? { token, actor } : null
+}
+
+/**
+ * Resolve the combatant an identity refers to. Prefers the token match
  * (unlinked NPC tokens — the common case), then the actor match (linked
  * actors, whose speaker may carry a different token than the combatant's).
  * Combats are searched in the order given; pass the active combat first.
- * @param {object|null} speaker        ChatMessage speaker data ({token, actor})
+ * @param {{token: string|null, actor: string|null}|null} identity
  * @param {Iterable<{combatants: Iterable<object>}>} combats
  * @returns {object|null}
  */
-export function findCombatant (speaker, combats) {
-  if (!speaker) return null
+export function findCombatant (identity, combats) {
+  if (!identity) return null
   for (const combat of combats ?? []) {
     const combatants = [...(combat?.combatants ?? [])]
-    const byToken = speaker.token ? combatants.find(c => c.tokenId === speaker.token) : null
+    const byToken = identity.token ? combatants.find(c => c.tokenId === identity.token) : null
     if (byToken) return byToken
-    const byActor = speaker.actor ? combatants.find(c => c.actorId === speaker.actor) : null
+    const byActor = identity.actor ? combatants.find(c => c.actorId === identity.actor) : null
     if (byActor) return byActor
   }
   return null
@@ -39,15 +61,18 @@ export function isHidden (combatant) {
 }
 
 /**
- * True when nobody has been excluded from seeing the message yet.
+ * True when no player can see the message: a blind roll, or a whisper whose
+ * every recipient is a GM. A public message, or one whispered to players
+ * (CoC7's Self Roll with "whisper target: everyone"), is not.
  * Accepts whisper as an Array or a Set.
  * @param {object} message
+ * @param {string[]} gmIds
  * @returns {boolean}
  */
-export function isPublic (message) {
-  const whisper = message.whisper ?? []
-  const recipients = whisper.size ?? whisper.length ?? 0
-  return recipients === 0 && message.blind !== true
+export function isGmOnly (message, gmIds) {
+  if (message.blind === true) return true
+  const whisper = [...(message.whisper ?? [])]
+  return whisper.length > 0 && whisper.every(id => gmIds.includes(id))
 }
 
 /**
@@ -64,14 +89,14 @@ export function gmModeKey (modes) {
  * Decide what to do with a chat message about to be created.
  *
  * - 'ignore'    — not an initiative roll, combatant not hidden, nothing to do
- * - 'redundant' — the hidden combatant's roll already arrived private although
- *                 the roll mode is public and this module did not do it:
- *                 something external (most likely the upstream fix) handles it now
- * - 'no-gm'     — there is nobody to whisper to; the roll stays public
- * - 'whisper'   — apply `update` to make the roll GM-only
+ * - 'redundant' — the hidden combatant's roll already reaches only the GMs
+ *                 although the roll mode is public and this module did not do
+ *                 it: something external (most likely the upstream fix) handles it now
+ * - 'no-gm'     — there is nobody to whisper to; the roll is left as is
+ * - 'whisper'   — apply `update` to narrow the roll to the GMs
  *
- * The decision only ever tightens visibility; it never loosens an already
- * whispered or blind message.
+ * The decision only ever tightens visibility: it removes players from the
+ * audience and never widens an already GM-only or blind message.
  *
  * @param {object} params
  * @param {object} params.message     The ChatMessage (or plain data): flags, speaker, whisper, blind
@@ -86,16 +111,17 @@ export function decideInitiativeVisibility ({ message, combats, gmIds, modes, ro
   const IGNORE = { kind: 'ignore' }
   if (message?.flags?.core?.initiativeRoll !== true) return IGNORE
 
-  const combatant = findCombatant(message.speaker, combats)
+  const combatant = findCombatant(resolveIdentity(message), combats)
   if (!isHidden(combatant)) return IGNORE
 
-  if (!isPublic(message)) {
+  const gms = gmIds ?? []
+  if (isGmOnly(message, gms)) {
     const external = !handledByModule && PUBLIC_MODES.includes(rollMode)
     return external ? { kind: 'redundant' } : IGNORE
   }
-  if (!gmIds?.length) return { kind: 'no-gm' }
+  if (!gms.length) return { kind: 'no-gm' }
 
-  const update = { whisper: [...gmIds], blind: false }
+  const update = { whisper: [...gms], blind: false }
   // Keep the visibility if CoC7 re-hydrates the check from its stored flags
   // (same reasoning as roll-visibility.js). Only touch the flag if it exists.
   const mode = gmModeKey(modes)

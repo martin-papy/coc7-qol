@@ -292,3 +292,52 @@ test('sorts with the given locale rather than the host locale', () => {
   assert.deepEqual(order('de'), ['Örjan', 'Zoe'], 'German: Ö sorts with O')
   assert.deepEqual(order('sv'), ['Zoe', 'Örjan'], 'Swedish: Ö sorts after Z')
 })
+
+function allActorsBox (section) {
+  return section.closest('form').querySelector('[name="CoC7RestTargetsAll"]')
+}
+
+test('the All Actors box checks and unchecks every row and every group toggle', () => {
+  const { dom, section, typeOf } = buildDialog(ACTORS)
+  restructureRestTargets(section, { typeOf, labels: LABELS })
+  const all = allActorsBox(section)
+  const rows = [...section.querySelectorAll('input[name^="CoC7RestTargets"]')]
+  const toggles = ['character', 'npc', 'creature'].map(type => groupToggle(section, type))
+
+  click(dom, all, true)
+  assert.deepEqual(rows.map(i => i.checked), rows.map(() => true), 'every row checked')
+  assert.deepEqual(toggles.map(t => [t.checked, t.indeterminate]), toggles.map(() => [true, false]), 'every group toggle checked')
+
+  click(dom, all, false)
+  assert.deepEqual(rows.map(i => i.checked), rows.map(() => false), 'every row unchecked')
+  assert.deepEqual(toggles.map(t => [t.checked, t.indeterminate]), toggles.map(() => [false, false]), 'every group toggle unchecked')
+})
+
+test('the All Actors box mirrors the overall selection: indeterminate, checked, or unchecked', () => {
+  const { dom, section, typeOf } = buildDialog(ACTORS)
+  restructureRestTargets(section, { typeOf, labels: LABELS })
+  const all = allActorsBox(section)
+  const state = () => ({ checked: all.checked, indeterminate: all.indeterminate })
+
+  assert.deepEqual(state(), { checked: false, indeterminate: true }, 'Investigators only → partial')
+
+  click(dom, groupToggle(section, 'npc'), true)
+  click(dom, groupToggle(section, 'creature'), true)
+  assert.deepEqual(state(), { checked: true, indeterminate: false }, 'everything selected via group toggles → checked')
+
+  click(dom, groupInputs(section, 'npc')[0], false)
+  assert.deepEqual(state(), { checked: false, indeterminate: true }, 'one row removed → partial')
+
+  click(dom, groupToggle(section, 'character'), false)
+  click(dom, groupToggle(section, 'npc'), false)
+  click(dom, groupToggle(section, 'creature'), false)
+  assert.deepEqual(state(), { checked: false, indeterminate: false }, 'nothing selected → unchecked')
+})
+
+test('works without an All Actors box in the form', () => {
+  const { section, typeOf } = buildDialog(ACTORS)
+  section.closest('form').querySelector('[name="CoC7RestTargetsAll"]').closest('div').remove()
+
+  assert.doesNotThrow(() => restructureRestTargets(section, { typeOf, labels: LABELS }))
+  assert.equal(section.querySelectorAll(':scope > details').length, 3)
+})

@@ -11,9 +11,10 @@ This tweak reorganises that dialog without changing what it does.
 - **Actors are grouped by type** — Investigators, NPCs, Creatures, and (if any exist) Vehicles — each with a count in its heading. Empty groups are hidden.
 - **Investigators are pre-selected** and their group is expanded; the other groups start collapsed and unchecked.
 - **Each group heading has its own select-all checkbox**, so resting every NPC, or every creature, is one click. The checkbox reflects the group's state — ticked, empty, or half-ticked when only some rows are selected.
+- **All Actors** works the same way one level up: ticking it selects everyone, unticking it clears everyone, and it shows half-ticked while only part of the world is selected.
 - Actors are sorted alphabetically within each group.
 
-The system's own **All Actors** shortcut and the **Start Rest** button behave exactly as before, and the rest itself (HP recovery, daily sanity reset, magic points) is untouched — this only rearranges the picker. Note that **All Actors** overrides the individual boxes without visually ticking them: when it is on, everyone rests regardless of what the groups show.
+The **Start Rest** button behaves exactly as before, and the rest itself (HP recovery, daily sanity reset, magic points) is untouched — this only rearranges the picker.
 
 If the world has no investigator, nothing is pre-selected and the first non-empty group is expanded instead.
 

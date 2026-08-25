@@ -53,19 +53,43 @@ export function restructureRestTargets (section, { typeOf, labels, locale }) {
   // present, otherwise open the first non-empty group so the dialog never opens fully collapsed.
   const hasDefault = byType.get(DEFAULT_OPEN_TYPE).length > 0
   let opened = false
+  const groups = []
   for (const type of GROUP_ORDER) {
     const groupRows = byType.get(type)
     if (groupRows.length === 0) continue
     const isDefault = type === DEFAULT_OPEN_TYPE
     const open = isDefault || (!hasDefault && !opened)
     opened ||= open
-    section.append(buildGroup(doc, { type, label: labels[type], rows: sort(groupRows), open, checked: isDefault }))
+    const group = buildGroup(doc, { type, label: labels[type], rows: sort(groupRows), open, checked: isDefault })
+    groups.push(group)
+    section.append(group.details)
   }
   section.append(...strays)
+
+  wireSelectionMirrors(section, groups, rows.filter(row => row.querySelector('input')))
 
   // Mark only once the work is done, so a failure above leaves the section eligible for a retry.
   section.dataset.coc7qolGrouped = 'true'
   return true
+}
+
+/**
+ * Keep the group toggles and the system's "All Actors" box in step with the rows.
+ * Any checkbox change inside the section bubbles up here; the All box (outside the
+ * section) acts as the master select-all and is mirrored like a group toggle.
+ */
+function wireSelectionMirrors (section, groups, allRows) {
+  const allBox = section.closest('form')?.querySelector(`[name="${INPUT_PREFIX}All"]`) ?? null
+  const refresh = () => {
+    for (const group of groups) syncToggle(group.toggle, group.rows)
+    if (allBox) syncToggle(allBox, allRows)
+  }
+  section.addEventListener('change', refresh)
+  allBox?.addEventListener('change', () => {
+    setChecked(allRows, allBox.checked)
+    refresh()
+  })
+  refresh()
 }
 
 /** One collapsible <details> per actor type, with a select-all toggle in its <summary>. */
@@ -75,9 +99,9 @@ function buildGroup (doc, { type, label, rows, open, checked }) {
   const toggle = doc.createElement('input')
   toggle.type = 'checkbox'
   toggle.name = `${GROUP_TOGGLE_PREFIX}${type}`
-  toggle.addEventListener('change', () => setChecked(rows, toggle.checked))
-
   toggle.setAttribute('aria-label', label)
+  // Only sets the rows; the mirrors are refreshed by the section-level change listener.
+  toggle.addEventListener('change', () => setChecked(rows, toggle.checked))
 
   // Deliberately no <label> around the text: clicking the group name should
   // expand/collapse the group, and only the checkbox should change the selection.
@@ -91,11 +115,7 @@ function buildGroup (doc, { type, label, rows, open, checked }) {
   details.dataset.actorType = type
   details.open = open
   details.append(summary, ...rows)
-
-  const sync = () => syncToggle(toggle, rows)
-  sync()
-  for (const row of rows) row.querySelector('input').addEventListener('change', sync)
-  return details
+  return { details, toggle, rows }
 }
 
 /** Mirror the rows onto the group toggle: all → checked, none → unchecked, mixed → indeterminate. */

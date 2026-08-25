@@ -54,6 +54,7 @@
     "scripts/ai-generator/index.js",
     "scripts/close-all-cards.js",
     "scripts/roll-visibility.js",
+    "scripts/hidden-initiative/index.js",
     "scripts/gm-visibility/index.js",
     "scripts/rest-targets/index.js",
     "scripts/trade-targets/index.js"

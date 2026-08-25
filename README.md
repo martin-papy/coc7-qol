@@ -19,6 +19,7 @@ If there's a workflow that annoys you, a small thing that could be smoother, or 
 | [👁️ Keeper-Only Highlights](#-keeper-only-highlights) | See what players can't see vs can't change, on sheets and chat cards | GM |
 | [🛏️ Grouped Rest Targets](#-grouped-rest-targets) | Rest just the Investigators in two clicks — actors grouped by type, PCs pre-selected | GM |
 | [🎁 Grouped Trade / Store Targets](#-grouped-trade--store-targets) | Give or store an item without scanning a flat list — targets grouped Investigators / Storage / NPCs / Creatures | Everyone |
+| [🙈 Hidden Initiative Rolls](#-hidden-initiative-rolls) | Initiative rolls of hidden combatants go to the GMs only, as Foundry intends — works around CoC7 #2149 | GM |
 
 ---
 
@@ -92,11 +93,19 @@ CoC7's **Start Rest** dialog lists every actor in the world in one flat, unticke
 
 ## 🎁 Grouped Trade / Store Targets
 
-The **Trade / Store Item** dropdown on the character sheet listed every visible actor in world order. It's now grouped into **Investigators / Storage / NPCs / Creatures** and nothing pre-selected — **Validate** waits until you've actually picked someone — so handing a clue to a fellow investigator or stashing a rifle in storage is one glance instead of a scroll. No more `zz_Storage`.
+The **Trade / Store Item** dropdown on the character sheet listed every visible actor in world order. It's now grouped into **Investigators / Storage / NPCs / Creatures** and nothing pre-selected — **Validate** waits until you've actually picked someone — so handing a clue to a fellow investigator or stashing a rifle in storage is one glance instead of a scroll.
 
-![Trade / Store dropdown grouped by actor type](images/Trade-Targets.png)
+![Trade / Store dropdown grouped by actor type](images/Trade-Targets-2.png)
 
 [**Read more →**](docs/features/trade-targets.md)
+
+---
+
+## 🙈 Hidden Initiative Rolls
+
+Hidden a monster in the combat tracker, rolled initiative, and watched its name and DEX roll land in everyone's chat? That's a CoC7 bug ([#2149](https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT/issues/2149)): the system's own initiative code skips Foundry's "hidden combatants roll privately" rule. With this module, initiative rolls of hidden combatants — hidden in the tracker or on the canvas — are whispered to the GMs, and players don't even get Foundry's "*privately rolled some dice*" placeholder to count them by. Visible combatants roll exactly as before, and the whisper half retires itself once the system is fixed.
+
+[**Read more →**](docs/features/hidden-initiative.md)
 
 ---
 

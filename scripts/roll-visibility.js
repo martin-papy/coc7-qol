@@ -1,4 +1,4 @@
-import { t } from './utils.js'
+import { t, retargetedMessages } from './utils.js'
 
 const MODULE = 'coc7-qol'
 const LAST_MODE_SETTING = 'last-roll-mode'
@@ -114,4 +114,5 @@ Hooks.on('preCreateChatMessage', (document, data) => {
   }
 
   document.updateSource(update)
+  retargetedMessages.add(document)
 })

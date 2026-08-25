@@ -39,3 +39,12 @@ export const t = key => game.i18n.localize(key)
  * @returns {string}
  */
 export const tf = (key, data) => game.i18n.format(key, data)
+
+/**
+ * Chat messages whose visibility this module has already retargeted in a
+ * preCreateChatMessage hook (roll-visibility). Lets sibling hooks tell
+ * "we did this" from "something external did this". In-memory only — the
+ * pending document instance is the key, nothing is written to the message.
+ * @type {WeakSet<ChatMessage>}
+ */
+export const retargetedMessages = new WeakSet()

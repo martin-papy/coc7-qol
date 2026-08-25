@@ -18,6 +18,7 @@ If there's a workflow that annoys you, a small thing that could be smoother, or 
 | [✨ AI Generation](#-ai-generation) | Conjure fully-statted weapons and NPCs from a one-line description | GM |
 | [👁️ Keeper-Only Highlights](#-keeper-only-highlights) | See what players can't see vs can't change, on sheets and chat cards | GM |
 | [🛏️ Grouped Rest Targets](#-grouped-rest-targets) | Rest just the Investigators in two clicks — actors grouped by type, PCs pre-selected | GM |
+| [🙈 Hidden Initiative Rolls](#-hidden-initiative-rolls) | Initiative rolls of hidden combatants go to the GMs only, as Foundry intends — works around CoC7 #2149 | GM |
 
 ---
 
@@ -86,6 +87,16 @@ CoC7's **Start Rest** dialog lists every actor in the world in one flat, unticke
 ![Rest Targets dialog grouped by actor type](images/Rest-Targets.png)
 
 [**Read more →**](docs/features/rest-targets.md)
+
+---
+
+## 🙈 Hidden Initiative Rolls
+
+Hidden a monster in the combat tracker, rolled initiative, and watched its name and DEX roll land in everyone's chat? That's a CoC7 bug ([#2149](https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT/issues/2149)): the system's own initiative code skips Foundry's "hidden combatants roll privately" rule. With this module, initiative rolls of hidden combatants — hidden in the tracker or on the canvas — are whispered to the GMs. Visible combatants roll exactly as before, and the tweak retires itself once the system is fixed.
+
+![A visible combatant's public initiative card above a hidden combatant's whispered one](images/Hidden-Initiative.png)
+
+[**Read more →**](docs/features/hidden-initiative.md)
 
 ---
 

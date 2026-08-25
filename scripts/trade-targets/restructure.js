@@ -1,0 +1,54 @@
+import { groupByActorType, nameSorter } from '../actor-groups.js'
+
+const ACTOR_UUID_PREFIX = 'Actor.'
+
+/** Display order of the target groups. Mirrors CoC7's TRADE_ALLOWED, ordered for the player. */
+export const GROUP_ORDER = ['character', 'container', 'npc', 'creature']
+
+/**
+ * Locate the system's actor <select> inside a rendered "Give item to another character" dialog.
+ * @param {HTMLElement} root
+ * @returns {HTMLSelectElement|null}
+ */
+export function findTradeTargetSelect (root) {
+  const select = root.querySelector('select[name="user"]')
+  const isActorList = select && [...select.options].some(option => option.value.startsWith(ACTOR_UUID_PREFIX))
+  return isActorList ? select : null
+}
+
+/**
+ * Regroup the flat <option> list rendered by CoC7Utilities.tradeItem() into one
+ * <optgroup> per actor type. Options keep their values, so the system's
+ * `form.elements.user.value` callback is unaffected.
+ *
+ * @param {HTMLSelectElement} select
+ * @param {object} deps
+ * @param {(uuid: string) => string|undefined} deps.typeOf  Resolve an actor uuid to its type.
+ * @param {Record<string, string>} deps.labels  Localised group label per actor type.
+ * @param {string} [deps.locale]  BCP 47 tag used to sort names.
+ * @returns {boolean} false when the select was already restructured (re-render).
+ */
+export function restructureTradeTargets (select, { typeOf, labels, locale }) {
+  if (select.dataset.coc7qolGrouped) return false
+
+  const doc = select.ownerDocument
+  const options = [...select.querySelectorAll(':scope > option')]
+  const { groups, strays } = groupByActorType(options, { order: GROUP_ORDER, typeOf: option => typeOf(option.value) })
+  const sort = nameSorter(locale)
+
+  for (const type of GROUP_ORDER) {
+    const groupOptions = groups.get(type)
+    if (groupOptions.length === 0) continue
+    const optgroup = doc.createElement('optgroup')
+    optgroup.label = labels[type]
+    optgroup.append(...sort(groupOptions, option => option.textContent.trim()))
+    select.append(optgroup)
+  }
+  select.append(...strays)
+
+  // The first option after regrouping is the first Investigator (or first of the first group).
+  select.selectedIndex = 0
+
+  select.dataset.coc7qolGrouped = 'true'
+  return true
+}

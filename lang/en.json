@@ -102,5 +102,13 @@
   "COC7QOL.RollVisibility.Label": "Roll Visibility",
   "COC7QOL.RollVisibility.Public": "Public — visible to all",
   "COC7QOL.RollVisibility.Private": "Private — GM and you",
-  "COC7QOL.RollVisibility.Blind": "Blind — GM only"
+  "COC7QOL.RollVisibility.Blind": "Blind — GM only",
+
+  "COC7QOL.ActorGroup.Investigators": "Investigators",
+  "COC7QOL.ActorGroup.Storage": "Storage",
+  "COC7QOL.ActorGroup.Npcs": "NPCs",
+  "COC7QOL.ActorGroup.Creatures": "Creatures",
+  "COC7QOL.ActorGroup.Vehicles": "Vehicles",
+
+  "COC7QOL.TradeTargets.Placeholder": "— Choose a character —"
 }

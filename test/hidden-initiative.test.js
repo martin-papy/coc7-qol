@@ -1,0 +1,206 @@
+import { test } from 'node:test'
+import assert from 'node:assert/strict'
+import { decideInitiativeVisibility, findCombatant, gmModeKey, isGmOnly, resolveIdentity, shouldHideCard } from '../scripts/hidden-initiative/visibility.js'
+
+const GM = ['gm-1']
+const PLAYERS = ['player-1', 'player-2']
+const V14_MODES = { public: {}, gm: {}, blind: {}, self: {} }
+const V13_MODES = { publicroll: {}, gmroll: {}, blindroll: {}, selfroll: {} }
+const SYNTHETIC_UUID = 'Scene.7yMdS1ggbEi8K084.Token.t1.Actor.a1'
+
+function combatant ({ tokenId = 't1', actorId = 'a1', hidden = false, tokenHidden = false } = {}) {
+  return { tokenId, actorId, hidden, token: { hidden: tokenHidden } }
+}
+
+/**
+ * A CoC7 initiative card as it reaches preCreateChatMessage (CoC7 8.15, Foundry v14).
+ * speaker: null = CoC7 stripped the speaker (Self Roll). coc7Mode: null = no CoC7 flag.
+ */
+function initiativeMessage ({ speaker = { token: 't1', actor: 'a1', alias: 'Byakhee' }, whisper = [], blind = false, coc7Mode = 'public', actorUuid = SYNTHETIC_UUID, initiative = true } = {}) {
+  const flags = {}
+  if (initiative) flags.core = { initiativeRoll: true }
+  if (coc7Mode !== null) flags.CoC7 = { load: { rollMode: coc7Mode, actorUuid } }
+  return { speaker: speaker ?? { scene: null, actor: null, token: null }, whisper, blind, flags }
+}
+
+function decide (overrides = {}) {
+  return decideInitiativeVisibility({
+    message: initiativeMessage(),
+    combats: [{ combatants: [combatant({ hidden: true })] }],
+    gmIds: GM,
+    modes: V14_MODES,
+    rollMode: 'public',
+    ...overrides
+  })
+}
+
+test('whispers a hidden combatant\'s public initiative roll to the GMs and rewrites the CoC7 roll-mode flag', () => {
+  const decision = decide()
+
+  assert.equal(decision.kind, 'whisper')
+  assert.deepEqual(decision.update, { whisper: GM, blind: false, sound: null, 'flags.CoC7.load.rollMode': 'gm' })
+})
+
+test('Self Roll + "whisper target: everyone": no speaker, whispered to the players — narrowed to the GMs via the CoC7 actor uuid', () => {
+  const decision = decide({ message: initiativeMessage({ speaker: null, whisper: PLAYERS, coc7Mode: 'self' }) })
+
+  assert.equal(decision.kind, 'whisper')
+  assert.deepEqual(decision.update, { whisper: GM, blind: false, sound: null, 'flags.CoC7.load.rollMode': 'gm' })
+})
+
+test('a whisper that reaches a GM and a player is narrowed to the GMs', () => {
+  const decision = decide({ message: initiativeMessage({ whisper: ['gm-1', 'player-1'], coc7Mode: 'self' }) })
+
+  assert.equal(decision.kind, 'whisper')
+  assert.deepEqual(decision.update.whisper, GM)
+})
+
+test('includes every GM user in the whisper', () => {
+  const decision = decide({ gmIds: ['gm-1', 'gm-2'] })
+
+  assert.deepEqual(decision.update.whisper, ['gm-1', 'gm-2'])
+})
+
+test('uses the v13 "gmroll" key when only the legacy roll modes are registered', () => {
+  const decision = decide({ modes: V13_MODES })
+
+  assert.equal(decision.update['flags.CoC7.load.rollMode'], 'gmroll')
+})
+
+test('does not add a CoC7 flag the message does not already carry', () => {
+  const decision = decide({ message: initiativeMessage({ coc7Mode: null }) })
+
+  assert.equal(decision.kind, 'whisper')
+  assert.deepEqual(decision.update, { whisper: GM, blind: false, sound: null })
+})
+
+test('leaves a visible combatant\'s roll alone', () => {
+  const decision = decide({ combats: [{ combatants: [combatant({ hidden: false })] }] })
+
+  assert.equal(decision.kind, 'ignore')
+})
+
+test('a token hidden on the canvas counts as hidden even if the tracker shows it', () => {
+  const decision = decide({ combats: [{ combatants: [combatant({ hidden: false, tokenHidden: true })] }] })
+
+  assert.equal(decision.kind, 'whisper')
+})
+
+test('a combatant hidden in the tracker counts as hidden even if the token is visible', () => {
+  const decision = decide({ combats: [{ combatants: [combatant({ hidden: true, tokenHidden: false })] }] })
+
+  assert.equal(decision.kind, 'whisper')
+})
+
+test('ignores chat messages that are not initiative rolls', () => {
+  const decision = decide({ message: initiativeMessage({ initiative: false }) })
+
+  assert.equal(decision.kind, 'ignore')
+})
+
+test('reports "unresolved" for an initiative roll whose speaker and uuid match no combatant', () => {
+  const decision = decide({ message: initiativeMessage({ speaker: { token: 'other', actor: 'other' }, actorUuid: 'Actor.other' }) })
+
+  assert.equal(decision.kind, 'unresolved')
+})
+
+test('reports "unresolved" for an initiative roll with neither speaker nor CoC7 uuid', () => {
+  const decision = decide({ message: initiativeMessage({ speaker: null, coc7Mode: null }) })
+
+  assert.equal(decision.kind, 'unresolved')
+})
+
+test('reports "no-gm" instead of silently leaving the roll exposed when there is no GM', () => {
+  const decision = decide({ gmIds: [] })
+
+  assert.equal(decision.kind, 'no-gm')
+})
+
+test('never loosens: a roll already whispered to the GMs only is left alone and flagged redundant under a public roll mode', () => {
+  const decision = decide({ message: initiativeMessage({ whisper: ['gm-1'], coc7Mode: 'gm' }) })
+
+  assert.equal(decision.kind, 'redundant')
+})
+
+test('never loosens: a blind roll is left alone', () => {
+  const decision = decide({ message: initiativeMessage({ whisper: ['gm-1'], blind: true, coc7Mode: 'blind' }) })
+
+  assert.equal(decision.kind, 'redundant')
+})
+
+test('an already GM-only roll that this module itself retargeted is not redundancy', () => {
+  const decision = decide({ message: initiativeMessage({ whisper: ['gm-1'], coc7Mode: 'gm' }), handledByModule: true })
+
+  assert.equal(decision.kind, 'ignore')
+})
+
+test('an already GM-only roll under a private roll mode is simply the user\'s choice, not redundancy', () => {
+  const decision = decide({ message: initiativeMessage({ whisper: ['gm-1'], coc7Mode: 'gm' }), rollMode: 'gm' })
+
+  assert.equal(decision.kind, 'ignore')
+})
+
+test('isGmOnly accepts whisper recipients as a Set', () => {
+  assert.equal(isGmOnly({ whisper: new Set(['gm-1']), blind: false }, GM), true)
+  assert.equal(isGmOnly({ whisper: new Set(['gm-1', 'player-1']), blind: false }, GM), false)
+  assert.equal(isGmOnly({ whisper: new Set(), blind: false }, GM), false)
+})
+
+test('resolveIdentity prefers the speaker and falls back to the CoC7 actor uuid', () => {
+  assert.deepEqual(resolveIdentity(initiativeMessage()), { token: 't1', actor: 'a1' })
+  assert.deepEqual(resolveIdentity(initiativeMessage({ speaker: null })), { token: 't1', actor: 'a1' })
+  assert.deepEqual(resolveIdentity(initiativeMessage({ speaker: null, actorUuid: 'Actor.linked1' })), { token: null, actor: 'linked1' })
+  assert.deepEqual(resolveIdentity(initiativeMessage({ speaker: { token: null, actor: 'a1' }, actorUuid: 'Scene.s.Token.t9.Actor.a1' })), { token: 't9', actor: 'a1' })
+  assert.equal(resolveIdentity(initiativeMessage({ speaker: null, coc7Mode: null })), null)
+  assert.equal(resolveIdentity({ speaker: null, flags: { CoC7: { load: { actorUuid: 42 } } } }), null)
+})
+
+test('findCombatant matches by token first, then falls back to the actor for linked actors', () => {
+  const byToken = combatant({ tokenId: 't1', actorId: 'other' })
+  const byActor = combatant({ tokenId: 'elsewhere', actorId: 'a1' })
+
+  assert.equal(findCombatant({ token: 't1', actor: 'a1' }, [{ combatants: [byActor, byToken] }]), byToken)
+  assert.equal(findCombatant({ token: null, actor: 'a1' }, [{ combatants: [byToken, byActor] }]), byActor)
+  assert.equal(findCombatant({ token: 'nope', actor: 'nope' }, [{ combatants: [byToken, byActor] }]), null)
+  assert.equal(findCombatant(null, [{ combatants: [byToken] }]), null)
+})
+
+test('findCombatant prefers the hidden one when several combatants share a linked actor', () => {
+  const visibleTwin = combatant({ tokenId: 'tA', actorId: 'linked', hidden: false })
+  const hiddenTwin = combatant({ tokenId: 'tB', actorId: 'linked', hidden: true })
+
+  assert.equal(findCombatant({ token: null, actor: 'linked' }, [{ combatants: [visibleTwin, hiddenTwin] }]), hiddenTwin)
+  assert.equal(findCombatant({ token: null, actor: 'linked' }, [{ combatants: [visibleTwin] }]), visibleTwin)
+})
+
+test('findCombatant honours combat order so the active combat wins', () => {
+  const inActive = combatant({ hidden: true })
+  const inOther = combatant({ hidden: false })
+
+  assert.equal(findCombatant({ token: 't1', actor: 'a1' }, [{ combatants: [inActive] }, { combatants: [inOther] }]), inActive)
+  assert.equal(findCombatant({ token: 't1', actor: 'a1' }, [{ combatants: [inOther] }, { combatants: [inActive] }]), inOther)
+})
+
+test('gmModeKey resolves the GM mode on v14 and v13, and null when neither is registered', () => {
+  assert.equal(gmModeKey(V14_MODES), 'gm')
+  assert.equal(gmModeKey(V13_MODES), 'gmroll')
+  assert.equal(gmModeKey({}), null)
+  assert.equal(gmModeKey(undefined), null)
+})
+
+test('shouldHideCard hides the "privately rolled some dice" placeholder of an initiative roll the viewer may not see', () => {
+  assert.equal(shouldHideCard({ message: initiativeMessage({ whisper: GM }), contentVisible: false }), true)
+  assert.equal(shouldHideCard({ message: initiativeMessage({ whisper: new Set(GM) }), contentVisible: false }), true)
+  assert.equal(shouldHideCard({ message: initiativeMessage({ whisper: GM, blind: true }), contentVisible: false }), true)
+})
+
+test('shouldHideCard leaves cards alone when the viewer can see the content', () => {
+  assert.equal(shouldHideCard({ message: initiativeMessage({ whisper: GM }), contentVisible: true }), false)
+  assert.equal(shouldHideCard({ message: initiativeMessage(), contentVisible: true }), false)
+})
+
+test('shouldHideCard never touches non-initiative messages or public ones', () => {
+  assert.equal(shouldHideCard({ message: initiativeMessage({ initiative: false, whisper: GM }), contentVisible: false }), false)
+  assert.equal(shouldHideCard({ message: initiativeMessage(), contentVisible: false }), false)
+  assert.equal(shouldHideCard({ message: { flags: {} }, contentVisible: false }), false)
+})

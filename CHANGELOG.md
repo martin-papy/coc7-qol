@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.0] - 2026-08-25
+
+### Added
+
+- **Grouped Trade / Store Targets** — The **Trade / Store Item** dropdown on the character sheet listed every visible actor in world order, investigators mixed in with NPCs, creatures and storage. It is now grouped into Investigators / Storage / NPCs / Creatures (empty groups hidden), sorted by name, and opens on a *Choose a character* placeholder with **Validate** disabled until a target is picked — no more accidental hand-offs to whoever was first in the list. The transfer itself is unchanged.
+- **Grouped Rest Targets** — The Keeper's **Start Rest** dialog used to list every actor in the world as one flat, unticked list, so resting just the party meant scrolling past every NPC and creature. Actors are now grouped into Investigators / NPCs / Creatures / Vehicles (empty groups hidden), the Investigators come pre-selected with their group expanded, and each group heading carries its own select-all checkbox that mirrors the group's state. The system's **All Actors** box now ticks and unticks every row (and shows a partial state) instead of silently overriding them. The rest itself is unchanged.
+- **Hidden Initiative Rolls** — With CoC7's *Optional* initiative rule, the initiative roll of a combatant hidden in the tracker or on the canvas was posted publicly, revealing the hidden NPC's name and result to every player (CoC7 issue [#2149](https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT/issues/2149); Foundry core keeps these rolls GM-only, but the system's initiative override drops that rule). The module now whispers such rolls to the GMs, creates them silent, and hides Foundry's "*privately rolled some dice*" placeholder on the players' side, so neither the cards nor the dice sounds can be used as a head-count of hidden NPCs. It only ever tightens visibility — a roll that already reaches only the GMs (GM whisper or blind) is left alone, while one CoC7 whispers to the players (*Self Roll* with *whisper target: everyone*) is narrowed to the GMs — so it cannot conflict with the upstream fix once it ships, and it prints a console note the day it notices it has become redundant.
+
 ## [0.6.0] - 2026-07-29
 
 ### Fixed

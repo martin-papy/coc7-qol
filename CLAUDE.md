@@ -135,5 +135,5 @@ Use this for: ApplicationV2, DocumentSheet, Hooks API, canvas/scene APIs, compen
 - FoundryVTT API docs: https://foundryvtt.com/api/
 - Design specs: `docs/superpowers/specs/`
 - Implementation plans: `docs/superpowers/plans/`
-- FoundryVTT v13 Source : `../Foundry Virtual Tabletop/v13` (workspace sibling)
-- FoundryVTT v14 Source : `../Foundry Virtual Tabletop/v14` (workspace sibling)
+- FoundryVTT v13 Source : `../FoundryVTT/v13` (workspace sibling)
+- FoundryVTT v14 Source : `../FoundryVTT/v14` (workspace sibling)

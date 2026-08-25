@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { decideInitiativeVisibility, findCombatant, gmModeKey, isGmOnly, resolveIdentity } from '../scripts/hidden-initiative/visibility.js'
+import { decideInitiativeVisibility, findCombatant, gmModeKey, isGmOnly, resolveIdentity, shouldHideCard } from '../scripts/hidden-initiative/visibility.js'
 
 const GM = ['gm-1']
 const PLAYERS = ['player-1', 'player-2']
@@ -178,4 +178,21 @@ test('gmModeKey resolves the GM mode on v14 and v13, and null when neither is re
   assert.equal(gmModeKey(V13_MODES), 'gmroll')
   assert.equal(gmModeKey({}), null)
   assert.equal(gmModeKey(undefined), null)
+})
+
+test('shouldHideCard hides the "privately rolled some dice" placeholder of an initiative roll the viewer may not see', () => {
+  assert.equal(shouldHideCard({ message: initiativeMessage({ whisper: GM }), contentVisible: false }), true)
+  assert.equal(shouldHideCard({ message: initiativeMessage({ whisper: new Set(GM) }), contentVisible: false }), true)
+  assert.equal(shouldHideCard({ message: initiativeMessage({ whisper: GM, blind: true }), contentVisible: false }), true)
+})
+
+test('shouldHideCard leaves cards alone when the viewer can see the content', () => {
+  assert.equal(shouldHideCard({ message: initiativeMessage({ whisper: GM }), contentVisible: true }), false)
+  assert.equal(shouldHideCard({ message: initiativeMessage(), contentVisible: true }), false)
+})
+
+test('shouldHideCard never touches non-initiative messages or public ones', () => {
+  assert.equal(shouldHideCard({ message: initiativeMessage({ initiative: false, whisper: GM }), contentVisible: false }), false)
+  assert.equal(shouldHideCard({ message: initiativeMessage(), contentVisible: false }), false)
+  assert.equal(shouldHideCard({ message: { flags: {} }, contentVisible: false }), false)
 })

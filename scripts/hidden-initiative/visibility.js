@@ -130,3 +130,21 @@ export function decideInitiativeVisibility ({ message, combats, gmIds, modes, ro
   }
   return { kind: 'whisper', update }
 }
+
+/**
+ * Foundry renders a whispered or blind ROLL to non-recipients anyway, as a
+ * "<user> privately rolled some dice" placeholder — enough for players to
+ * count hidden NPCs from their initiative cards. Hide the placeholder when the
+ * message is an initiative roll whose content this user is not allowed to see.
+ * Purely presentational, on the viewing client; the message itself is untouched.
+ * @param {object} params
+ * @param {object} params.message        The ChatMessage (or plain data): flags, whisper, blind
+ * @param {boolean} params.contentVisible  ChatMessage#isContentVisible for the current user
+ * @returns {boolean}
+ */
+export function shouldHideCard ({ message, contentVisible }) {
+  if (message?.flags?.core?.initiativeRoll !== true) return false
+  if (contentVisible) return false
+  const recipients = [...(message.whisper ?? [])].length
+  return recipients > 0 || message.blind === true
+}

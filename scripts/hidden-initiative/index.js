@@ -8,20 +8,28 @@
  * hidden NPC is therefore posted publicly, leaking its name and result.
  * Upstream issue: https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT/issues/2149
  *
+ * Two hooks:
+ *  1. preCreateChatMessage (rolling client) — narrows the card to the GMs.
+ *  2. renderChatMessageHTML (every client) — Foundry still shows non-recipients
+ *     a "<user> privately rolled some dice" placeholder for whispered rolls,
+ *     which lets players count hidden NPCs; the placeholder is hidden for
+ *     initiative cards whose content the viewer may not see.
+ *
  * Designed to coexist with (and be removed after) the upstream fix:
  *  - It only ever TIGHTENS visibility: a card that already reaches only the GMs
  *    (GM whisper or blind roll) is left untouched, whatever made it so. A card
  *    players would see — public, or whispered to them by CoC7's Self Roll with
  *    "whisper target: owners/everyone" — is narrowed to the GMs.
  *  - UPSTREAM_FIXED_IN is a one-constant kill switch: set it to the CoC7 version
- *    that ships the fix and the hook disables itself from that version on.
+ *    that ships the fix and hook 1 disables itself from that version on. Hook 2
+ *    stays: core itself shows the placeholder, so it remains useful after the fix.
  *  - Full removal = delete this folder + its "esmodules" entry in module.json
  *    + test/hidden-initiative.test.js. Nothing else imports it (it only reads
  *    the shared `retargetedMessages` marker from utils.js); it registers no
  *    settings, styles, lang keys or document flags of its own.
  */
 import { retargetedMessages } from '../utils.js'
-import { decideInitiativeVisibility } from './visibility.js'
+import { decideInitiativeVisibility, shouldHideCard } from './visibility.js'
 
 // Set to the CoC7 version that fixes the issue upstream (e.g. '8.16').
 // While null the workaround is active on every CoC7 version.
@@ -107,4 +115,11 @@ Hooks.on('preCreateChatMessage', (document) => {
   if (decision.kind === 'whisper') document.updateSource(decision.update)
   else if (decision.kind === 'redundant') reportRedundancy()
   else if (decision.kind === 'no-gm') reportNoGm()
+})
+
+Hooks.on('renderChatMessageHTML', (message, html) => {
+  if (!shouldHideCard({ message, contentVisible: message.isContentVisible })) return
+  // Inline so it beats the stylesheet's display rule on .chat-message; the
+  // element stays in the log so ChatLog can still find it for updates/deletes.
+  html.style.display = 'none'
 })

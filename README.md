@@ -92,7 +92,7 @@ CoC7's **Start Rest** dialog lists every actor in the world in one flat, unticke
 
 ## 🙈 Hidden Initiative Rolls
 
-Hidden a monster in the combat tracker, rolled initiative, and watched its name and DEX roll land in everyone's chat? That's a CoC7 bug ([#2149](https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT/issues/2149)): the system's own initiative code skips Foundry's "hidden combatants roll privately" rule. With this module, initiative rolls of hidden combatants — hidden in the tracker or on the canvas — are whispered to the GMs. Visible combatants roll exactly as before, and the tweak retires itself once the system is fixed.
+Hidden a monster in the combat tracker, rolled initiative, and watched its name and DEX roll land in everyone's chat? That's a CoC7 bug ([#2149](https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT/issues/2149)): the system's own initiative code skips Foundry's "hidden combatants roll privately" rule. With this module, initiative rolls of hidden combatants — hidden in the tracker or on the canvas — are whispered to the GMs, and players don't even get Foundry's "*privately rolled some dice*" placeholder to count them by. Visible combatants roll exactly as before, and the whisper half retires itself once the system is fixed.
 
 ![A visible combatant's public initiative card above a hidden combatant's whispered one](images/Hidden-Initiative.png)
 

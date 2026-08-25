@@ -17,6 +17,7 @@ The item transfer itself (the Keeper-side socket request) and the **Validate** /
 ## How to use it
 
 1. On a character sheet, hover an item and click the **Trade / Store Item** button
+
    ![Give item dialog opening on the Choose a character placeholder](../../images/Trade-Targets.png)
 
 2. Open the dropdown — pick from the group you want; **Validate** lights up once you have

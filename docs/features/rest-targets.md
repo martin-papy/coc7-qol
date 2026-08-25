@@ -31,6 +31,7 @@ If the world has no investigator, nothing is pre-selected and the first non-empt
 4. Or expand a group and adjust the selection — tick the group's box to select everyone in it, then untick the exceptions. The group box goes half-ticked to show a partial selection
 
    ![NPC group expanded with a partial selection](../../images/Rest-Targets-2.png)
+   ![NPC group expanded with a full selection](../../images/Rest-Targets-3.png)
 
 ---
 

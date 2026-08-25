@@ -13,7 +13,11 @@ This tweak reorganises that dialog without changing what it does.
 - **Each group heading has its own select-all checkbox**, so resting every NPC, or every creature, is one click. The checkbox reflects the group's state — ticked, empty, or half-ticked when only some rows are selected.
 - Actors are sorted alphabetically within each group.
 
-The system's own **All Actors** shortcut and the **Start Rest** button behave exactly as before, and the rest itself (HP recovery, daily sanity reset, magic points) is untouched — this only rearranges the picker.
+The system's own **All Actors** shortcut and the **Start Rest** button behave exactly as before, and the rest itself (HP recovery, daily sanity reset, magic points) is untouched — this only rearranges the picker. Note that **All Actors** overrides the individual boxes without visually ticking them: when it is on, everyone rests regardless of what the groups show.
+
+If the world has no investigator, nothing is pre-selected and the first non-empty group is expanded instead.
+
+> CoC7 itself meant to pre-tick the active players' characters, but a markup slip in the system puts the `checked` attribute on the label instead of the checkbox, so nothing was ever selected. Pre-selecting the Investigators here fills that gap.
 
 ## How to use it
 

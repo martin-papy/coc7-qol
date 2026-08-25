@@ -30,11 +30,11 @@ export function findRestTargetsSection (root) {
  * @param {object} deps
  * @param {(actorId: string) => string|undefined} deps.typeOf  Resolve an actor id to its type.
  * @param {Record<string, string>} deps.labels  Localised group label per actor type.
+ * @param {string} [deps.locale]  BCP 47 tag used to sort names (defaults to the host locale).
  * @returns {boolean} false when the section was already restructured (DialogV2 re-render).
  */
-export function restructureRestTargets (section, { typeOf, labels }) {
+export function restructureRestTargets (section, { typeOf, labels, locale }) {
   if (section.dataset.coc7qolGrouped) return false
-  section.dataset.coc7qolGrouped = 'true'
 
   const doc = section.ownerDocument
   const rows = [...section.querySelectorAll(':scope > div.flexrow')]
@@ -43,23 +43,34 @@ export function restructureRestTargets (section, { typeOf, labels }) {
   const strays = []
   for (const row of rows) {
     const input = row.querySelector(`input[name^="${INPUT_PREFIX}"]`)
-    const type = typeOf(input.name.slice(INPUT_PREFIX.length))
+    const type = input ? typeOf(input.name.slice(INPUT_PREFIX.length)) : undefined
     if (byType.has(type)) byType.get(type).push(row)
     else strays.push(row)
   }
 
+  const sort = rowSorter(locale)
+  // Investigators are the group the Keeper almost always wants; open them (pre-selected) when
+  // present, otherwise open the first non-empty group so the dialog never opens fully collapsed.
+  const hasDefault = byType.get(DEFAULT_OPEN_TYPE).length > 0
+  let opened = false
   for (const type of GROUP_ORDER) {
     const groupRows = byType.get(type)
-    if (groupRows.length > 0) section.append(buildGroup(doc, type, labels[type], groupRows))
+    if (groupRows.length === 0) continue
+    const isDefault = type === DEFAULT_OPEN_TYPE
+    const open = isDefault || (!hasDefault && !opened)
+    opened ||= open
+    section.append(buildGroup(doc, { type, label: labels[type], rows: sort(groupRows), open, checked: isDefault }))
   }
   section.append(...strays)
+
+  // Mark only once the work is done, so a failure above leaves the section eligible for a retry.
+  section.dataset.coc7qolGrouped = 'true'
   return true
 }
 
 /** One collapsible <details> per actor type, with a select-all toggle in its <summary>. */
-function buildGroup (doc, type, label, rows) {
-  const isDefault = type === DEFAULT_OPEN_TYPE
-  if (isDefault) setChecked(rows, true)
+function buildGroup (doc, { type, label, rows, open, checked }) {
+  if (checked) setChecked(rows, true)
 
   const toggle = doc.createElement('input')
   toggle.type = 'checkbox'
@@ -78,8 +89,8 @@ function buildGroup (doc, type, label, rows) {
   const details = doc.createElement('details')
   details.className = 'coc7qol-rest-group'
   details.dataset.actorType = type
-  details.open = isDefault
-  details.append(summary, ...sortByLabel(rows))
+  details.open = open
+  details.append(summary, ...rows)
 
   const sync = () => syncToggle(toggle, rows)
   sync()
@@ -94,10 +105,9 @@ function syncToggle (toggle, rows) {
   toggle.indeterminate = checkedCount > 0 && checkedCount < rows.length
 }
 
-const collator = new Intl.Collator(undefined, { sensitivity: 'base' })
-
-function sortByLabel (rows) {
-  return [...rows].sort((a, b) => collator.compare(labelOf(a), labelOf(b)))
+function rowSorter (locale) {
+  const collator = new Intl.Collator(locale, { sensitivity: 'base' })
+  return rows => [...rows].sort((a, b) => collator.compare(labelOf(a), labelOf(b)))
 }
 
 function labelOf (row) {

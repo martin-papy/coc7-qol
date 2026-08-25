@@ -205,3 +205,90 @@ test('clicking the group name does not change the selection (it is left free to 
   assert.deepEqual(groupInputs(section, 'npc').map(i => i.checked), [false, false])
   assert.ok(toggle.getAttribute('aria-label'), 'checkbox keeps an accessible name without a <label>')
 })
+
+/** The exact id-collection loop from CoC7Utilities.restTargets()'s submit callback (CoC7 8.15). */
+function systemCallbackIds (form) {
+  const ids = []
+  let allChecked = false
+  for (const element of form.elements) {
+    if (element.checked || allChecked) {
+      const name = element.name.replace(/^CoC7RestTargets/, '')
+      if (name === 'All') {
+        allChecked = true
+      } else if (name !== element.name) {
+        ids.push(name)
+      }
+    }
+  }
+  return ids
+}
+
+test('the system submit callback collects the selected actor ids and ignores the group toggles', () => {
+  const { dom, section, typeOf } = buildDialog(ACTORS)
+  restructureRestTargets(section, { typeOf, labels: LABELS })
+  const form = section.closest('form')
+
+  assert.deepEqual(systemCallbackIds(form), ['pc1'], 'default: Investigators only')
+
+  click(dom, groupToggle(section, 'npc'), true)
+  assert.deepEqual(systemCallbackIds(form).sort(), ['npc1', 'npc2', 'pc1'], 'group toggle adds its rows, not itself')
+})
+
+test('the system All Actors shortcut still selects everything after restructuring', () => {
+  const { section, typeOf } = buildDialog(ACTORS)
+  restructureRestTargets(section, { typeOf, labels: LABELS })
+  const form = section.closest('form')
+
+  form.querySelector('[name="CoC7RestTargetsAll"]').checked = true
+
+  assert.deepEqual(systemCallbackIds(form).sort(), ['cre1', 'npc1', 'npc2', 'pc1'])
+})
+
+test('shows a Vehicles group when the world has vehicle actors', () => {
+  const { section, typeOf } = buildDialog([...ACTORS, { id: 'veh1', name: 'Model T', type: 'vehicle' }])
+
+  restructureRestTargets(section, { typeOf, labels: LABELS })
+
+  const vehicles = section.querySelector('details[data-actor-type="vehicle"]')
+  assert.equal(vehicles.querySelector('summary').textContent.replace(/\s+/g, ' ').trim(), 'Vehicles (1)')
+  assert.equal(vehicles.open, false)
+  assert.equal(groupToggle(section, 'vehicle').checked, false)
+})
+
+test('a row without an actor input is kept as a stray instead of throwing', () => {
+  const { section, typeOf } = buildDialog(ACTORS)
+  const odd = section.ownerDocument.createElement('div')
+  odd.className = 'flexrow'
+  odd.textContent = 'not an actor row'
+  section.append(odd)
+
+  assert.doesNotThrow(() => restructureRestTargets(section, { typeOf, labels: LABELS }))
+
+  assert.equal(section.querySelectorAll(':scope > details').length, 3)
+  assert.equal(section.lastElementChild, odd)
+})
+
+test('opens the first non-empty group when the world has no Investigators', () => {
+  const { section, typeOf } = buildDialog(ACTORS.filter(a => a.type !== 'character'))
+
+  restructureRestTargets(section, { typeOf, labels: LABELS })
+
+  const open = [...section.querySelectorAll(':scope > details')].map(d => d.open)
+  assert.deepEqual(open, [true, false], 'NPCs open, Creatures collapsed')
+  assert.equal(section.querySelectorAll('input[name^="CoC7RestTargets"]:checked').length, 0, 'nothing pre-selected')
+})
+
+test('sorts with the given locale rather than the host locale', () => {
+  const actors = [
+    { id: 'n1', name: 'Örjan', type: 'npc' },
+    { id: 'n2', name: 'Zoe', type: 'npc' }
+  ]
+  const order = locale => {
+    const { section, typeOf } = buildDialog(actors)
+    restructureRestTargets(section, { typeOf, labels: LABELS, locale })
+    return [...section.querySelectorAll('div.flexrow label')].map(l => l.textContent)
+  }
+
+  assert.deepEqual(order('de'), ['Örjan', 'Zoe'], 'German: Ö sorts with O')
+  assert.deepEqual(order('sv'), ['Zoe', 'Örjan'], 'Swedish: Ö sorts after Z')
+})

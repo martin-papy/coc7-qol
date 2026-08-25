@@ -21,6 +21,7 @@ Hooks.on('renderDialogV2', (dialog, element) => {
   const labels = Object.fromEntries(GROUP_ORDER.map(type => [type, t(LABEL_KEYS[type])]))
   restructureRestTargets(section, {
     typeOf: actorId => game.actors.get(actorId)?.type,
-    labels
+    labels,
+    locale: game.i18n.lang
   })
 })

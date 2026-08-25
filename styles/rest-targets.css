@@ -24,7 +24,7 @@
   display: none;
 }
 
-/* Foundry hides the native marker, so draw our own disclosure caret. */
+/* The rules above hide the native marker (Foundry leaves it alone); draw a Font Awesome caret instead so the group reads as expandable. */
 .coc7qol-rest-group > summary::before {
   content: "\f0da";
   font-family: var(--font-awesome, "Font Awesome 6 Pro");

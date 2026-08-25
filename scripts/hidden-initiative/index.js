@@ -13,7 +13,8 @@
  *  2. renderChatMessageHTML (every client) — Foundry still shows non-recipients
  *     a "<user> privately rolled some dice" placeholder for whispered rolls,
  *     which lets players count hidden NPCs; the placeholder is hidden for
- *     initiative cards whose content the viewer may not see.
+ *     initiative cards whose content the viewer may not see. Hook 1 also
+ *     silences the card's dice sound for the same reason.
  *
  * Designed to coexist with (and be removed after) the upstream fix:
  *  - It only ever TIGHTENS visibility: a card that already reaches only the GMs
@@ -37,6 +38,7 @@ const UPSTREAM_FIXED_IN = null
 
 let redundancyReported = false
 let noGmReported = false
+let unresolvedReported = false
 
 /**
  * True once the running CoC7 version is at or above UPSTREAM_FIXED_IN.
@@ -97,7 +99,19 @@ function reportNoGm () {
   console.warn('[coc7-qol] A hidden combatant rolled initiative but no user has the Gamemaster role — the roll was left as is.')
 }
 
-Hooks.on('preCreateChatMessage', (document) => {
+/**
+ * An initiative card we could not tie to any combatant: if it belonged to a
+ * hidden one, it went out unprotected. Say so once so a CoC7 change to the
+ * card's shape does not fail silently.
+ */
+function reportUnresolved () {
+  if (unresolvedReported) return
+  unresolvedReported = true
+  console.warn('[coc7-qol] An initiative roll could not be matched to any combatant (no speaker, no CoC7 actor uuid, or no match) — '
+    + 'hidden combatants may not be protected. Has the CoC7 initiative card changed shape?')
+}
+
+Hooks.on('preCreateChatMessage', (document, data) => {
   // Read from the document, not the raw create data: earlier hooks (e.g. our
   // roll-visibility feature) may already have called updateSource on it.
   if (document.flags?.core?.initiativeRoll !== true) return
@@ -112,9 +126,14 @@ Hooks.on('preCreateChatMessage', (document) => {
     handledByModule: retargetedMessages.has(document)
   })
 
-  if (decision.kind === 'whisper') document.updateSource(decision.update)
-  else if (decision.kind === 'redundant') reportRedundancy()
+  if (decision.kind === 'whisper') {
+    document.updateSource(decision.update)
+    // Core fills in the dice sound AFTER this hook when the raw create data has
+    // no "sound" key (ChatMessage#_preCreate), which would undo the update above.
+    if (data && typeof data === 'object') data.sound = null
+  } else if (decision.kind === 'redundant') reportRedundancy()
   else if (decision.kind === 'no-gm') reportNoGm()
+  else if (decision.kind === 'unresolved') reportUnresolved()
 })
 
 Hooks.on('renderChatMessageHTML', (message, html) => {

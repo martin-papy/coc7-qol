@@ -44,8 +44,10 @@ export function findCombatant (identity, combats) {
     const combatants = [...(combat?.combatants ?? [])]
     const byToken = identity.token ? combatants.find(c => c.tokenId === identity.token) : null
     if (byToken) return byToken
-    const byActor = identity.actor ? combatants.find(c => c.actorId === identity.actor) : null
-    if (byActor) return byActor
+    // Several combatants may share one linked actor; if any of them is hidden,
+    // err on the side of protecting it rather than picking the first match.
+    const byActor = identity.actor ? combatants.filter(c => c.actorId === identity.actor) : []
+    if (byActor.length) return byActor.find(isHidden) ?? byActor[0]
   }
   return null
 }
@@ -88,7 +90,9 @@ export function gmModeKey (modes) {
 /**
  * Decide what to do with a chat message about to be created.
  *
- * - 'ignore'    — not an initiative roll, combatant not hidden, nothing to do
+ * - 'ignore'     — not an initiative roll, combatant not hidden, nothing to do
+ * - 'unresolved' — an initiative roll we cannot tie to any combatant (no speaker,
+ *                  no CoC7 actor uuid, or no match): nothing can be protected
  * - 'redundant' — the hidden combatant's roll already reaches only the GMs
  *                 although the roll mode is public and this module did not do
  *                 it: something external (most likely the upstream fix) handles it now
@@ -105,13 +109,14 @@ export function gmModeKey (modes) {
  * @param {object} [params.modes]     Registered roll modes of this Foundry version
  * @param {string|null} params.rollMode  The user's default chat roll-mode setting (may differ from a per-roll override)
  * @param {boolean} [params.handledByModule=false]  True when a sibling hook of this module already retargeted the message
- * @returns {{kind: 'ignore'}|{kind: 'redundant'}|{kind: 'no-gm'}|{kind: 'whisper', update: object}}
+ * @returns {{kind: 'ignore'}|{kind: 'unresolved'}|{kind: 'redundant'}|{kind: 'no-gm'}|{kind: 'whisper', update: object}}
  */
 export function decideInitiativeVisibility ({ message, combats, gmIds, modes, rollMode, handledByModule = false }) {
   const IGNORE = { kind: 'ignore' }
   if (message?.flags?.core?.initiativeRoll !== true) return IGNORE
 
   const combatant = findCombatant(resolveIdentity(message), combats)
+  if (!combatant) return { kind: 'unresolved' }
   if (!isHidden(combatant)) return IGNORE
 
   const gms = gmIds ?? []
@@ -121,7 +126,9 @@ export function decideInitiativeVisibility ({ message, combats, gmIds, modes, ro
   }
   if (!gms.length) return { kind: 'no-gm' }
 
-  const update = { whisper: [...gms], blind: false }
+  // sound: null — Foundry plays a roll's sound on every client, recipients or
+  // not, so a dice clatter per hidden NPC would still give players a head-count.
+  const update = { whisper: [...gms], blind: false, sound: null }
   // Keep the visibility if CoC7 re-hydrates the check from its stored flags
   // (same reasoning as roll-visibility.js). Only touch the flag if it exists.
   const mode = gmModeKey(modes)

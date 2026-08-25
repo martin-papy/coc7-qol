@@ -9,8 +9,8 @@ This is CoC7 issue [#2149](https://github.com/Miskatonic-Investigative-Society/C
 ## What changes
 
 - **Initiative rolls of hidden combatants are whispered to the GMs.** A combatant counts as hidden when it is hidden in the combat tracker *or* its token is hidden on the canvas (Foundry core only checks the tracker; the canvas check is stricter on purpose).
-- **Players don't get a placeholder either.** Foundry normally shows non-recipients of a private roll a "*Gamemaster privately rolled some dice*" card — one per hidden NPC, which is a head-count. For initiative rolls a player may not see, that placeholder is hidden on the player's screen; the message itself is untouched and the Keeper sees the full card.
-- **Visible combatants are untouched** — their rolls follow your chat roll mode exactly as before.
+- **Players don't get a placeholder or a dice sound either.** Foundry normally shows non-recipients of a private roll a "*Gamemaster privately rolled some dice*" card and plays the dice sound on every client — one of each per hidden NPC, which is a head-count. Hidden combatants' initiative cards are created silent, and on the players' screens the placeholder of *any* initiative roll they may not see is hidden (that includes a private roll you make for a visible combatant — players still see its initiative in the tracker). The message itself is untouched and the Keeper sees the full card.
+- **Visible combatants' rolls are not altered** — they keep exactly the visibility, recipients and sound CoC7 gives them.
 - **It only ever tightens visibility.** A roll that already reaches only the GMs — a GM whisper or a blind roll, whether because of your roll mode, another module, or a fixed CoC7 — is left exactly as it is. A roll players would see — public, or whispered *to them* by CoC7's **Self Roll** combined with the *Self roll whisper target: everyone* setting — is narrowed to the GMs.
 - Applies to every way CoC7 rolls initiative: the tracker's per-combatant dice button, *Roll All* / *Roll NPCs*, and the *Draw gun* toggle that re-rolls initiative.
 
@@ -28,6 +28,11 @@ Nothing to configure.
    *Arthur is visible and rolls publicly; the hidden Byakhee's card arrives as a GM whisper.*
 
 3. The card appears in your chat as a whisper to the GMs; players see nothing. Reveal the combatant and its next roll is public again
+
+## Limits
+
+- This works at the level of what players are *shown*. Like every whisper in Foundry, the message document itself is still synced to every client, so a player digging through the browser console or an exported chat log can find it. That is a Foundry limitation, not something a module can close.
+- Dice So Nice shows its 3D dice only to the users who may see the roll, so a GM-only card should not animate on players' screens — but this combination was not tested here.
 
 ## Why this exists, and when it goes away
 

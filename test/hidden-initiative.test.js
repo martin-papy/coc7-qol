@@ -38,14 +38,14 @@ test('whispers a hidden combatant\'s public initiative roll to the GMs and rewri
   const decision = decide()
 
   assert.equal(decision.kind, 'whisper')
-  assert.deepEqual(decision.update, { whisper: GM, blind: false, 'flags.CoC7.load.rollMode': 'gm' })
+  assert.deepEqual(decision.update, { whisper: GM, blind: false, sound: null, 'flags.CoC7.load.rollMode': 'gm' })
 })
 
 test('Self Roll + "whisper target: everyone": no speaker, whispered to the players — narrowed to the GMs via the CoC7 actor uuid', () => {
   const decision = decide({ message: initiativeMessage({ speaker: null, whisper: PLAYERS, coc7Mode: 'self' }) })
 
   assert.equal(decision.kind, 'whisper')
-  assert.deepEqual(decision.update, { whisper: GM, blind: false, 'flags.CoC7.load.rollMode': 'gm' })
+  assert.deepEqual(decision.update, { whisper: GM, blind: false, sound: null, 'flags.CoC7.load.rollMode': 'gm' })
 })
 
 test('a whisper that reaches a GM and a player is narrowed to the GMs', () => {
@@ -71,7 +71,7 @@ test('does not add a CoC7 flag the message does not already carry', () => {
   const decision = decide({ message: initiativeMessage({ coc7Mode: null }) })
 
   assert.equal(decision.kind, 'whisper')
-  assert.deepEqual(decision.update, { whisper: GM, blind: false })
+  assert.deepEqual(decision.update, { whisper: GM, blind: false, sound: null })
 })
 
 test('leaves a visible combatant\'s roll alone', () => {
@@ -98,16 +98,16 @@ test('ignores chat messages that are not initiative rolls', () => {
   assert.equal(decision.kind, 'ignore')
 })
 
-test('ignores an initiative roll whose speaker and uuid match no combatant', () => {
+test('reports "unresolved" for an initiative roll whose speaker and uuid match no combatant', () => {
   const decision = decide({ message: initiativeMessage({ speaker: { token: 'other', actor: 'other' }, actorUuid: 'Actor.other' }) })
 
-  assert.equal(decision.kind, 'ignore')
+  assert.equal(decision.kind, 'unresolved')
 })
 
-test('ignores an initiative roll with neither speaker nor CoC7 uuid', () => {
+test('reports "unresolved" for an initiative roll with neither speaker nor CoC7 uuid', () => {
   const decision = decide({ message: initiativeMessage({ speaker: null, coc7Mode: null }) })
 
-  assert.equal(decision.kind, 'ignore')
+  assert.equal(decision.kind, 'unresolved')
 })
 
 test('reports "no-gm" instead of silently leaving the roll exposed when there is no GM', () => {
@@ -163,6 +163,14 @@ test('findCombatant matches by token first, then falls back to the actor for lin
   assert.equal(findCombatant({ token: null, actor: 'a1' }, [{ combatants: [byToken, byActor] }]), byActor)
   assert.equal(findCombatant({ token: 'nope', actor: 'nope' }, [{ combatants: [byToken, byActor] }]), null)
   assert.equal(findCombatant(null, [{ combatants: [byToken] }]), null)
+})
+
+test('findCombatant prefers the hidden one when several combatants share a linked actor', () => {
+  const visibleTwin = combatant({ tokenId: 'tA', actorId: 'linked', hidden: false })
+  const hiddenTwin = combatant({ tokenId: 'tB', actorId: 'linked', hidden: true })
+
+  assert.equal(findCombatant({ token: null, actor: 'linked' }, [{ combatants: [visibleTwin, hiddenTwin] }]), hiddenTwin)
+  assert.equal(findCombatant({ token: null, actor: 'linked' }, [{ combatants: [visibleTwin] }]), visibleTwin)
 })
 
 test('findCombatant honours combat order so the active combat wins', () => {

@@ -91,8 +91,11 @@
   "COC7QOL.RollVisibility.Private": "Privé — MJ et vous",
   "COC7QOL.RollVisibility.Blind": "Aveugle — MJ uniquement",
 
-  "COC7QOL.RestTargets.Group.Investigators": "Investigateurs",
-  "COC7QOL.RestTargets.Group.Npcs": "PNJ",
-  "COC7QOL.RestTargets.Group.Creatures": "Créatures",
-  "COC7QOL.RestTargets.Group.Vehicles": "Véhicules"
+  "COC7QOL.ActorGroup.Investigators": "Investigateurs",
+  "COC7QOL.ActorGroup.Storage": "Stockage",
+  "COC7QOL.ActorGroup.Npcs": "PNJ",
+  "COC7QOL.ActorGroup.Creatures": "Créatures",
+  "COC7QOL.ActorGroup.Vehicles": "Véhicules",
+
+  "COC7QOL.TradeTargets.Placeholder": "— Choisir un personnage —"
 }

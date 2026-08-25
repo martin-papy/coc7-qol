@@ -1,3 +1,5 @@
+import { groupByActorType, nameSorter } from '../actor-groups.js'
+
 const INPUT_PREFIX = 'CoC7RestTargets'
 /** Our own controls must not share the system's prefix: its submit callback collects every `CoC7RestTargets*` input as an actor id. */
 const GROUP_TOGGLE_PREFIX = 'coc7qol-rest-group-'
@@ -38,17 +40,15 @@ export function restructureRestTargets (section, { typeOf, labels, locale }) {
 
   const doc = section.ownerDocument
   const rows = [...section.querySelectorAll(':scope > div.flexrow')]
-
-  const byType = new Map(GROUP_ORDER.map(type => [type, []]))
-  const strays = []
-  for (const row of rows) {
-    const input = row.querySelector(`input[name^="${INPUT_PREFIX}"]`)
-    const type = input ? typeOf(input.name.slice(INPUT_PREFIX.length)) : undefined
-    if (byType.has(type)) byType.get(type).push(row)
-    else strays.push(row)
-  }
-
-  const sort = rowSorter(locale)
+  const { groups: byType, strays } = groupByActorType(rows, {
+    order: GROUP_ORDER,
+    typeOf: row => {
+      const input = row.querySelector(`input[name^="${INPUT_PREFIX}"]`)
+      return input ? typeOf(input.name.slice(INPUT_PREFIX.length)) : undefined
+    }
+  })
+  const sortRows = nameSorter(locale)
+  const sort = groupRows => sortRows(groupRows, labelOf)
   // Investigators are the group the Keeper almost always wants; open them (pre-selected) when
   // present, otherwise open the first non-empty group so the dialog never opens fully collapsed.
   const hasDefault = byType.get(DEFAULT_OPEN_TYPE).length > 0
@@ -60,7 +60,7 @@ export function restructureRestTargets (section, { typeOf, labels, locale }) {
     const isDefault = type === DEFAULT_OPEN_TYPE
     const open = isDefault || (!hasDefault && !opened)
     opened ||= open
-    const group = buildGroup(doc, { type, label: labels[type], rows: sort(groupRows), open, checked: isDefault })
+    const group = buildGroup(doc, { type, label: labels[type] ?? type, rows: sort(groupRows), open, checked: isDefault })
     groups.push(group)
     section.append(group.details)
   }
@@ -123,11 +123,6 @@ function syncToggle (toggle, rows) {
   const checkedCount = rows.filter(row => row.querySelector('input').checked).length
   toggle.checked = checkedCount === rows.length
   toggle.indeterminate = checkedCount > 0 && checkedCount < rows.length
-}
-
-function rowSorter (locale) {
-  const collator = new Intl.Collator(locale, { sensitivity: 'base' })
-  return rows => [...rows].sort((a, b) => collator.compare(labelOf(a), labelOf(b)))
 }
 
 function labelOf (row) {

@@ -92,7 +92,7 @@ CoC7's **Start Rest** dialog lists every actor in the world in one flat, unticke
 
 ## 🎁 Grouped Trade / Store Targets
 
-The **Trade / Store Item** dropdown on the character sheet listed every visible actor in world order. It's now grouped into **Investigators / Storage / NPCs / Creatures** with the first Investigator pre-selected (or the first entry of the first group when there isn't one), so handing a clue to a fellow investigator or stashing a rifle in storage is one glance instead of a scroll. No more `zz_Storage`.
+The **Trade / Store Item** dropdown on the character sheet listed every visible actor in world order. It's now grouped into **Investigators / Storage / NPCs / Creatures** and nothing pre-selected — **Validate** waits until you've actually picked someone — so handing a clue to a fellow investigator or stashing a rifle in storage is one glance instead of a scroll. No more `zz_Storage`.
 
 ![Trade / Store dropdown grouped by actor type](images/Trade-Targets.png)
 

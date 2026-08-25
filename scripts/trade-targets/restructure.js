@@ -25,10 +25,11 @@ export function findTradeTargetSelect (root) {
  * @param {object} deps
  * @param {(uuid: string) => string|undefined} deps.typeOf  Resolve an actor uuid to its type.
  * @param {Record<string, string>} deps.labels  Localised group label per actor type.
+ * @param {string} deps.placeholder  Text of the pre-selected "choose a character" entry.
  * @param {string} [deps.locale]  BCP 47 tag used to sort names.
  * @returns {boolean} false when the select was already restructured (re-render).
  */
-export function restructureTradeTargets (select, { typeOf, labels, locale }) {
+export function restructureTradeTargets (select, { typeOf, labels, placeholder, locale }) {
   if (select.dataset.coc7qolGrouped) return false
 
   const doc = select.ownerDocument
@@ -45,11 +46,36 @@ export function restructureTradeTargets (select, { typeOf, labels, locale }) {
     select.append(optgroup)
   }
   select.append(...strays)
-
-  // The first option after regrouping is the first Investigator (or first of the first group).
+  select.prepend(buildPlaceholder(doc, placeholder))
   select.selectedIndex = 0
+  gateValidateButton(select)
 
   // Mark only once the work is done, so a failure above leaves the select eligible for a retry.
   select.dataset.coc7qolGrouped = 'true'
   return true
+}
+
+/**
+ * A disabled, empty-valued first entry: nothing is chosen until the user picks a target, and
+ * the entry cannot be re-selected afterwards.
+ */
+function buildPlaceholder (doc, text) {
+  const option = doc.createElement('option')
+  option.value = ''
+  option.disabled = true
+  option.textContent = text
+  return option
+}
+
+/**
+ * DialogV2 routes button clicks straight to its submit handler (no constraint validation),
+ * so keep the Validate button disabled while the placeholder is selected. Keeper-side an
+ * empty target is a silent no-op — the dialog would close and nothing would move.
+ */
+function gateValidateButton (select) {
+  const validate = select.closest('form')?.querySelector('button[data-action="ok"]')
+  if (!validate) return
+  const refresh = () => { validate.disabled = select.value === '' }
+  select.addEventListener('change', refresh)
+  refresh()
 }

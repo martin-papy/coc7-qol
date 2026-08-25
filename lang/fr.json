@@ -95,5 +95,7 @@
   "COC7QOL.ActorGroup.Storage": "Stockage",
   "COC7QOL.ActorGroup.Npcs": "PNJ",
   "COC7QOL.ActorGroup.Creatures": "Créatures",
-  "COC7QOL.ActorGroup.Vehicles": "Véhicules"
+  "COC7QOL.ActorGroup.Vehicles": "Véhicules",
+
+  "COC7QOL.TradeTargets.Placeholder": "— Choisir un personnage —"
 }

@@ -15,6 +15,7 @@ Hooks.on('renderDialogV2', (dialog, element) => {
   restructureTradeTargets(select, {
     typeOf: uuid => fromUuidSync(uuid)?.type,
     labels: actorGroupLabels(GROUP_ORDER, t),
+    placeholder: t('COC7QOL.TradeTargets.Placeholder'),
     locale: game.i18n.lang
   })
 })

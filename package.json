@@ -1,0 +1,12 @@
+{
+  "name": "coc7-qol",
+  "private": true,
+  "type": "module",
+  "description": "Test tooling for the coc7-qol FoundryVTT module (not shipped in the release zip)",
+  "scripts": {
+    "test": "node --test \"test/**/*.test.js\""
+  },
+  "devDependencies": {
+    "jsdom": "^30.0.1"
+  }
+}

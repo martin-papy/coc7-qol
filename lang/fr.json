@@ -89,5 +89,10 @@
   "COC7QOL.RollVisibility.Label": "Visibilité du Jet",
   "COC7QOL.RollVisibility.Public": "Public — visible par tous",
   "COC7QOL.RollVisibility.Private": "Privé — MJ et vous",
-  "COC7QOL.RollVisibility.Blind": "Aveugle — MJ uniquement"
+  "COC7QOL.RollVisibility.Blind": "Aveugle — MJ uniquement",
+
+  "COC7QOL.RestTargets.Group.Investigators": "Investigateurs",
+  "COC7QOL.RestTargets.Group.Npcs": "PNJ",
+  "COC7QOL.RestTargets.Group.Creatures": "Créatures",
+  "COC7QOL.RestTargets.Group.Vehicles": "Véhicules"
 }

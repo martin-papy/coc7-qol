@@ -5,3 +5,4 @@ coc7-qol.code-workspace
 temp/
 module.json.tmp
 .playwright-mcp/
+node_modules/

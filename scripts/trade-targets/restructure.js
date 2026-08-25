@@ -40,7 +40,7 @@ export function restructureTradeTargets (select, { typeOf, labels, locale }) {
     const groupOptions = groups.get(type)
     if (groupOptions.length === 0) continue
     const optgroup = doc.createElement('optgroup')
-    optgroup.label = labels[type]
+    optgroup.label = labels[type] ?? type
     optgroup.append(...sort(groupOptions, option => option.textContent.trim()))
     select.append(optgroup)
   }
@@ -49,6 +49,7 @@ export function restructureTradeTargets (select, { typeOf, labels, locale }) {
   // The first option after regrouping is the first Investigator (or first of the first group).
   select.selectedIndex = 0
 
+  // Mark only once the work is done, so a failure above leaves the select eligible for a retry.
   select.dataset.coc7qolGrouped = 'true'
   return true
 }

@@ -9,7 +9,7 @@ This tweak reorganises that dropdown without changing what it does.
 ## What changes
 
 - **Targets are grouped by type** — Investigators, Storage, NPCs, Creatures, in that order — using native dropdown headings. Empty groups are hidden.
-- **The first Investigator is pre-selected**, instead of whoever happens to be alphabetically first.
+- **The first Investigator is pre-selected** — or, when you can't see any other Investigator (solo play, an item traded out of a container), the first entry of the first group — instead of whoever happens to come first in the world.
 - Names are sorted alphabetically within each group.
 
 The item transfer itself (the Keeper-side socket request) and the **Validate** / **Cancel** buttons are untouched — this only rearranges the picker. Which actors you can see is still decided by the system: players only see actors they have at least Limited permission on.

@@ -14,13 +14,17 @@ export const ACTOR_GROUP_LABEL_KEYS = {
 }
 
 /**
- * Resolve the localised label of every type in `order`.
+ * Resolve the localised label of every type in `order`; a type without a key falls back to
+ * its raw name so a future GROUP_ORDER addition shows up visibly instead of as "undefined".
  * @param {string[]} order
  * @param {(key: string) => string} localize
  * @returns {Record<string, string>}
  */
 export function actorGroupLabels (order, localize) {
-  return Object.fromEntries(order.map(type => [type, localize(ACTOR_GROUP_LABEL_KEYS[type])]))
+  return Object.fromEntries(order.map(type => {
+    const key = ACTOR_GROUP_LABEL_KEYS[type]
+    return [type, key ? localize(key) : type]
+  }))
 }
 
 /**

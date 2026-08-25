@@ -60,7 +60,7 @@ export function restructureRestTargets (section, { typeOf, labels, locale }) {
     const isDefault = type === DEFAULT_OPEN_TYPE
     const open = isDefault || (!hasDefault && !opened)
     opened ||= open
-    const group = buildGroup(doc, { type, label: labels[type], rows: sort(groupRows), open, checked: isDefault })
+    const group = buildGroup(doc, { type, label: labels[type] ?? type, rows: sort(groupRows), open, checked: isDefault })
     groups.push(group)
     section.append(group.details)
   }

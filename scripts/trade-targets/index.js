@@ -2,7 +2,7 @@ import { t } from '../utils.js'
 import { actorGroupLabels } from '../actor-groups.js'
 import { restructureTradeTargets, findTradeTargetSelect, GROUP_ORDER } from './restructure.js'
 
-/** Window title key CoC7Utilities.tradeItem() gives its DialogV2 (CoC7 8.x). The dialog has no id. */
+/** Window title key CoC7Utilities.tradeItem() gives its DialogV2 (verified against CoC7 8.15). The dialog has no id, and ApplicationV2 keeps the raw key in options.window.title. */
 const TRADE_DIALOG_TITLE = 'CoC7.MessageTitleSelectUserToGiveTo'
 
 Hooks.on('renderDialogV2', (dialog, element) => {

@@ -114,3 +114,33 @@ test('is a no-op on a select it already restructured', () => {
   assert.equal(restructureTradeTargets(select, { typeOf, labels: LABELS }), false)
   assert.equal(select.innerHTML, snapshot)
 })
+
+test('a list of only unknown types yields no groups and keeps the first option selected', () => {
+  const { select, typeOf } = buildDialog([
+    { id: 'v1', name: 'Model T', type: 'vehicle' },
+    { id: 'v2', name: 'Biplane', type: 'vehicle' }
+  ])
+
+  restructureTradeTargets(select, { typeOf, labels: LABELS })
+
+  assert.equal(select.querySelectorAll('optgroup').length, 0)
+  assert.deepEqual([...select.options].map(o => o.value), ['Actor.v1', 'Actor.v2'])
+  assert.equal(select.value, 'Actor.v1')
+})
+
+test('a single-option list is grouped and stays selected', () => {
+  const { select, typeOf } = buildDialog([{ id: 's1', name: 'Trunk', type: 'container' }])
+
+  restructureTradeTargets(select, { typeOf, labels: LABELS })
+
+  assert.deepEqual(groupsOf(select), [{ label: 'Storage', options: ['Trunk'] }])
+  assert.equal(select.value, 'Actor.s1')
+})
+
+test('falls back to the raw type as heading when a label is missing', () => {
+  const { select, typeOf } = buildDialog(ACTORS)
+
+  restructureTradeTargets(select, { typeOf, labels: { ...LABELS, container: undefined } })
+
+  assert.deepEqual(groupsOf(select).map(g => g.label), ['Investigators', 'container', 'NPCs', 'Creatures'])
+})

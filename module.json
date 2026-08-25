@@ -32,7 +32,8 @@
   "styles": [
     "styles/close-all-cards.css",
     "styles/ai-generator.css",
-    "styles/gm-visibility.css"
+    "styles/gm-visibility.css",
+    "styles/rest-targets.css"
   ],
   "languages": [
     {
@@ -53,6 +54,7 @@
     "scripts/ai-generator/index.js",
     "scripts/close-all-cards.js",
     "scripts/roll-visibility.js",
-    "scripts/gm-visibility/index.js"
+    "scripts/gm-visibility/index.js",
+    "scripts/rest-targets/index.js"
   ]
 }

@@ -1,0 +1,51 @@
+/* Rest Targets dialog (CoC7Utilities.restTargets) — grouped by actor type. */
+
+.coc7qol-rest-group {
+  border-top: 1px solid var(--color-border-light-tertiary);
+  padding-top: 0.25rem;
+}
+
+.coc7qol-rest-group:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.coc7qol-rest-group > summary {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  cursor: pointer;
+  font-weight: bold;
+  list-style: none;
+  user-select: none;
+}
+
+.coc7qol-rest-group > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* The rules above hide the native marker (Foundry leaves it alone); draw a Font Awesome caret instead so the group reads as expandable. */
+.coc7qol-rest-group > summary::before {
+  content: "\f0da";
+  font-family: var(--font-awesome, "Font Awesome 6 Pro");
+  font-weight: 900;
+  width: 0.75rem;
+  text-align: center;
+  flex: 0 0 auto;
+  opacity: 0.7;
+}
+
+.coc7qol-rest-group[open] > summary::before {
+  content: "\f0d7";
+}
+
+.coc7qol-rest-group > summary input[type="checkbox"] {
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+/* Rows keep the system's markup; indent them under their group heading. */
+.coc7qol-rest-group > .flexrow {
+  margin-left: 1.75rem;
+  margin-top: 0.375rem;
+}

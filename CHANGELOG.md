@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.0] - 2026-08-25
+
+### Added
+
+- **Grouped Rest Targets** — The Keeper's **Start Rest** dialog used to list every actor in the world as one flat, unticked list, so resting just the party meant scrolling past every NPC and creature. Actors are now grouped into Investigators / NPCs / Creatures / Vehicles (empty groups hidden), the Investigators come pre-selected with their group expanded, and each group heading carries its own select-all checkbox that mirrors the group's state. The system's **All Actors** box now ticks and unticks every row (and shows a partial state) instead of silently overriding them. The rest itself is unchanged.
+
 ## [0.6.0] - 2026-07-29
 
 ### Fixed

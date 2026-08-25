@@ -17,6 +17,7 @@ If there's a workflow that annoys you, a small thing that could be smoother, or 
 | [🖼️ Item Image Popouts](#-item-image-popouts) | Click any item portrait to see it full size, draggable, resizable | Everyone |
 | [✨ AI Generation](#-ai-generation) | Conjure fully-statted weapons and NPCs from a one-line description | GM |
 | [👁️ Keeper-Only Highlights](#-keeper-only-highlights) | See what players can't see vs can't change, on sheets and chat cards | GM |
+| [🛏️ Grouped Rest Targets](#-grouped-rest-targets) | Rest just the Investigators in two clicks — actors grouped by type, PCs pre-selected | GM |
 
 ---
 
@@ -75,6 +76,16 @@ See at a glance which parts of item sheets and chat cards your players **can't s
 Item sheets follow the same idea — the non-obvious Keeper-only tabs are marked, while the self-explanatory Keeper's Notes tab is left alone:
 
 ![Book sheet, Keeper view](images/Book-Keeper.png)
+
+---
+
+## 🛏️ Grouped Rest Targets
+
+CoC7's **Start Rest** dialog lists every actor in the world in one flat, unticked list. Now it's grouped into **Investigators / NPCs / Creatures / Vehicles**, the Investigators come pre-selected and expanded, and every group heading has its own select-all checkbox. Resting the party is two clicks; resting every NPC is three.
+
+![Rest Targets dialog grouped by actor type](images/Rest-Targets.png)
+
+[**Read more →**](docs/features/rest-targets.md)
 
 ---
 

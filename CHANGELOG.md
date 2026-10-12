@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Changed
+
+- **Hidden Initiative Rolls defer to CoC7 8.16** — CoC7 8.16 fixed issue [#2149](https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT/issues/2149) itself by rolling hidden combatants' initiative as a blind roll. On CoC7 8.16 and later the module no longer rewrites these rolls (no GM whisper, no silencing), so it cannot conflict with the system's fix. It still hides Foundry's "*privately rolled some dice*" placeholder on the players' side. CoC7 versions before 8.16 keep the full workaround.
+
 ## [0.7.0] - 2026-08-25
 
 ### Added

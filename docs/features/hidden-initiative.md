@@ -4,9 +4,11 @@
 
 When you use CoC7's **Optional** initiative rule (*Select initiative rule → Optional*, i.e. initiative is a DEX roll rather than the raw DEX value), every initiative roll produces a chat card. Foundry core makes that card private to the GM when the combatant is hidden — but CoC7 replaces Foundry's initiative code with its own and never looks at the hidden flag. Result: you hide the Byakhee in the tracker, click *Roll All*, and every player sees a chat card titled **Byakhee — Initiative roll**, success level included.
 
-This is CoC7 issue [#2149](https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT/issues/2149). Until it is fixed upstream, this module closes the gap.
+This is CoC7 issue [#2149](https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT/issues/2149). **CoC7 8.16 fixed it**: the system now rolls a hidden combatant's initiative as a blind roll. On CoC7 8.16 and later, this module's whisper workaround switches itself off and leaves the roll to the system; only the placeholder hiding described below stays active. On older CoC7 versions the full workaround still applies.
 
 ## What changes
+
+*The first bullet and the silent cards apply to CoC7 versions before 8.16 only. From 8.16 on the system makes the roll blind itself, and this module only hides the players' placeholder.*
 
 - **Initiative rolls of hidden combatants are whispered to the GMs.** A combatant counts as hidden when it is hidden in the combat tracker *or* its token is hidden on the canvas (Foundry core only checks the tracker; the canvas check is stricter on purpose).
 - **Players don't get a placeholder or a dice sound either.** Foundry normally shows non-recipients of a private roll a "*Gamemaster privately rolled some dice*" card and plays the dice sound on every client — one of each per hidden NPC, which is a head-count. Hidden combatants' initiative cards are created silent, and on the players' screens the placeholder of *any* initiative roll they may not see is hidden (that includes a private roll you make for a visible combatant — players still see its initiative in the tracker). The message itself is untouched and the Keeper sees the full card.
@@ -40,7 +42,8 @@ This is a workaround for a system bug, built to disappear cleanly:
 
 - It never loosens a message's visibility, so whatever shape the upstream fix takes, the two cannot fight — worst case, this code becomes a silent no-op.
 - When it notices that a hidden combatant's roll already reached only the GMs while your roll mode is public (and this module's own Roll Visibility dropdown was not the cause), it logs a one-line `[coc7-qol]` note in the browser console: CoC7 (or another module) now handles it, and this workaround can be removed.
-- Once the fixing CoC7 version is known, a single constant in `scripts/hidden-initiative/index.js` (`UPSTREAM_FIXED_IN`) switches the whisper part off from that version on. The placeholder hiding stays — Foundry itself shows that placeholder for every private roll, so it is useful regardless of the CoC7 fix.
+- A single constant in `scripts/hidden-initiative/index.js` (`UPSTREAM_FIXED_IN`, now `'8.16'`) switches the whisper part off from the fixing CoC7 version on. The placeholder hiding stays — Foundry itself shows that placeholder for every private roll, so it is useful regardless of the CoC7 fix.
+- Note that CoC7's fix only covers combatants hidden in the **combat tracker**; a combatant whose token is hidden on the canvas but not in the tracker rolls publicly again from 8.16 on, as in Foundry core.
 
 ---
 

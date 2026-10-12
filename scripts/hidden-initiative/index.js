@@ -32,9 +32,9 @@
 import { retargetedMessages } from '../utils.js'
 import { decideInitiativeVisibility, shouldHideCard } from './visibility.js'
 
-// Set to the CoC7 version that fixes the issue upstream (e.g. '8.16').
-// While null the workaround is active on every CoC7 version.
-const UPSTREAM_FIXED_IN = null
+// CoC7 8.16 fixed the issue upstream: hidden combatants now roll initiative
+// as a blind roll (CoC7 commit 2fff9595). From that version on hook 1 is off.
+const UPSTREAM_FIXED_IN = '8.16'
 
 let redundancyReported = false
 let noGmReported = false

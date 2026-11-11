@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Fixed
+
+- **Blind and private rolls could turn public on Foundry v14 with CoC7 9.x** — The roll visibility dropdown stored the chosen mode on the check card under its Foundry v13 name (`blindroll`, `gmroll`). CoC7 9.x reads that stored mode back every time the card is updated (revealing a result, pushing a roll, spending luck, rolling a standby card) and, on Foundry v14, only recognises the v14 names (`blind`, `gm`) — anything else falls back to the chat box's current mode, so a blind or private roll was re-published to everyone. The module now stores and applies the mode under the name the running Foundry version uses. Foundry v13 is unaffected.
+
 ## [0.7.1] - 2026-10-12
 
 ### Changed

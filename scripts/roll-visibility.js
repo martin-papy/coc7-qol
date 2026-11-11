@@ -1,12 +1,15 @@
 import { t, retargetedMessages } from './utils.js'
+import { VISIBILITY_CHOICES, choiceForCoreMode, visibilityUpdate } from './roll-mode-keys.js'
 
 const MODULE = 'coc7-qol'
 const LAST_MODE_SETTING = 'last-roll-mode'
-const ROLL_MODES = ['publicroll', 'gmroll', 'blindroll']
+const DEFAULT_CHOICE = 'publicroll'
 
 // Module-level state: the last value picked in the CoC7 roll dialog,
 // consumed by the next preCreateChatMessage. Cancelled dialogs leave it null.
 let pendingRollMode = null
+
+let unsupportedModeReported = false
 
 Hooks.once('init', () => {
   game.settings.register(MODULE, LAST_MODE_SETTING, {
@@ -20,16 +23,50 @@ Hooks.once('init', () => {
 function readLastRollMode () {
   try {
     const stored = game.settings.get(MODULE, LAST_MODE_SETTING)
-    if (ROLL_MODES.includes(stored)) return stored
+    if (VISIBILITY_CHOICES.includes(stored)) return stored
   } catch (_) { /* setting not yet registered — fall through */ }
   return null
 }
 
 function writeLastRollMode (mode) {
-  if (!ROLL_MODES.includes(mode)) return
+  if (!VISIBILITY_CHOICES.includes(mode)) return
   game.settings.set(MODULE, LAST_MODE_SETTING, mode).catch(err => {
     console.warn('[coc7-qol] Failed to persist last roll mode:', err)
   })
+}
+
+/**
+ * The roll-mode registry of the running Foundry version: CONFIG.ChatMessage.modes
+ * on v14, CONFIG.Dice.rollModes on v13 (v14 keeps the latter only as a deprecated
+ * proxy, so it is never touched there). CoC7 builds its own mode constants from
+ * the same expression (coc7/constants.js).
+ * @returns {object|undefined}
+ */
+function registeredModes () {
+  return CONFIG.ChatMessage?.modes ?? CONFIG.Dice?.rollModes
+}
+
+/**
+ * The user's chat-box default as one of the dropdown choices, or null when it
+ * is a mode the dropdown does not offer (self, in-character). The setting is
+ * 'core.messageMode' on v14 and 'core.rollMode' on v13 — v14 keeps 'rollMode'
+ * only as a deprecated shim that logs a compatibility warning.
+ * @returns {string|null}
+ */
+function coreDefaultChoice () {
+  const key = CONFIG.ChatMessage?.modes ? 'messageMode' : 'rollMode'
+  return choiceForCoreMode(game.settings.get('core', key))
+}
+
+/**
+ * Apply a visibility mode to message data: ChatMessage.applyMode on v14,
+ * ChatMessage.applyRollMode on v13 (deprecated on v14).
+ * @param {object} messageData  Mutated in place by core
+ * @param {string} mode  A key of the running version's registry
+ */
+function applyVisibility (messageData, mode) {
+  if (typeof ChatMessage.applyMode === 'function') ChatMessage.applyMode(messageData, mode)
+  else ChatMessage.applyRollMode(messageData, mode)
 }
 
 Hooks.on('renderDialogV2', (dialog, element) => {
@@ -42,10 +79,7 @@ Hooks.on('renderDialogV2', (dialog, element) => {
   // Guard against re-renders
   if (element.querySelector('[name="coc7qol-rollMode"]')) return
 
-  const remembered = readLastRollMode()
-  const coreMode = game.settings.get('core', 'rollMode')
-  const currentMode = remembered
-    ?? (ROLL_MODES.includes(coreMode) ? coreMode : 'publicroll')
+  const currentMode = readLastRollMode() ?? coreDefaultChoice() ?? DEFAULT_CHOICE
 
   const group = document.createElement('div')
   group.className = 'form-group'
@@ -71,7 +105,7 @@ Hooks.on('renderDialogV2', (dialog, element) => {
   const okButton = element.querySelector('[data-action="ok"]')
   okButton?.addEventListener('click', () => {
     const select = element.querySelector('[name="coc7qol-rollMode"]')
-    if (select && ROLL_MODES.includes(select.value)) {
+    if (select && VISIBILITY_CHOICES.includes(select.value)) {
       pendingRollMode = select.value
       writeLastRollMode(select.value)
     }
@@ -84,33 +118,44 @@ Hooks.on('preCreateChatMessage', (document, data) => {
   // Consume immediately — only the first message generated after the dialog
   // should be retargeted (e.g. the skill check card). Subsequent messages
   // (damage, follow-ups) fall back to their default roll mode.
-  const mode = pendingRollMode
+  const choice = pendingRollMode
   pendingRollMode = null
 
-  const messageData = foundry.utils.deepClone(data)
-  // Foundry v13's ChatMessage.applyRollMode preserves any pre-existing whisper
-  // recipients for private/blind rolls. When the chat-box rollMode is 'selfroll',
-  // CoC7 has already populated whisper with [self.id], so applyRollMode keeps it
-  // instead of switching to GMs — the GM never sees the blind/private roll.
-  // Reset whisper first so the chosen mode determines recipients unambiguously.
-  messageData.whisper = []
-  ChatMessage.applyRollMode(messageData, mode)
+  // The dropdown speaks the module's own keys; Foundry and CoC7 speak the keys
+  // of the running version ('blindroll' on v13, 'blind' on v14) — the
+  // translation, and the payload, are built in roll-mode-keys.js.
+  //
+  // storedMode: when a CoC7 standby card is created (GM rolls on a player-owned
+  // actor), the check is serialized into flags.CoC7.load and later re-hydrated
+  // when the player/GM clicks "Roll" — and again on every later update of the
+  // card. Without rewriting the stored rollMode, the re-hydrated check rolls
+  // under whatever core mode is currently active — making blind/private results
+  // leak as public. Rewriting the flag keeps the chosen visibility on every
+  // subsequent message produced by this check.
+  const update = visibilityUpdate({
+    choice,
+    modes: registeredModes(),
+    storedMode: data.flags?.CoC7?.load?.rollMode,
+    resolveRecipients: mode => {
+      const messageData = foundry.utils.deepClone(data)
+      // Core preserves any pre-existing whisper recipients for private/blind
+      // rolls (ChatMessage.applyRollMode on v13, ChatMessage.applyMode on v14).
+      // When the chat-box mode is 'self', CoC7 has already populated whisper
+      // with [self.id], so core keeps it instead of switching to GMs — the GM
+      // never sees the blind/private roll. Reset whisper first so the chosen
+      // mode determines recipients unambiguously.
+      messageData.whisper = []
+      applyVisibility(messageData, mode)
+      return messageData
+    }
+  })
 
-  const update = {
-    whisper: messageData.whisper ?? [],
-    blind: messageData.blind ?? false,
-    rollMode: messageData.rollMode ?? mode
-  }
-
-  // When a CoC7 standby card is created (GM rolls on a player-owned actor),
-  // the check is serialized into flags.CoC7.load and later re-hydrated when
-  // the player/GM clicks "Roll". Without rewriting the stored rollMode, the
-  // re-hydrated check rolls under whatever core rollMode is currently active
-  // — making blind/private results leak as public. Rewriting the flag keeps
-  // the chosen visibility on every subsequent message produced by this check.
-  const coc7Load = data.flags?.CoC7?.load
-  if (coc7Load && typeof coc7Load.rollMode !== 'undefined') {
-    update['flags.CoC7.load.rollMode'] = mode
+  if (!update) {
+    if (!unsupportedModeReported) {
+      unsupportedModeReported = true
+      console.warn(`[coc7-qol] Roll visibility "${choice}" is not a registered message mode on this Foundry version — the roll was left as is.`)
+    }
+    return
   }
 
   document.updateSource(update)

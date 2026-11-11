@@ -37,7 +37,7 @@ export const CHARACTERISTIC_FORMULAS = {
  * Resolve a CoC7 skill's base value. `system.base` is either a plain number
  * ("25"), a characteristic reference ("@EDU"), or an expression over one
  * ("1/2*@DEX"). Mirrors the system's own approach at
- * ../CoC7-FoundryVTT-8.x/coc7/apps/utilities.js:995-1021 — substitute @terms
+ * CoC7Utilities.setMultipleSkillBases (coc7/apps/utilities.js) — substitute @terms
  * from the characteristics, then evaluate and floor.
  *
  * Returns 0 for an absent or unresolvable base, so an unknown formula degrades

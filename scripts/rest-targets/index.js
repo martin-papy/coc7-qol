@@ -2,7 +2,7 @@ import { t } from '../utils.js'
 import { actorGroupLabels } from '../actor-groups.js'
 import { restructureRestTargets, findRestTargetsSection, GROUP_ORDER } from './restructure.js'
 
-/** DialogV2 id assigned by CoC7Utilities.restTargets() (CoC7 8.x). */
+/** DialogV2 id assigned by CoC7Utilities.restTargets() (CoC7 8.x and 9.x, verified against 9.1). */
 const REST_DIALOG_ID = 'CoC7RestTargets'
 
 Hooks.on('renderDialogV2', (dialog, element) => {

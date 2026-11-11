@@ -81,15 +81,21 @@ Hooks.on('renderDialogV2', (dialog, element) => {
 
   const currentMode = readLastRollMode() ?? coreDefaultChoice() ?? DEFAULT_CHOICE
 
+  // Same row markup as CoC7 9.x's own rows (templates/apps/bonus.hbs): the system
+  // stylesheet gives a bare <label> `flex: 0 0 auto` inside its dialogs, so the
+  // label needs .flex-single to line up with the other rows. Both classes are
+  // inert on CoC7 8.x, where the select simply fills its wrapper.
   const group = document.createElement('div')
   group.className = 'form-group'
   group.innerHTML = `
-    <label>${t('COC7QOL.RollVisibility.Label')}</label>
-    <select name="coc7qol-rollMode">
-      <option value="publicroll" ${currentMode === 'publicroll' ? 'selected' : ''}>${t('COC7QOL.RollVisibility.Public')}</option>
-      <option value="gmroll" ${currentMode === 'gmroll' ? 'selected' : ''}>${t('COC7QOL.RollVisibility.Private')}</option>
-      <option value="blindroll" ${currentMode === 'blindroll' ? 'selected' : ''}>${t('COC7QOL.RollVisibility.Blind')}</option>
-    </select>
+    <label class="flex-single">${t('COC7QOL.RollVisibility.Label')}</label>
+    <div class="form-value">
+      <select name="coc7qol-rollMode">
+        <option value="publicroll" ${currentMode === 'publicroll' ? 'selected' : ''}>${t('COC7QOL.RollVisibility.Public')}</option>
+        <option value="gmroll" ${currentMode === 'gmroll' ? 'selected' : ''}>${t('COC7QOL.RollVisibility.Private')}</option>
+        <option value="blindroll" ${currentMode === 'blindroll' ? 'selected' : ''}>${t('COC7QOL.RollVisibility.Blind')}</option>
+      </select>
+    </div>
   `
 
   const bonusSelector = poolModifier.closest('.bonus-penalty-selector')

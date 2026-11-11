@@ -50,12 +50,16 @@ function registeredModes () {
  * The user's chat-box default as one of the dropdown choices, or null when it
  * is a mode the dropdown does not offer (self, in-character). The setting is
  * 'core.messageMode' on v14 and 'core.rollMode' on v13 — v14 keeps 'rollMode'
- * only as a deprecated shim that logs a compatibility warning.
+ * only as a deprecated shim that logs a compatibility warning. Also null when
+ * the setting cannot be read (game.settings.get throws on an unregistered key).
  * @returns {string|null}
  */
 function coreDefaultChoice () {
   const key = CONFIG.ChatMessage?.modes ? 'messageMode' : 'rollMode'
-  return choiceForCoreMode(game.settings.get('core', key))
+  try {
+    return choiceForCoreMode(game.settings.get('core', key))
+  } catch (_) { /* core setting unreadable — caller falls back to DEFAULT_CHOICE */ }
+  return null
 }
 
 /**

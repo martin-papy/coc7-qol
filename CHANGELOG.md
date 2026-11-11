@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Fixed
+
+- **Close All Cards left closed cards actionable** — Closing a card from the **Close All Cards** dialog only removed its *Close card* button, so a check card flagged as closed still offered *Push* and the bonus/penalty-die buttons, and one click was enough to change a roll the Keeper had just closed. The dialog now removes every live action button, as the system's own *Close card* does, and keeps what the system keeps (the locked Attacker/Defender markers of an opposed roll, talent links). Cards without a *Close card* button (standby rolls, sanity, damage, combat) are left as they were.
+
 ## [0.7.1] - 2026-10-12
 
 ### Changed

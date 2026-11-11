@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.0] - 2026-11-11
+
+### Fixed
+
+- **Close All Cards left closed cards actionable** — Closing a card from the dialog only removed its *Close card* button, so *Push* and the bonus/penalty-die buttons still worked on a closed roll. The dialog now removes every live action button, as the system's own *Close card* does.
+- **Close All Cards listed some cards under "Unknown"** — Cards posted without a speaker (chat box on *Self*) now show the actor recorded on the card, and opposed or combined rolls list every actor.
+- **Blind and private rolls could turn public on Foundry v14 with CoC7 9.x** — The roll visibility dropdown stored the mode under its Foundry v13 name, which CoC7 9.x does not recognise on v14, so the roll fell back to the chat box's mode on the card's next update. The mode is now stored under the running Foundry version's name. Foundry v13 is unaffected.
+- **Roll visibility row misaligned in the CoC7 9.x roll dialog** — The row now uses CoC7 9.x's new row markup, so its label lines up again.
+
+### Changed
+
+- **CoC7 9.x compatibility** — Every feature reviewed against CoC7 9.1 and Foundry v14 (build 370). The roll visibility selector no longer uses the APIs deprecated in v14, so it logs no compatibility warnings there.
+
 ## [0.7.1] - 2026-10-12
 
 ### Changed

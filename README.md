@@ -138,7 +138,7 @@ Dialogs, buttons, settings, and notifications follow your configured Foundry lan
 ## Compatibility
 
 - **FoundryVTT:** v13+
-- **System:** Call of Cthulhu 7th Edition (CoC7) — v8.x
+- **System:** Call of Cthulhu 7th Edition (CoC7) — v8.x and v9.x
 
 ## AI Usage Disclaimer
 

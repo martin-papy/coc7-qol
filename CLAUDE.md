@@ -131,7 +131,7 @@ Use this for: ApplicationV2, DocumentSheet, Hooks API, canvas/scene APIs, compen
 
 ## Reference
 
-- CoC7 system source: `../CoC7-FoundryVTT-8.x/` (workspace sibling, targets CoC7 8.1+)
+- CoC7 system source: `../CoC7-FoundryVTT-9.x/` (workspace sibling, targets CoC7 9.x)
 - FoundryVTT API docs: https://foundryvtt.com/api/
 - Design specs: `docs/superpowers/specs/`
 - Implementation plans: `docs/superpowers/plans/`

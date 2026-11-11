@@ -49,3 +49,39 @@ export function stripCardControls (root) {
 
   return true
 }
+
+/**
+ * The name to list a card under: the speaker alias when the card has one,
+ * otherwise the actor(s) recorded in the card's own flags. CoC7 strips the
+ * speaker from a Keeper's "Self" rolls (whisper target owners/everyone), which
+ * used to leave those cards listed as "Unknown".
+ *
+ * @param {object} params
+ * @param {string|null} [params.speakerAlias]  message.speaker.alias
+ * @param {unknown[]} [params.actorUuids]  flags.CoC7.load.actorUuids, or [actorUuid]
+ * @param {(uuid: string) => string|null|undefined} params.resolveName  Resolve an actor uuid to a display name
+ * @returns {string|null}  null when nothing identifies the card
+ */
+export function cardActorName ({ speakerAlias, actorUuids, resolveName }) {
+  if (speakerAlias) return speakerAlias
+
+  const names = []
+  for (const uuid of actorUuids ?? []) {
+    if (typeof uuid !== 'string' || uuid === '') continue
+    const name = safeResolve(resolveName, uuid)
+    if (name && !names.includes(name)) names.push(name)
+  }
+  return names.length ? names.join(', ') : null
+}
+
+/**
+ * A uuid that no longer resolves (deleted actor, unloaded compendium, malformed
+ * flag) must not break the dialog: the card is simply listed without that name.
+ */
+function safeResolve (resolveName, uuid) {
+  try {
+    return resolveName(uuid) ?? null
+  } catch (_) {
+    return null
+  }
+}

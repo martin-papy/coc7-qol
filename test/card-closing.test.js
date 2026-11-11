@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { JSDOM } from 'jsdom'
-import { stripCardControls } from '../scripts/card-closing.js'
+import { stripCardControls, cardActorName } from '../scripts/card-closing.js'
 
 /** Parse card content the way the feature does (DOMParser → body). */
 function parse (html) {
@@ -113,4 +113,34 @@ test('stripCardControls is a no-op on an already closed card', () => {
   const closed = root.innerHTML
   assert.equal(stripCardControls(root), false)
   assert.equal(root.innerHTML, closed)
+})
+
+const NAMES = { 'Actor.a1': 'Sir Duncan', 'Scene.s1.Token.t1.Actor.a2': 'Byakhee' }
+const resolveName = uuid => NAMES[uuid]
+
+test('cardActorName prefers the speaker alias', () => {
+  assert.equal(cardActorName({ speakerAlias: 'Token Name', actorUuids: ['Actor.a1'], resolveName }), 'Token Name')
+})
+
+test('cardActorName falls back to the card\'s actor when CoC7 stripped the speaker', () => {
+  assert.equal(cardActorName({ speakerAlias: undefined, actorUuids: ['Actor.a1'], resolveName }), 'Sir Duncan')
+  assert.equal(cardActorName({ speakerAlias: '', actorUuids: ['Scene.s1.Token.t1.Actor.a2'], resolveName }), 'Byakhee')
+})
+
+test('cardActorName lists every actor of a multi-actor card once', () => {
+  const actorUuids = ['Actor.a1', 'Scene.s1.Token.t1.Actor.a2', 'Actor.a1']
+  assert.equal(cardActorName({ actorUuids, resolveName }), 'Sir Duncan, Byakhee')
+})
+
+test('cardActorName skips actors that no longer resolve and returns null when none is left', () => {
+  assert.equal(cardActorName({ actorUuids: ['Actor.gone', 'Actor.a1'], resolveName }), 'Sir Duncan')
+  assert.equal(cardActorName({ actorUuids: ['Actor.gone'], resolveName }), null)
+  assert.equal(cardActorName({ actorUuids: [], resolveName }), null)
+  assert.equal(cardActorName({ actorUuids: [undefined, null, 42], resolveName }), null)
+  assert.equal(cardActorName({ resolveName }), null)
+})
+
+test('cardActorName survives a resolver that throws', () => {
+  const throwing = () => { throw new Error('bad uuid') }
+  assert.equal(cardActorName({ actorUuids: ['Actor.a1'], resolveName: throwing }), null)
 })

@@ -1,5 +1,5 @@
 import { escapeHtml, t, tf } from './utils.js'
-import { stripCardControls } from './card-closing.js'
+import { stripCardControls, cardActorName } from './card-closing.js'
 
 // Maps CoC7 card template class names to i18n keys.
 // Values are keys — resolved via t() at use-time (game.i18n not available at load time).
@@ -15,16 +15,34 @@ const CARD_TYPE_KEYS = {
   CoC7ChatChaseObstacle: 'COC7QOL.CloseAllCards.CardType.ChaseObstacle'
 }
 
+/**
+ * Display name of the actor behind a CoC7 actor uuid. For an unlinked token
+ * actor ("Scene.<id>.Token.<id>.Actor.<id>") the token's name is used, which is
+ * what a speaker alias would have shown.
+ * @param {string} uuid
+ * @returns {string|undefined}
+ */
+function actorDisplayName (uuid) {
+  const actor = fromUuidSync(uuid)
+  return actor?.token?.name ?? actor?.name
+}
+
 function getOpenCards () {
   const open = [];
   for (const message of game.messages) {
     const load = message.flags?.CoC7?.load;
     if (load?.cardOpen === true) {
       const typeKey = CARD_TYPE_KEYS[load.as]
+      const actor = cardActorName({
+        speakerAlias: message.speaker?.alias,
+        // Multi-actor cards (opposed, combined, damage) store actorUuids; the others a single actorUuid.
+        actorUuids: Array.isArray(load.actorUuids) ? load.actorUuids : [load.actorUuid],
+        resolveName: actorDisplayName
+      })
       open.push({
         messageId: message.id,
         type: typeKey ? t(typeKey) : t('COC7QOL.CloseAllCards.UnknownCardType'),
-        actor: message.speaker?.alias ?? t('COC7QOL.CloseAllCards.UnknownActor'),
+        actor: actor ?? t('COC7QOL.CloseAllCards.UnknownActor'),
         timestamp: new Date(message.timestamp).toLocaleTimeString()
       });
     }

@@ -39,3 +39,33 @@ export function makeResizable (cls) {
     window: { ...own.window, resizable: true }
   }
 }
+
+/** Window elements already being watched, so re-renders do not stack observers. */
+const watched = new WeakSet()
+
+/**
+ * Keep an auto-height sheet on screen while it grows.
+ * The system opens a section by animating its height without re-rendering, so Foundry never
+ * re-positions the window: a sheet sitting mid-screen grows past the bottom edge. Whenever the
+ * window's size changes and it now hangs below the viewport, let Foundry clamp it back in.
+ * @param {{ element: HTMLElement|null, minimized: boolean, setPosition: () => unknown }} app  An ApplicationV2.
+ * @param {object} [env]  Browser globals, injectable for tests.
+ * @param {typeof ResizeObserver} [env.Observer]
+ * @param {Document} [env.doc]
+ */
+export function keepInViewport (app, { Observer = globalThis.ResizeObserver, doc = globalThis.document } = {}) {
+  const element = app.element
+  if (!element || watched.has(element)) return
+  watched.add(element)
+
+  const observer = new Observer(() => {
+    if (!element.isConnected) {
+      observer.disconnect()
+      return
+    }
+    // A sheet detached into its own browser window (Foundry v14) is sized by that window.
+    if (element.ownerDocument !== doc || app.minimized) return
+    if (element.getBoundingClientRect().bottom > doc.documentElement.clientHeight) app.setPosition()
+  })
+  observer.observe(element)
+}

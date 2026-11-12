@@ -1,0 +1,27 @@
+/* styles/npc-sheets.css */
+
+/* Resizable NPC / Creature sheets (issue #26).
+   The system caps the sheet's .window-content at `90vh - 2rem`, which only works while the
+   window sizes itself to its content. Once the window can be dragged to any height, the cap
+   has to sit on the window frame instead: Foundry clamps a resize to the frame's max-height,
+   and the content then fills whatever height the frame has and scrolls inside it.
+   The frame is the content plus its header and its 1px top and bottom borders, so the
+   default (auto) height is unchanged.
+   Scoped to the class sheet-window.js puts on the sheets it makes resizable: the system's
+   `npc` class is also on its container and summarized investigator sheets. */
+.application.coc7qol-resizable-sheet:not(.minimized) {
+  --coc7qol-npc-frame-border: 2px;
+  --coc7qol-npc-min-width: 520px;
+
+  /* Below this width the characteristic and attribute rows start clipping their values. */
+  min-width: var(--coc7qol-npc-min-width);
+  max-height: calc(90vh - 2rem + var(--header-height) + var(--coc7qol-npc-frame-border));
+}
+
+/* .window-content is `overflow: visible` while the Notes panel is out, so as a flex item it
+   refuses to shrink below its content; min-height: 0 lets a shorter frame squeeze it and
+   hands the overflow to the system's own scroll region (div.npc.scrollable). */
+.application.coc7qol-resizable-sheet section.window-content {
+  min-height: 0;
+  max-height: none;
+}

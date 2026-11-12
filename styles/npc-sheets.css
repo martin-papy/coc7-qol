@@ -1,6 +1,6 @@
 /* styles/npc-sheets.css */
 
-/* Resizable NPC / Creature sheets (issue #26).
+/* Resizable NPC / Creature sheets (issue #26). World setting, on by default.
    The system caps the sheet's .window-content at `90vh - 2rem`, which only works while the
    window sizes itself to its content. Once the window can be dragged to any height, the cap
    has to sit on the window frame instead: Foundry clamps a resize to the frame's max-height,
@@ -27,10 +27,11 @@
 }
 
 /* Skills read down each column, like the investigator sheet, instead of across each row.
-   Opt-out for the whole world (module setting); index.js sets the class on the sheet window.
-   The column count follows the sheet's width: three at the default 650px, more when the
-   sheet is dragged wider, two at the minimum width. */
-.application.coc7qol-resizable-sheet.coc7qol-skill-columns section.window-content .skill-list {
+   Its own world setting, independent of resizing; index.js sets the class on NPC and
+   Creature sheet windows only.
+   The column count follows the sheet's width: three at the default 650px, more when a
+   resizable sheet is dragged wider, two at its minimum width. */
+.application.coc7qol-skill-columns section.window-content .skill-list {
   --coc7qol-skill-column-width: 180px;
 
   display: block;
@@ -38,7 +39,7 @@
   column-gap: 0.5rem;
 }
 
-.application.coc7qol-resizable-sheet.coc7qol-skill-columns section.window-content .skill-list .item {
+.application.coc7qol-skill-columns section.window-content .skill-list .item {
   break-inside: avoid;
   margin-bottom: 0.125rem;
 }

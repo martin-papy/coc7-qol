@@ -114,7 +114,9 @@ Hidden a monster in the combat tracker, rolled initiative, and watched its name 
 
 CoC7's NPC and Creature sheets are a fixed size, and one opened mid-screen grows past the bottom of your display as you open its sections — on a 1080p screen the inventory ends up out of reach (CoC7 [#1416](https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT/issues/1416), [#1621](https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT/issues/1621)). With this module they get the usual resize handle in the bottom-right corner, scroll inside whatever size you give them, and slide back on screen when an opened section would push them off it.
 
-Skills also read **down each column**, like the investigator sheet, instead of across each row (CoC7 [#1622](https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT/issues/1622)) — and a wider sheet shows more columns. Prefer the system's layout? As Keeper, untick **NPC sheets: skills in columns** under **Settings → Module Settings → CoC7 QoL Improvements**; it applies to the whole table.
+Rather keep the system's fixed-size sheets? As Keeper, untick **NPC sheets: resizable** under **Settings → Module Settings → CoC7 QoL Improvements**; it applies to the whole table after a reload.
+
+Skills also read **down each column**, like the investigator sheet, instead of across each row (CoC7 [#1622](https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT/issues/1622)) — and a wider sheet shows more columns. Prefer the system's layout? Untick **NPC sheets: skills in columns** in the same place; it is independent of resizing and applies to the whole table straight away.
 
 ---
 

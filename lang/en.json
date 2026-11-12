@@ -110,5 +110,8 @@
   "COC7QOL.ActorGroup.Creatures": "Creatures",
   "COC7QOL.ActorGroup.Vehicles": "Vehicles",
 
-  "COC7QOL.TradeTargets.Placeholder": "— Choose a character —"
+  "COC7QOL.TradeTargets.Placeholder": "— Choose a character —",
+
+  "COC7QOL.NpcSheets.SkillColumnsName": "NPC sheets: skills in columns",
+  "COC7QOL.NpcSheets.SkillColumnsHint": "List skills on NPC and Creature sheets down each column, like the investigator sheet, instead of across each row. Applies to everyone in this world."
 }

@@ -25,3 +25,20 @@
   min-height: 0;
   max-height: none;
 }
+
+/* Skills read down each column, like the investigator sheet, instead of across each row.
+   Opt-out for the whole world (module setting); index.js sets the class on the sheet window.
+   The column count follows the sheet's width: three at the default 650px, more when the
+   sheet is dragged wider, two at the minimum width. */
+.application.coc7qol-resizable-sheet.coc7qol-skill-columns section.window-content .skill-list {
+  --coc7qol-skill-column-width: 180px;
+
+  display: block;
+  columns: var(--coc7qol-skill-column-width);
+  column-gap: 0.5rem;
+}
+
+.application.coc7qol-resizable-sheet.coc7qol-skill-columns section.window-content .skill-list .item {
+  break-inside: avoid;
+  margin-bottom: 0.125rem;
+}

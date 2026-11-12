@@ -18,7 +18,7 @@
         "id": "CoC7",
         "type": "system",
         "compatibility": {
-          "minimum": "8"
+          "minimum": "8.16"
         }
       }
     ]
@@ -33,7 +33,8 @@
     "styles/close-all-cards.css",
     "styles/ai-generator.css",
     "styles/gm-visibility.css",
-    "styles/rest-targets.css"
+    "styles/rest-targets.css",
+    "styles/npc-sheets.css"
   ],
   "languages": [
     {
@@ -54,9 +55,9 @@
     "scripts/ai-generator/index.js",
     "scripts/close-all-cards.js",
     "scripts/roll-visibility.js",
-    "scripts/hidden-initiative/index.js",
     "scripts/gm-visibility/index.js",
     "scripts/rest-targets/index.js",
-    "scripts/trade-targets/index.js"
+    "scripts/trade-targets/index.js",
+    "scripts/npc-sheets/index.js"
   ]
 }

@@ -1,4 +1,4 @@
-import { t, retargetedMessages } from './utils.js'
+import { t } from './utils.js'
 import { VISIBILITY_CHOICES, choiceForCoreMode, visibilityUpdate } from './roll-mode-keys.js'
 
 const MODULE = 'coc7-qol'
@@ -169,5 +169,4 @@ Hooks.on('preCreateChatMessage', (document, data) => {
   }
 
   document.updateSource(update)
-  retargetedMessages.add(document)
 })

@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- **Resizable NPC and Creature sheets** — NPC and Creature sheets could not be resized, and a sheet sitting mid-screen grew past the bottom of the display when its sections were opened, leaving the lower part out of reach (CoC7 issues [#1416](https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT/issues/1416) and [#1621](https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT/issues/1621)). They now have Foundry's resize handle, scroll inside whatever size you drag them to, and move back on screen when an opened section would push them off it. The default size is unchanged. A Keeper can turn it off for the whole table by unticking *NPC sheets: resizable* in the module settings (applies after a reload).
+- **NPC skills in columns** — Skills on NPC and Creature sheets now read down each column, like the investigator sheet, instead of across each row (CoC7 issue [#1622](https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT/issues/1622)), and a wider sheet shows more columns. It works with or without resizing: a Keeper can untick *NPC sheets: skills in columns* in the module settings to give the whole table the system's row layout back.
+
+### Changed
+
+- **CoC7 8.16 or later is required** — Earlier CoC7 versions are no longer supported, and Foundry will not let the module be enabled on them.
+
+### Removed
+
+- **Hidden Initiative Rolls** — CoC7 fixed issue [#2149](https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT/issues/2149) itself: the system now rolls a hidden combatant's initiative as a blind roll, so the module's workaround is gone. Players see Foundry's "*privately rolled some dice*" placeholder for these rolls again, which the module used to hide.
+
 ## [0.8.0] - 2026-11-11
 
 ### Fixed

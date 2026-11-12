@@ -97,5 +97,10 @@
   "COC7QOL.ActorGroup.Creatures": "Créatures",
   "COC7QOL.ActorGroup.Vehicles": "Véhicules",
 
-  "COC7QOL.TradeTargets.Placeholder": "— Choisir un personnage —"
+  "COC7QOL.TradeTargets.Placeholder": "— Choisir un personnage —",
+
+  "COC7QOL.NpcSheets.ResizableName": "Fiches de PNJ : redimensionnables",
+  "COC7QOL.NpcSheets.ResizableHint": "Ajoute une poignée de redimensionnement aux fiches de PNJ et de Créature, les fait défiler à l'intérieur de la taille choisie et les garde à l'écran lorsqu'une section est ouverte. S'applique à tous les utilisateurs de ce monde.",
+  "COC7QOL.NpcSheets.SkillColumnsName": "Fiches de PNJ : compétences en colonnes",
+  "COC7QOL.NpcSheets.SkillColumnsHint": "Affiche les compétences des fiches de PNJ et de Créature de haut en bas, colonne par colonne, comme sur la fiche d'investigateur, plutôt que ligne par ligne. S'applique à tous les utilisateurs de ce monde."
 }

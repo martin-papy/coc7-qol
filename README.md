@@ -19,7 +19,7 @@ If there's a workflow that annoys you, a small thing that could be smoother, or 
 | [👁️ Keeper-Only Highlights](#-keeper-only-highlights) | See what players can't see vs can't change, on sheets and chat cards | GM |
 | [🛏️ Grouped Rest Targets](#-grouped-rest-targets) | Rest just the Investigators in two clicks — actors grouped by type, PCs pre-selected | GM |
 | [🎁 Grouped Trade / Store Targets](#-grouped-trade--store-targets) | Give or store an item without scanning a flat list — targets grouped Investigators / Storage / NPCs / Creatures | Everyone |
-| [🙈 Hidden Initiative Rolls](#-hidden-initiative-rolls) | Initiative rolls of hidden combatants go to the GMs only, as Foundry intends — works around CoC7 #2149 (fixed upstream in CoC7 8.16) | GM |
+| [↔️ Resizable NPC Sheets](#-resizable-npc-sheets) | Drag NPC and Creature sheets to any size — they scroll inside, stay on screen, and list skills in columns | Everyone |
 
 ---
 
@@ -101,11 +101,13 @@ The **Trade / Store Item** dropdown on the character sheet listed every visible 
 
 ---
 
-## 🙈 Hidden Initiative Rolls
+## ↔️ Resizable NPC Sheets
 
-Hidden a monster in the combat tracker, rolled initiative, and watched its name and DEX roll land in everyone's chat? That's a CoC7 bug ([#2149](https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT/issues/2149)): the system's own initiative code skips Foundry's "hidden combatants roll privately" rule. With this module, initiative rolls of hidden combatants — hidden in the tracker or on the canvas — are whispered to the GMs, and players don't even get Foundry's "*privately rolled some dice*" placeholder to count them by. Visible combatants roll exactly as before. CoC7 8.16 fixed the bug, so on 8.16+ the whisper half is switched off and only the placeholder hiding remains.
+NPC and Creature sheets can now be **resized** like any other window: drag the bottom-right corner to the size you want, and the sheet scrolls inside it. Open as many sections as you like — the sheet stays on screen instead of running off the bottom.
 
-[**Read more →**](docs/features/hidden-initiative.md)
+Skills also read **down each column**, like on the investigator sheet, and a wider sheet shows more columns.
+
+Both are on by default. The Keeper can switch either one off under **Settings → Module Settings → CoC7 QoL Improvements**.
 
 ---
 
@@ -138,7 +140,7 @@ Dialogs, buttons, settings, and notifications follow your configured Foundry lan
 ## Compatibility
 
 - **FoundryVTT:** v13+
-- **System:** Call of Cthulhu 7th Edition (CoC7) — v8.x and v9.x
+- **System:** Call of Cthulhu 7th Edition (CoC7) — v8.16+ and v9.x
 
 ## AI Usage Disclaimer
 

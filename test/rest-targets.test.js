@@ -10,7 +10,7 @@ const LABELS = {
   vehicle: 'Vehicles'
 }
 
-/** Reproduce the markup CoC7Utilities.restTargets() renders (CoC7 8.15). */
+/** Reproduce the markup CoC7Utilities.restTargets() renders (CoC7 8.16). */
 function systemRow ({ id, name }) {
   return `<div class="flexrow"><input type="checkbox" name="CoC7RestTargets${id}" id="CoC7RestTargets${id}" style="flex: 0 0 auto;"><label for="CoC7RestTargets${id}">${name}</label></div>`
 }
@@ -206,7 +206,7 @@ test('clicking the group name does not change the selection (it is left free to 
   assert.ok(toggle.getAttribute('aria-label'), 'checkbox keeps an accessible name without a <label>')
 })
 
-/** The exact id-collection loop from CoC7Utilities.restTargets()'s submit callback (CoC7 8.15). */
+/** The exact id-collection loop from CoC7Utilities.restTargets()'s submit callback (CoC7 8.16). */
 function systemCallbackIds (form) {
   const ids = []
   let allChecked = false

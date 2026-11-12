@@ -21,7 +21,7 @@ const ACTORS = [
   { id: 's1', name: 'zz_Storage', type: 'container' }
 ]
 
-/** Reproduce the markup CoC7Utilities.tradeItem() renders inside DialogV2.wait (CoC7 8.15). */
+/** Reproduce the markup CoC7Utilities.tradeItem() renders inside DialogV2.wait (CoC7 8.16). */
 function buildDialog (actors) {
   const options = actors.map(a => `<option value="Actor.${a.id}">${a.name}</option>`).join('')
   const html = `

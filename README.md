@@ -20,6 +20,7 @@ If there's a workflow that annoys you, a small thing that could be smoother, or 
 | [🛏️ Grouped Rest Targets](#-grouped-rest-targets) | Rest just the Investigators in two clicks — actors grouped by type, PCs pre-selected | GM |
 | [🎁 Grouped Trade / Store Targets](#-grouped-trade--store-targets) | Give or store an item without scanning a flat list — targets grouped Investigators / Storage / NPCs / Creatures | Everyone |
 | [↔️ Resizable NPC Sheets](#-resizable-npc-sheets) | Drag NPC and Creature sheets to any size — they scroll inside, stay on screen, and list skills in columns | Everyone |
+| [🪄 Cast Spells from the Sheet](#-cast-spells-from-the-sheet) | Cast a spell in one click from its row on the actor sheet — no need to open the spell first | Everyone |
 
 ---
 
@@ -108,6 +109,14 @@ NPC and Creature sheets can now be **resized** like any other window: drag the b
 Skills also read **down each column**, like on the investigator sheet, and a wider sheet shows more columns.
 
 Both are on by default. The Keeper can switch either one off under **Settings → Module Settings → CoC7 QoL Improvements**.
+
+---
+
+## 🪄 Cast Spells from the Sheet
+
+Every spell listed on an investigator, NPC or Creature sheet gets a **cast icon** at the start of its row. Click it and the spell is cast exactly as if you had opened it and pressed *Cast*: same chat card, same costs taken from the caster.
+
+The icon is there for anyone who owns the actor. The Keeper can also **right-click** it to cast hidden, so only the Keeper sees the card.
 
 ---
 

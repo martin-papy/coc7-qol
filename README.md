@@ -14,6 +14,7 @@ If there's a workflow that annoys you, a small thing that could be smoother, or 
 |---|---|---|
 | [🎲 Roll Visibility Selector](#-roll-visibility-selector) | Easily pick public / private / blind per roll — and remember your last choice | Everyone |
 | [🗂️ Close All Cards](#-close-all-cards) | Sweep stale chat cards out of the way in one click | GM |
+| [🍀 Group Luck](#-group-luck) | Find who rolls Group Luck and send them the request in two clicks | GM |
 | [🖼️ Item Image Popouts](#-item-image-popouts) | Click any item portrait to see it full size, draggable, resizable | Everyone |
 | [✨ AI Generation](#-ai-generation) | Conjure fully-statted weapons and NPCs from a one-line description | GM |
 | [👁️ Keeper-Only Highlights](#-keeper-only-highlights) | See what players can't see vs can't change, on sheets and chat cards | GM |
@@ -43,6 +44,16 @@ Open the Keeper's toolbar (the tentacle-strike icon), click **Close All Cards**,
 ![Close All Cards selection dialog](images/Close-Cards-2.png)
 
 [**Read more →**](docs/features/close-all-cards.md)
+
+---
+
+## 🍀 Group Luck
+
+The investigator with the lowest Luck among those present rolls Luck for the group. Open the Keeper's toolbar, click **Group Luck**, and tick who is in the scene: the lowest Luck is highlighted, and one click whispers that player a **Luck check** link. Ties let you pick who rolls, and if the player is offline you roll Luck for them.
+
+![Group Luck dialog](images/Group-Luck-1.png)
+
+[**Read more →**](docs/features/group-luck.md)
 
 ---
 

@@ -70,9 +70,22 @@
   "COC7QOL.AIGenerator.NPC.Preview.PossessionsHeader": "Possessions ({count})",
   "COC7QOL.AIGenerator.NPC.Preview.PossessionsHeaderPartial": "Possessions ({kept} / {count})",
   "COC7QOL.AIGenerator.NPC.Preview.WarningsHeader": "Avertissements",
+  "COC7QOL.AIGenerator.Warning.NativeLanguageTemplateMissing": "La langue maternelle « {name} » n'a pas pu être créée à partir du modèle « Language (Own) » — il est absent du compendium CoC7.skills ; elle a donc été ajoutée comme une compétence de langue étrangère ordinaire.",
+  "COC7QOL.AIGenerator.Warning.NativeLanguageNoCompendium": "La langue maternelle « {name} » n'a pas pu être créée à partir du modèle « Language (Own) » — le compendium CoC7.skills est indisponible ; elle a donc été ajoutée comme une compétence de langue étrangère ordinaire.",
   "COC7QOL.AIGenerator.NPC.Preview.WeaponRowDamage": "{damage} • {skill}",
   "COC7QOL.AIGenerator.NPC.Preview.PossessionRowQuantity": "×{quantity}",
   "COC7QOL.AIGenerator.NPC.Button.RemoveItem": "Retirer du PNJ",
+  "COC7QOL.AIGenerator.NPCDialog.TierLabel": "Niveau max",
+  "COC7QOL.AIGenerator.NPCDialog.AboveTierTitle": "Au-dessus du niveau {tier} déclaré — vérifiez que c'est voulu",
+  "COC7QOL.AIGenerator.NPCDialog.AboveTierBadge": "!",
+  "COC7QOL.AIGenerator.NPCDialog.AboveTierSummary": "Compétences au-dessus du niveau {tier} déclaré : {count}",
+
+  "COC7QOL.AIGenerator.Tier.novice": "Novice",
+  "COC7QOL.AIGenerator.Tier.neophyte": "Néophyte",
+  "COC7QOL.AIGenerator.Tier.amateur": "Amateur",
+  "COC7QOL.AIGenerator.Tier.professional": "Professionnel",
+  "COC7QOL.AIGenerator.Tier.expert": "Expert",
+  "COC7QOL.AIGenerator.Tier.master": "Maître",
 
   "COC7QOL.Settings.AIProvider.Name": "Générateur IA : Fournisseur",
   "COC7QOL.Settings.AIProvider.Hint": "Fournisseur LLM utilisé pour la génération. Changer ceci met à jour automatiquement l'endpoint et le modèle.",
@@ -102,5 +115,8 @@
   "COC7QOL.NpcSheets.ResizableName": "Fiches de PNJ : redimensionnables",
   "COC7QOL.NpcSheets.ResizableHint": "Ajoute une poignée de redimensionnement aux fiches de PNJ et de Créature, les fait défiler à l'intérieur de la taille choisie et les garde à l'écran lorsqu'une section est ouverte. S'applique à tous les utilisateurs de ce monde.",
   "COC7QOL.NpcSheets.SkillColumnsName": "Fiches de PNJ : compétences en colonnes",
-  "COC7QOL.NpcSheets.SkillColumnsHint": "Affiche les compétences des fiches de PNJ et de Créature de haut en bas, colonne par colonne, comme sur la fiche d'investigateur, plutôt que ligne par ligne. S'applique à tous les utilisateurs de ce monde."
+  "COC7QOL.NpcSheets.SkillColumnsHint": "Affiche les compétences des fiches de PNJ et de Créature de haut en bas, colonne par colonne, comme sur la fiche d'investigateur, plutôt que ligne par ligne. S'applique à tous les utilisateurs de ce monde.",
+
+  "COC7QOL.SpellCast.KeeperTooltip": "{cast} · Clic droit : {hidden}",
+  "COC7QOL.SpellCast.Failed": "Impossible de lancer {name} : {error}"
 }

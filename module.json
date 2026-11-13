@@ -34,7 +34,8 @@
     "styles/ai-generator.css",
     "styles/gm-visibility.css",
     "styles/rest-targets.css",
-    "styles/npc-sheets.css"
+    "styles/npc-sheets.css",
+    "styles/spell-cast.css"
   ],
   "languages": [
     {
@@ -58,6 +59,7 @@
     "scripts/gm-visibility/index.js",
     "scripts/rest-targets/index.js",
     "scripts/trade-targets/index.js",
-    "scripts/npc-sheets/index.js"
+    "scripts/npc-sheets/index.js",
+    "scripts/spell-cast/index.js"
   ]
 }

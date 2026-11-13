@@ -115,5 +115,8 @@
   "COC7QOL.NpcSheets.ResizableName": "NPC sheets: resizable",
   "COC7QOL.NpcSheets.ResizableHint": "Give NPC and Creature sheets a resize handle, let them scroll inside whatever size they are dragged to, and keep them on screen when a section is opened. Applies to everyone in this world.",
   "COC7QOL.NpcSheets.SkillColumnsName": "NPC sheets: skills in columns",
-  "COC7QOL.NpcSheets.SkillColumnsHint": "List skills on NPC and Creature sheets down each column, like the investigator sheet, instead of across each row. Applies to everyone in this world."
+  "COC7QOL.NpcSheets.SkillColumnsHint": "List skills on NPC and Creature sheets down each column, like the investigator sheet, instead of across each row. Applies to everyone in this world.",
+
+  "COC7QOL.SpellCast.KeeperTooltip": "{cast} · Right-click: {hidden}",
+  "COC7QOL.SpellCast.Failed": "Could not cast {name}: {error}"
 }

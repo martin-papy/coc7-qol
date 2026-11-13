@@ -1,0 +1,38 @@
+/* styles/spell-cast.css */
+
+/* Cast control on spell rows (issue #27). It is a <button> so that it can be reached with
+   Tab and activated with Enter or Space; the system's own row controls are bare <a>
+   elements. This strips Foundry's button chrome (box, border, background, fixed height)
+   so the control sits in the row like its neighbours. Module styles load in the `modules`
+   cascade layer, after Foundry's `elements` layer, so these win without extra specificity. */
+button.item-control.coc7qol-cast-spell {
+  display: block;
+  flex: 0 0 auto;
+  width: auto;
+  height: auto;
+  min-height: 0;
+  padding: 0;
+  /* Foundry gives buttons their own font and size; take the row's, as the <a> controls do.
+     `font` also resets line-height, so restate the one the system gives .item-control. */
+  font: inherit;
+  line-height: var(--font-size-14);
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  outline: none;
+  color: inherit;
+  /* Foundry animates every button property over 0.5s, which makes the focus ring start thick. */
+  transition: none;
+}
+
+/* The hover cue Foundry gives the neighbouring <a> controls. */
+button.item-control.coc7qol-cast-spell:hover {
+  text-shadow: 0 0 8px var(--color-shadow-primary);
+}
+
+/* A focus ring for keyboard users only, in Foundry's button focus colour. */
+button.item-control.coc7qol-cast-spell:focus-visible {
+  outline: 1px solid var(--button-focus-outline-color);
+  outline-offset: 2px;
+}

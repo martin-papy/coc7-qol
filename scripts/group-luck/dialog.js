@@ -22,6 +22,7 @@ export default class GroupLuckDialog extends foundry.applications.api.Applicatio
   #candidates
   #tickedIds
   #preferredId = null
+  #isConfirmed = false
   #onConfirm
 
   /**
@@ -75,7 +76,8 @@ export default class GroupLuckDialog extends foundry.applications.api.Applicatio
 
   static async #handleConfirm (event, target) {
     const { roller, presentCount } = this.#resolve()
-    if (!roller) return
+    if (!roller || this.#isConfirmed) return
+    this.#isConfirmed = true
     await this.close()
     await this.#onConfirm({ roller, presentCount })
   }

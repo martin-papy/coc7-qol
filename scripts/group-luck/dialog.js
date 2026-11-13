@@ -53,10 +53,15 @@ export default class GroupLuckDialog extends foundry.applications.api.Applicatio
   _replaceHTML (result, content, options) {
     const focused = content.contains(document.activeElement) ? document.activeElement : null
     const focusKey = focused?.matches?.('input') ? { name: focused.name, value: focused.value } : null
+    const scrollTop = content.querySelector('.group-luck-list')?.scrollTop
     content.replaceChildren(result)
+    const list = result.querySelector('.group-luck-list')
+    if (list && scrollTop) list.scrollTop = scrollTop
     if (!focusKey) return
     const inputs = result.querySelectorAll('input')
-    Array.from(inputs).find(node => node.name === focusKey.name && node.value === focusKey.value)?.focus()
+    Array.from(inputs)
+      .find(node => node.name === focusKey.name && node.value === focusKey.value)
+      ?.focus({ preventScroll: true })
   }
 
   #handleChange (event) {

@@ -37,7 +37,7 @@ function input (doc, type, name, value) {
 }
 
 /**
- * Marker text node content for a row: the roller, another tied row, or nothing.
+ * Marker span for a row: the roller, another tied row, or null when it needs none.
  * @param {Document} doc
  * @param {boolean} isRoller
  * @param {boolean} isTiedRow
@@ -87,9 +87,18 @@ function buildRow (doc, candidate, { tickedIds, resolution }, t) {
     radio.setAttribute('aria-label', `${t(`${KEY}RollerChoice`)}: ${candidate.name}`)
     li.append(radio)
   }
-  if (!candidate.isOnline) li.append(el(doc, 'span', 'group-luck-offline', t(`${KEY}Offline`)))
-  li.append(el(doc, 'span', 'group-luck-value', String(candidate.luck)))
+  const described = []
+  const offline = candidate.isOnline ? null : el(doc, 'span', 'group-luck-offline', t(`${KEY}Offline`))
+  const value = el(doc, 'span', 'group-luck-value', String(candidate.luck))
   const marker = buildMarker(doc, isRoller, isTiedRow, t)
+  for (const [suffix, node] of [['luck', value], ['offline', offline], ['marker', marker]]) {
+    if (!node) continue
+    node.setAttribute('id', `group-luck-${candidate.id}-${suffix}`)
+    described.push(node.id)
+  }
+  present.setAttribute('aria-describedby', described.join(' '))
+  if (offline) li.append(offline)
+  li.append(value)
   if (marker) li.append(marker)
   return li
 }

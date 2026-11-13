@@ -173,6 +173,18 @@ test('view tags only the rows whose players are all offline', () => {
   assert.equal(row(root, 'a1').querySelector('.group-luck-offline'), null)
 })
 
+test('view describes each checkbox with its Luck, offline tag and marker', () => {
+  const root = view(PARTY, ['a1', 'a5'])
+  const described = id => row(root, id).querySelector('input[name=present]').getAttribute('aria-describedby')
+  assert.equal(described('a5'), 'group-luck-a5-luck group-luck-a5-offline group-luck-a5-marker')
+  const classes = { luck: 'group-luck-value', offline: 'group-luck-offline', marker: 'group-luck-marker' }
+  for (const [suffix, className] of Object.entries(classes)) {
+    const target = root.querySelector(`[id="group-luck-a5-${suffix}"]`)
+    assert.ok(target.classList.contains(className))
+  }
+  assert.equal(described('a1'), 'group-luck-a1-luck')
+})
+
 test('view labels the confirm button for a request, a Keeper-side roll, or nothing ticked', () => {
   const confirm = root => root.querySelector('[data-action=confirm]')
   assert.equal(confirm(view(PARTY, ['a1', 'a3'])).textContent, 'F(COC7QOL.GroupLuck.Button.RequestFrom|name=Harvey)')

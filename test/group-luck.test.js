@@ -2,6 +2,8 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { buildCandidates, resolveRoller } from '../scripts/group-luck/candidates.js'
 import { LUCK_LINK, buildRequestMessage } from '../scripts/group-luck/request.js'
+import { JSDOM } from 'jsdom'
+import { buildGroupLuckView } from '../scripts/group-luck/dialog-view.js'
 
 const PLAYERS = [
   { id: 'u1', isActive: true, characterId: 'a1' },   // connected, assigned character
@@ -124,4 +126,66 @@ test('buildRequestMessage escapes the investigator name', () => {
   const { content } = buildRequestMessage(roller, 4, { ...i18n, userName: 'Keeper' })
   assert.ok(!content.includes('<img'))
   assert.ok(content.includes('&lt;img'))
+})
+
+function view (candidates, ticked, preferredId) {
+  const { document } = new JSDOM('').window
+  const tickedIds = new Set(ticked)
+  return buildGroupLuckView(document, { candidates, tickedIds, resolution: resolveRoller(candidates, tickedIds, preferredId) }, i18n)
+}
+const PARTY = buildCandidates(INVESTIGATORS, PLAYERS, { locale: 'en' })
+const row = (root, id) => root.querySelector(`.group-luck-row[data-candidate-id="${id}"]`)
+
+test('view renders one row per candidate and a divider between the two groups', () => {
+  const root = view(PARTY, ['a1', 'a3', 'a4'])
+  assert.equal(root.querySelectorAll('.group-luck-row').length, 5)
+  const items = [...root.querySelector('.group-luck-list').children]
+  assert.equal(items.findIndex(li => li.classList.contains('group-luck-divider')), 3)
+  assert.equal(view(PARTY.filter(c => c.isDefault), ['a1']).querySelectorAll('.group-luck-divider').length, 0)
+})
+
+test('view ticks the given rows and marks the roller', () => {
+  const root = view(PARTY, ['a1', 'a3', 'a4'])
+  assert.deepEqual([...root.querySelectorAll('input[name=present]:checked')].map(i => i.value), ['a1', 'a3', 'a4'])
+  assert.ok(row(root, 'a1').classList.contains('is-roller'))
+  assert.equal(root.querySelectorAll('.is-roller').length, 1)
+  assert.ok(row(root, 'a1').querySelector('.group-luck-marker').textContent.includes('T(COC7QOL.GroupLuck.Rolls)'))
+  assert.equal(root.querySelectorAll('input[name=roller]').length, 0)
+})
+
+test('view shows a radio on each tied row, checked on the roller', () => {
+  const tied = [
+    { id: 'x', name: 'Ada', luck: 35, isOnline: true, isDefault: true },
+    { id: 'y', name: 'Harvey', luck: 35, isOnline: true, isDefault: true },
+    { id: 'w', name: 'Tom', luck: 60, isOnline: true, isDefault: true }
+  ]
+  const root = view(tied, ['x', 'y', 'w'], 'y')
+  assert.deepEqual([...root.querySelectorAll('input[name=roller]')].map(i => i.value), ['x', 'y'])
+  assert.equal(root.querySelector('input[name=roller]:checked').value, 'y')
+  assert.ok(row(root, 'x').classList.contains('is-tied') && row(root, 'y').classList.contains('is-tied'))
+  assert.ok(row(root, 'x').querySelector('.group-luck-marker').textContent.includes('T(COC7QOL.GroupLuck.Tied)'))
+  assert.equal(row(root, 'w').querySelector('.group-luck-marker'), null)
+})
+
+test('view tags only the rows whose players are all offline', () => {
+  const root = view(PARTY, ['a1'])
+  assert.ok(row(root, 'a5').querySelector('.group-luck-offline'))
+  assert.equal(row(root, 'a1').querySelector('.group-luck-offline'), null)
+})
+
+test('view labels the confirm button for a request, a Keeper-side roll, or nothing ticked', () => {
+  const confirm = root => root.querySelector('[data-action=confirm]')
+  assert.equal(confirm(view(PARTY, ['a1', 'a3'])).textContent, 'F(COC7QOL.GroupLuck.Button.RequestFrom|name=Harvey)')
+  assert.equal(confirm(view(PARTY, ['a1', 'a5'])).textContent, 'F(COC7QOL.GroupLuck.Button.KeeperRoll|name=Edith)')
+  const empty = confirm(view(PARTY, []))
+  assert.equal(empty.textContent, 'T(COC7QOL.GroupLuck.Button.Request)')
+  assert.equal(empty.disabled, true)
+  assert.equal(confirm(view(PARTY, ['a1'])).disabled, false)
+})
+
+test('view renders an investigator name as text', () => {
+  const evil = [{ id: 'e', name: '<img src=x onerror=alert(1)>', luck: 35, isOnline: true, isDefault: true }]
+  const root = view(evil, ['e'])
+  assert.equal(root.querySelector('img'), null)
+  assert.equal(row(root, 'e').querySelector('.group-luck-name').textContent, '<img src=x onerror=alert(1)>')
 })

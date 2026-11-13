@@ -118,5 +118,22 @@
   "COC7QOL.NpcSheets.SkillColumnsHint": "Affiche les compétences des fiches de PNJ et de Créature de haut en bas, colonne par colonne, comme sur la fiche d'investigateur, plutôt que ligne par ligne. S'applique à tous les utilisateurs de ce monde.",
 
   "COC7QOL.SpellCast.KeeperTooltip": "{cast} · Clic droit : {hidden}",
-  "COC7QOL.SpellCast.Failed": "Impossible de lancer {name} : {error}"
+  "COC7QOL.SpellCast.Failed": "Impossible de lancer {name} : {error}",
+
+  "COC7QOL.GroupLuck.Title": "Chance de groupe",
+  "COC7QOL.GroupLuck.Hint": "Cochez les investigateurs présents dans la scène.",
+  "COC7QOL.GroupLuck.Others": "Autres",
+  "COC7QOL.GroupLuck.Offline": "hors ligne",
+  "COC7QOL.GroupLuck.Rolls": "lance",
+  "COC7QOL.GroupLuck.Tied": "égalité",
+  "COC7QOL.GroupLuck.RollerChoice": "Lance pour le groupe",
+  "COC7QOL.GroupLuck.Button.Request": "Demander un jet de Chance",
+  "COC7QOL.GroupLuck.Button.RequestFrom": "Demander un jet de Chance à {name}",
+  "COC7QOL.GroupLuck.Button.KeeperRoll": "Lancer la Chance pour {name}",
+  "COC7QOL.GroupLuck.Button.Cancel": "Annuler",
+  "COC7QOL.GroupLuck.Message.Lowest": "{name} a la Chance la plus basse ({luck}) des {count} investigateurs présents et lance pour le groupe.",
+  "COC7QOL.GroupLuck.Message.Single": "{name} fait le jet de Chance pour le groupe.",
+  "COC7QOL.GroupLuck.Notification.NoInvestigators": "Aucun investigateur appartenant à un joueur n'a été trouvé.",
+  "COC7QOL.GroupLuck.Notification.Missing": "{name} n'existe plus.",
+  "COC7QOL.GroupLuck.Notification.Failed": "La Chance de groupe a échoué pour {name} : {error}"
 }

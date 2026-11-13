@@ -12,7 +12,7 @@ This is a no-build-step vanilla JS module. FoundryVTT loads `scripts/*.js` files
 
 Each feature is a self-contained ES module in `scripts/` that registers FoundryVTT hooks. The module.json `esmodules` array is the entry point list — add new feature files there.
 
-**Key pattern:** Features hook into FoundryVTT's lifecycle via `Hooks.on(...)`. Most use render hooks (e.g., `renderItemSheetV2` for item sheets, `renderActorSheetV2` for actor sheets) to modify sheet HTML after the system renders it. Some use non-render hooks (e.g., `getSceneControlButtons` to inject buttons into the scene controls toolbar). This avoids modifying CoC7 source code.
+**Key pattern:** Features hook into FoundryVTT's lifecycle via `Hooks.on(...)`. Most use render hooks (e.g., `renderItemSheetV2` for item sheets, `renderActorSheetV2` for actor sheets) to modify sheet HTML after the system renders it. Some use non-render hooks (e.g., `getSceneControlButtons` to inject buttons into the scene controls toolbar, used by `scripts/close-all-cards.js` and `scripts/group-luck/`). This avoids modifying CoC7 source code.
 
 ### AI Generator
 
@@ -77,11 +77,23 @@ Then submit the release to FoundryVTT by editing the package on foundryvtt.com (
 
 ## Testing
 
-No automated tests. All features require manual testing in a running FoundryVTT instance with the CoC7 system. Test as both GM and player — most features behave differently per role.
+Two layers: unit tests for logic that does not need Foundry, and manual testing in a running FoundryVTT instance for everything else.
+
+### Unit tests
+
+    npm test
+
+runs `node --test "test/**/*.test.js"` (Node 22+, built-in test runner, `jsdom` for DOM work). `.github/workflows/test.yml` runs it on every pull request and on pushes to `develop` and `main`. `test/`, `package.json` and `node_modules/` are repo-only and never shipped in the release zip.
+
+Only modules that do not touch Foundry globals at import time can be tested this way. Keep a feature's rules and DOM transforms in such a module and pass Foundry data in as arguments, leaving `game`, `Hooks`, `ui` and `CONFIG` access to the feature's `index.js` — see `scripts/spell-cast/cast-control.js` with `test/spell-cast.test.js`, or `scripts/rest-targets/restructure.js` with `test/rest-targets.test.js`. New logic of this kind gets a test file in `test/`.
+
+### Manual testing
+
+Hooks, sheets, dialogs and anything that depends on the CoC7 system require manual testing in a running FoundryVTT instance. Test as both GM and player — most features behave differently per role.
 
 ### Browser automation with Playwright
 
-If a FoundryVTT instance is running (typically `http://localhost:30000`) and the **Playwright MCP server** is available, use it to verify UI and behaviour against the real client instead of relying on synthetic reproductions. This is the closest thing to an automated check this project has.
+If a FoundryVTT instance is running (typically `http://localhost:30000`) and the **Playwright MCP server** is available, use it to verify UI and behaviour against the real client instead of relying on synthetic reproductions. This is the closest thing to an automated check of the Foundry-side behaviour.
 
 **When to use it:**
 

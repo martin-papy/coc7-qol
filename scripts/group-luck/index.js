@@ -5,6 +5,9 @@ import GroupLuckDialog from './dialog.js'
 
 const TOOL_NAME = 'coc7-group-luck'
 
+/** Key of the Luck attribute in CoC7's actor data and roll options. */
+const LUCK_ATTRIBUTE = 'lck'
+
 /**
  * Gather the investigators and players from the world and build the dialog rows.
  * @returns {import('./candidates.js').Candidate[]}
@@ -21,7 +24,7 @@ function collectCandidates () {
     .map(actor => ({
       id: actor.id,
       name: actor.name,
-      luck: Number.parseInt(actor.system.attribs?.lck?.value, 10),
+      luck: Number.parseInt(actor.system.attribs?.[LUCK_ATTRIBUTE]?.value, 10),
       ownerIds: users.filter(user => actor.testUserPermission(user, 'OWNER')).map(user => user.id)
     }))
   return buildCandidates(investigators, players, { locale: game.i18n.lang })
@@ -43,7 +46,10 @@ async function requestRoll ({ roller, presentCount }) {
     if (roller.isOnline) {
       await ChatMessage.create(buildRequestMessage(roller, presentCount, { t, tf, userName: game.user.name }))
     } else {
-      await actor.attributeCheck('lck')
+      // CoC7's entry point for rolls triggered by a module. Unlike attributeCheck it rolls at once,
+      // where "Standby Keeper rolls" would post a pending card for a player-owned investigator.
+      // fastForward skips the roll dialog: runRoll throws when that dialog is closed without rolling.
+      await actor.runRoll({ attribute: LUCK_ATTRIBUTE, fastForward: true })
     }
   } catch (err) {
     console.error('[coc7-qol] Group Luck failed:', err)

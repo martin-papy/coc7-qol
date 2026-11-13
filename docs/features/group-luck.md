@@ -25,7 +25,7 @@ When several ticked investigators share the lowest Luck, each of them gets a rad
 
 ## Offline players
 
-When none of the players behind the chosen investigator is connected, the button reads **Roll Luck for** that investigator and opens the Luck roll on your side instead. No request is sent. If CoC7's *Standby Keeper rolls* setting is on, the roll first appears in chat as a card with a roll button instead of rolling straight away.
+When none of the players behind the chosen investigator is connected, the button reads **Roll Luck for** that investigator and rolls their Luck for you straight away: the roll card appears in chat, with no roll dialog and no stand-by card. No request is sent. The roll uses the world's default difficulty, with no bonus or penalty dice.
 
 ## The request is a whisper
 

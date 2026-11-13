@@ -99,7 +99,9 @@ The player clicks the link and gets CoC7's usual roll dialog (Shift skips it), e
 
 ### Roller with no connected player
 
-If none of the roller's owners is connected, a whisper would reach nobody. The button then reads **Roll Luck for {name}** and opens the system's Luck roll on the Keeper's side (`actor.attributeCheck('lck')`); no request message is posted. *(My call: this is what makes "include an offline player" usable.)*
+If none of the roller's owners is connected, a whisper would reach nobody. The button then reads **Roll Luck for {name}** and rolls that investigator's Luck on the Keeper's side at once, through the system's entry point for module-triggered rolls (`actor.runRoll({ attribute: 'lck', fastForward: true })`); no request message is posted. *(My call: this is what makes "include an offline player" usable.)*
+
+Revised after review of PR #38. The first version called `actor.attributeCheck('lck')`, which opens the roll dialog and then, with CoC7's *Standby Keeper rolls* setting on (the default), posts a pending card with a roll button instead of rolling. `runRoll` skips that card. It is called with `fastForward` because `runRoll` throws when its roll dialog is closed without rolling, so the Keeper does not get the difficulty and bonus-dice dialog on this path: the roll uses the world's default difficulty, with no bonus or penalty dice.
 
 ## Structure
 

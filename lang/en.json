@@ -118,5 +118,22 @@
   "COC7QOL.NpcSheets.SkillColumnsHint": "List skills on NPC and Creature sheets down each column, like the investigator sheet, instead of across each row. Applies to everyone in this world.",
 
   "COC7QOL.SpellCast.KeeperTooltip": "{cast} · Right-click: {hidden}",
-  "COC7QOL.SpellCast.Failed": "Could not cast {name}: {error}"
+  "COC7QOL.SpellCast.Failed": "Could not cast {name}: {error}",
+
+  "COC7QOL.GroupLuck.Title": "Group Luck",
+  "COC7QOL.GroupLuck.Hint": "Tick the investigators present in the scene.",
+  "COC7QOL.GroupLuck.Others": "Others",
+  "COC7QOL.GroupLuck.Offline": "offline",
+  "COC7QOL.GroupLuck.Rolls": "rolls",
+  "COC7QOL.GroupLuck.Tied": "tied",
+  "COC7QOL.GroupLuck.RollerChoice": "Rolls for the group",
+  "COC7QOL.GroupLuck.Button.Request": "Request Luck roll",
+  "COC7QOL.GroupLuck.Button.RequestFrom": "Request Luck roll from {name}",
+  "COC7QOL.GroupLuck.Button.KeeperRoll": "Roll Luck for {name}",
+  "COC7QOL.GroupLuck.Button.Cancel": "Cancel",
+  "COC7QOL.GroupLuck.Message.Lowest": "{name} has the lowest Luck ({luck}) of the {count} investigators present and rolls for the group.",
+  "COC7QOL.GroupLuck.Message.Single": "{name} rolls Luck for the group.",
+  "COC7QOL.GroupLuck.Notification.NoInvestigators": "No investigator owned by a player was found.",
+  "COC7QOL.GroupLuck.Notification.Missing": "{name} no longer exists.",
+  "COC7QOL.GroupLuck.Notification.Failed": "Group Luck failed for {name}: {error}"
 }

@@ -75,7 +75,7 @@ Everything else starts unticked: investigators of offline players, and spare, re
 - Two groups: investigators ticked by default, then the others. Each group is sorted by Luck, lowest first, then by name. The order does not change when boxes are ticked.
 - A row whose owners are all offline carries an *offline* tag.
 - The lowest Luck among the ticked rows is marked as the roller. The marker and the button label update as boxes are ticked.
-- **Tie:** when several ticked rows share the lowest Luck, each shows a radio button and the Keeper picks who rolls. The first by name is preselected. *(My call: the odds are identical, so a pick is enough; sending to everyone tied risks two rolls.)*
+- **Tie:** when several ticked rows share the lowest Luck, each shows a radio button and the Keeper picks who rolls. The first one listed is preselected. *(My call: the odds are identical, so a pick is enough; sending to everyone tied risks two rolls.)*
 
   ```
   │ [x] (•) Ada Marsh                35   tied    │

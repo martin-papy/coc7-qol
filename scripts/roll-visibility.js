@@ -1,13 +1,15 @@
 import { t } from './utils.js'
 import { VISIBILITY_CHOICES, choiceForCoreMode, visibilityUpdate } from './roll-mode-keys.js'
+import { createPendingRollMode } from './pending-roll-mode.js'
 
 const MODULE = 'coc7-qol'
 const LAST_MODE_SETTING = 'last-roll-mode'
 const DEFAULT_CHOICE = 'publicroll'
 
-// Module-level state: the last value picked in the CoC7 roll dialog,
-// consumed by the next preCreateChatMessage. Cancelled dialogs leave it null.
-let pendingRollMode = null
+// The value picked in the CoC7 roll dialog, armed on OK and consumed by the
+// next CoC7 card created on this client. Cancelled dialogs never arm it; see
+// pending-roll-mode.js for the guards against stale choices.
+const pendingRollMode = createPendingRollMode()
 
 let unsupportedModeReported = false
 
@@ -115,21 +117,21 @@ Hooks.on('renderDialogV2', (dialog, element) => {
   const okButton = element.querySelector('[data-action="ok"]')
   okButton?.addEventListener('click', () => {
     const select = element.querySelector('[name="coc7qol-rollMode"]')
-    if (select && VISIBILITY_CHOICES.includes(select.value)) {
-      pendingRollMode = select.value
-      writeLastRollMode(select.value)
-    }
+    if (!select) return
+    pendingRollMode.arm({
+      choice: select.value,
+      cardType: element.querySelector('[name="cardType"]')?.value
+    })
+    writeLastRollMode(select.value)
   }, true)
 })
 
 Hooks.on('preCreateChatMessage', (document, data) => {
-  if (!pendingRollMode) return
-
-  // Consume immediately — only the first message generated after the dialog
-  // should be retargeted (e.g. the skill check card). Subsequent messages
-  // (damage, follow-ups) fall back to their default roll mode.
-  const choice = pendingRollMode
-  pendingRollMode = null
+  // Only the first CoC7 card generated after the dialog is retargeted (e.g. the
+  // skill check card). Later messages (damage, follow-ups) keep their default
+  // roll mode, and non-CoC7 messages are never touched.
+  const choice = pendingRollMode.consume(data)
+  if (!choice) return
 
   // The dropdown speaks the module's own keys; Foundry and CoC7 speak the keys
   // of the running version ('blindroll' on v13, 'blind' on v14) — the

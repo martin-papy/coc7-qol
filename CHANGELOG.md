@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- **Roll visibility leaking onto the next message** — The visibility picked in the roll dialog was applied to the next chat message, whatever it was. When OK produced no card, the choice stayed pending: a player's Combined or Opposed roll goes to the Keeper instead, and a roll that failed made no card. A later `/w Keeper` message was then posted to everyone, or a plain message whispered to the Keeper. The choice now applies only to the CoC7 card the roll produces. It is not used for Combined or Opposed rolls, and it is dropped if no card follows within a minute.
 - **Empty module page in a player's settings** — Players saw a *CoC7 QoL Improvements* page in the settings window, counted as one setting, with nothing on it: the AI Generator's API key was listed for everyone and then hidden from non-GMs. The key is now listed for GMs only, so players no longer get the page.
 - **AI Generator: missing French strings** — Twelve strings of the NPC review dialog had no French translation, so a French client showed their raw keys (for example `COC7QOL.AIGenerator.Tier.expert`): the skill tier names, the *above the declared tier* flags, and the two native-language warnings. They are now translated.
 

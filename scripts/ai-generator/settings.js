@@ -1,5 +1,8 @@
 const MODULE = 'coc7-qol'
 
+/** Keys of the settings registered below, in the order the settings window lists them. */
+export const AI_SETTING_KEYS = ['ai-provider', 'ai-api-key', 'ai-endpoint', 'ai-model']
+
 export const PROVIDER_DEFAULTS = {
   anthropic: {
     endpoint: 'https://api.anthropic.com/v1/messages',

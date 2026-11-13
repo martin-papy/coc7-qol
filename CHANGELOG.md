@@ -18,6 +18,10 @@ All notable changes to this project will be documented in this file.
 
 - **Hidden Initiative Rolls** — CoC7 fixed issue [#2149](https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT/issues/2149) itself: the system now rolls a hidden combatant's initiative as a blind roll, so the module's workaround is gone. Players see Foundry's "*privately rolled some dice*" placeholder for these rolls again, which the module used to hide.
 
+### Fixed
+
+- **AI Generator: missing French strings** — Twelve strings of the NPC review dialog had no French translation, so a French client showed their raw keys (for example `COC7QOL.AIGenerator.Tier.expert`): the skill tier names, the *above the declared tier* flags, and the two native-language warnings. They are now translated.
+
 ## [0.8.0] - 2026-11-11
 
 ### Fixed

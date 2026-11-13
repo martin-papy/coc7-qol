@@ -36,7 +36,8 @@
     "styles/gm-visibility.css",
     "styles/rest-targets.css",
     "styles/npc-sheets.css",
-    "styles/spell-cast.css"
+    "styles/spell-cast.css",
+    "styles/skill-highlight.css"
   ],
   "languages": [
     {

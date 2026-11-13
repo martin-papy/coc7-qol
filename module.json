@@ -36,7 +36,9 @@
     "styles/gm-visibility.css",
     "styles/rest-targets.css",
     "styles/npc-sheets.css",
-    "styles/spell-cast.css"
+    "styles/spell-cast.css",
+    "styles/skill-highlight.css",
+    "styles/settings-sections.css"
   ],
   "languages": [
     {
@@ -62,6 +64,8 @@
     "scripts/rest-targets/index.js",
     "scripts/trade-targets/index.js",
     "scripts/npc-sheets/index.js",
-    "scripts/spell-cast/index.js"
+    "scripts/spell-cast/index.js",
+    "scripts/skill-highlight/index.js",
+    "scripts/settings-sections/index.js"
   ]
 }

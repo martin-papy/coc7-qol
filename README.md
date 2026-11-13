@@ -22,6 +22,7 @@ If there's a workflow that annoys you, a small thing that could be smoother, or 
 | [🎁 Grouped Trade / Store Targets](#-grouped-trade--store-targets) | Give or store an item without scanning a flat list — targets grouped Investigators / Storage / NPCs / Creatures | Everyone |
 | [↔️ Resizable NPC Sheets](#-resizable-npc-sheets) | Drag NPC and Creature sheets to any size — they scroll inside, stay on screen, and list skills in columns | Everyone |
 | [🪄 Cast Spells from the Sheet](#-cast-spells-from-the-sheet) | Cast a spell in one click from its row on the actor sheet — no need to open the spell first | Everyone |
+| [💪 Strong Skills at a Glance](#-strong-skills-at-a-glance) | See what a character is good at without re-sorting — skills at 50% or more are highlighted | Everyone |
 
 ---
 
@@ -128,6 +129,14 @@ Both are on by default. The Keeper can switch either one off under **Settings �
 Every spell listed on an investigator, NPC or Creature sheet gets a **cast icon** at the start of its row. Click it and the spell is cast exactly as if you had opened it and pressed *Cast*: same chat card, same costs taken from the caster.
 
 The icon is there for anyone who owns the actor. The Keeper can also **right-click** it to cast hidden, so only the Keeper sees the card.
+
+---
+
+## 💪 Strong Skills at a Glance
+
+Keep your skills sorted by name and still see what a character is good at: every skill at **50% or more** gets a soft tint, a bar on its left edge and a bold name. It works on investigator, NPC and Creature sheets, in the light and the dark theme.
+
+It is on by default. The Keeper can change the threshold or switch it off for the whole table under **Settings → Module Settings → CoC7 QoL Improvements**.
 
 ---
 

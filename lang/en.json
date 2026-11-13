@@ -87,16 +87,16 @@
   "COC7QOL.AIGenerator.Tier.expert": "Expert",
   "COC7QOL.AIGenerator.Tier.master": "Master",
 
-  "COC7QOL.Settings.AIProvider.Name": "AI Generator: Provider",
+  "COC7QOL.Settings.AIProvider.Name": "Provider",
   "COC7QOL.Settings.AIProvider.Hint": "LLM provider used for item generation. Changing this auto-updates the endpoint and model to provider defaults.",
   "COC7QOL.Settings.AIProvider.Anthropic": "Anthropic (Claude)",
   "COC7QOL.Settings.AIProvider.OpenAI": "OpenAI (GPT)",
   "COC7QOL.Settings.AIProvider.Gemini": "Google (Gemini)",
-  "COC7QOL.Settings.AIAPIKey.Name": "AI Generator: API Key",
+  "COC7QOL.Settings.AIAPIKey.Name": "API key",
   "COC7QOL.Settings.AIAPIKey.Hint": "Your API key for the selected provider. Stored only in your browser (localStorage) \u2014 never sent to other players. The key is sent directly from your browser to the provider \u2014 use a provider-scoped, spend-limited key, not a master key.",
-  "COC7QOL.Settings.AIEndpoint.Name": "AI Generator: Endpoint URL",
+  "COC7QOL.Settings.AIEndpoint.Name": "Endpoint URL",
   "COC7QOL.Settings.AIEndpoint.Hint": "API endpoint URL. Updated automatically when changing provider. Override for custom deployments.",
-  "COC7QOL.Settings.AIModel.Name": "AI Generator: Model",
+  "COC7QOL.Settings.AIModel.Name": "Model",
   "COC7QOL.Settings.AIModel.Hint": "Model name. Updated automatically when changing provider. Override for custom or newer models.",
 
   "COC7QOL.RollVisibility.Label": "Roll Visibility",
@@ -112,13 +112,23 @@
 
   "COC7QOL.TradeTargets.Placeholder": "— Choose a character —",
 
-  "COC7QOL.NpcSheets.ResizableName": "NPC sheets: resizable",
+  "COC7QOL.NpcSheets.ResizableName": "Resizable",
   "COC7QOL.NpcSheets.ResizableHint": "Give NPC and Creature sheets a resize handle, let them scroll inside whatever size they are dragged to, and keep them on screen when a section is opened. Applies to everyone in this world.",
-  "COC7QOL.NpcSheets.SkillColumnsName": "NPC sheets: skills in columns",
+  "COC7QOL.NpcSheets.SkillColumnsName": "Skills in columns",
   "COC7QOL.NpcSheets.SkillColumnsHint": "List skills on NPC and Creature sheets down each column, like the investigator sheet, instead of across each row. Applies to everyone in this world.",
 
   "COC7QOL.SpellCast.KeeperTooltip": "{cast} · Right-click: {hidden}",
   "COC7QOL.SpellCast.Failed": "Could not cast {name}: {error}",
+
+  "COC7QOL.SkillHighlight.EnabledName": "Highlight strong skills",
+  "COC7QOL.SkillHighlight.EnabledHint": "Mark the skills at or above the threshold below on investigator, NPC and Creature sheets, so a character's strengths stand out when skills are sorted by name. Applies to everyone in this world.",
+  "COC7QOL.SkillHighlight.ThresholdName": "Strong skill threshold",
+  "COC7QOL.SkillHighlight.ThresholdHint": "A skill whose value is at or above this number is highlighted. Applies to everyone in this world.",
+
+  "COC7QOL.SettingsSection.AIGenerator": "AI Generator",
+  "COC7QOL.SettingsSection.GmVisibility": "Keeper-Only Highlights",
+  "COC7QOL.SettingsSection.NpcSheets": "NPC and Creature Sheets",
+  "COC7QOL.SettingsSection.SkillHighlight": "Strong Skills",
 
   "COC7QOL.GroupLuck.Title": "Group Luck",
   "COC7QOL.GroupLuck.Hint": "Tick the investigators present in the scene.",

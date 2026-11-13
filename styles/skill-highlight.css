@@ -1,0 +1,19 @@
+/* styles/skill-highlight.css */
+
+/* Strong skills at a glance (issue #29). scripts/skill-highlight/index.js puts
+   `coc7qol-strong-skill` on every skill row at or above the world threshold; this is only the
+   look: a faint accent tint, a bar on the row's left edge and a bold name. The bar is an inset
+   box-shadow and the tint a background, so neither takes room and no row moves. The text keeps
+   its own colour, which is what keeps it legible in both themes. Module styles load in the
+   `modules` cascade layer, after the system's, so these win without extra specificity. */
+.application .coc7qol-strong-skill {
+  --coc7qol-strong-skill-accent: var(--color-text-accent);
+  --coc7qol-strong-skill-tint: 16%;
+  --coc7qol-strong-skill-bar: 3px;
+  background: color-mix(in oklab, var(--coc7qol-strong-skill-accent) var(--coc7qol-strong-skill-tint), transparent);
+  box-shadow: inset var(--coc7qol-strong-skill-bar) 0 0 var(--coc7qol-strong-skill-accent);
+}
+
+.application .coc7qol-strong-skill .skill-name {
+  font-weight: 700;
+}

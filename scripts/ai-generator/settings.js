@@ -1,5 +1,8 @@
 const MODULE = 'coc7-qol'
 
+/** Keys of the settings registered below, in the order the settings window lists them. */
+export const AI_SETTING_KEYS = ['ai-provider', 'ai-api-key', 'ai-endpoint', 'ai-model']
+
 export const PROVIDER_DEFAULTS = {
   anthropic: {
     endpoint: 'https://api.anthropic.com/v1/messages',
@@ -17,15 +20,9 @@ export const PROVIDER_DEFAULTS = {
 
 export function registerSettingsHooks () {
   Hooks.on('renderSettingsConfig', (_app, html) => {
+    // Only GMs are shown the key (see registerApiKeySetting), so it is absent for players.
     const apiKeyInput = html.querySelector(`[name="${MODULE}.ai-api-key"]`)
-    if (apiKeyInput) {
-      if (!game.user.isGM) {
-        // Non-GMs have no use for the API key field — hide the whole row
-        apiKeyInput.closest('.form-group')?.remove()
-      } else {
-        apiKeyInput.type = 'password'
-      }
-    }
+    if (apiKeyInput) apiKeyInput.type = 'password'
 
     const providerSelect = html.querySelector(`[name="${MODULE}.ai-provider"]`)
     if (!providerSelect) return
@@ -63,15 +60,6 @@ export function registerSettings () {
     }
   })
 
-  game.settings.register(MODULE, 'ai-api-key', {
-    name: 'COC7QOL.Settings.AIAPIKey.Name',
-    hint: 'COC7QOL.Settings.AIAPIKey.Hint',
-    scope: 'client',
-    config: true,
-    type: String,
-    default: ''
-  })
-
   game.settings.register(MODULE, 'ai-endpoint', {
     name: 'COC7QOL.Settings.AIEndpoint.Name',
     hint: 'COC7QOL.Settings.AIEndpoint.Hint',
@@ -88,5 +76,22 @@ export function registerSettings () {
     config: true,
     type: String,
     default: PROVIDER_DEFAULTS.anthropic.model
+  })
+}
+
+/**
+ * Register the API key. It is the module's only client-scoped setting, so it is the only one
+ * Foundry would list for a player, who has no use for it: generation is a GM tool. Listing
+ * it for GMs only keeps a player's settings window free of a page for this module.
+ * Call during the 'setup' hook: `game.user` does not exist yet at 'init'.
+ */
+export function registerApiKeySetting () {
+  game.settings.register(MODULE, 'ai-api-key', {
+    name: 'COC7QOL.Settings.AIAPIKey.Name',
+    hint: 'COC7QOL.Settings.AIAPIKey.Hint',
+    scope: 'client',
+    config: game.user.isGM,
+    type: String,
+    default: ''
   })
 }

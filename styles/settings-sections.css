@@ -1,0 +1,23 @@
+/* styles/settings-sections.css */
+
+/* Sections on the module's page of the settings window. scripts/settings-sections/ wraps
+   each section's heading and settings in a group. The group must not change the page's
+   layout, so it generates no box of its own: its children lay out as if they were still
+   direct children of the page. */
+#settings-config .coc7qol-settings-section {
+  display: contents;
+}
+
+/* A heading only makes sense above a setting, so a section that shows none is hidden whole.
+   A section empties after it was built when Foundry's search box sets `hidden` on the rows
+   that do not match, or if another render hook removes its rows. */
+#settings-config .coc7qol-settings-section:not(:has(.form-group:not([hidden]))) {
+  display: none;
+}
+
+/* The heading is Foundry's own bordered heading (h4.border), the element the CoC7 system
+   uses for the sections of its page; the look is Foundry's. The rows bring their own
+   spacing, so the heading drops its margin, as the system's headings do. */
+#settings-config .coc7qol-settings-heading {
+  margin: 0;
+}

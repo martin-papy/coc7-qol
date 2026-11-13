@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- **Empty module page in a player's settings** — Players saw a *CoC7 QoL Improvements* page in the settings window, counted as one setting, with nothing on it: the AI Generator's API key was listed for everyone and then hidden from non-GMs. The key is now listed for GMs only, so players no longer get the page.
 - **AI Generator: missing French strings** — Twelve strings of the NPC review dialog had no French translation, so a French client showed their raw keys (for example `COC7QOL.AIGenerator.Tier.expert`): the skill tier names, the *above the declared tier* flags, and the two native-language warnings. They are now translated.
 
 ## [0.8.0] - 2026-11-11

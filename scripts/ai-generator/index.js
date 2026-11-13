@@ -2,7 +2,7 @@
 // All other files in this directory are imported from here.
 // Only this file is listed in module.json esmodules.
 
-import { registerSettings, registerSettingsHooks } from './settings.js'
+import { registerSettings, registerApiKeySetting, registerSettingsHooks } from './settings.js'
 import * as providers from './providers/registry.js'
 import AnthropicProvider from './providers/anthropic.js'
 import OpenAIProvider from './providers/openai.js'
@@ -21,6 +21,8 @@ mappers.register('npc', NPCMapper)
 
 // Settings must be registered during the 'init' hook
 Hooks.once('init', registerSettings)
+// ...except the API key, which is listed for GMs only and so needs `game.user` ('setup').
+Hooks.once('setup', registerApiKeySetting)
 
 // Attach live-update listener so changing provider in the settings UI immediately
 // updates the endpoint and model inputs without requiring a save/reopen.

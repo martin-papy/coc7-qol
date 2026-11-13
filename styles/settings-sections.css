@@ -9,10 +9,8 @@
 }
 
 /* A heading only makes sense above a setting, so a section that shows none is hidden whole.
-   This covers the two ways a section empties after it was built: Foundry's search box sets
-   `hidden` on the rows that do not match, and another render hook can remove a row (the AI
-   Generator's API key is removed for players, and it is the only setting of that section
-   they are shown). */
+   A section empties after it was built when Foundry's search box sets `hidden` on the rows
+   that do not match, or if another render hook removes its rows. */
 #settings-config .coc7qol-settings-section:not(:has(.form-group:not([hidden]))) {
   display: none;
 }

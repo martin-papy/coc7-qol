@@ -62,6 +62,7 @@
     "scripts/rest-targets/index.js",
     "scripts/trade-targets/index.js",
     "scripts/npc-sheets/index.js",
-    "scripts/spell-cast/index.js"
+    "scripts/spell-cast/index.js",
+    "scripts/skill-highlight/index.js"
   ]
 }

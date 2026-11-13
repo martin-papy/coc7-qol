@@ -120,6 +120,11 @@
   "COC7QOL.SpellCast.KeeperTooltip": "{cast} · Clic droit : {hidden}",
   "COC7QOL.SpellCast.Failed": "Impossible de lancer {name} : {error}",
 
+  "COC7QOL.SkillHighlight.EnabledName": "Mettre en évidence les compétences fortes",
+  "COC7QOL.SkillHighlight.EnabledHint": "Signale, sur les fiches d'investigateur, de PNJ et de Créature, les compétences égales ou supérieures au seuil ci-dessous, pour repérer les points forts d'un personnage quand les compétences sont triées par nom. S'applique à tous les utilisateurs de ce monde.",
+  "COC7QOL.SkillHighlight.ThresholdName": "Seuil des compétences fortes",
+  "COC7QOL.SkillHighlight.ThresholdHint": "Une compétence dont la valeur est égale ou supérieure à ce nombre est mise en évidence. S'applique à tous les utilisateurs de ce monde.",
+
   "COC7QOL.GroupLuck.Title": "Chance de groupe",
   "COC7QOL.GroupLuck.Hint": "Cochez les investigateurs présents dans la scène.",
   "COC7QOL.GroupLuck.Others": "Autres",

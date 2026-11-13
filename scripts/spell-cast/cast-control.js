@@ -49,16 +49,17 @@ export function castLabelKeys (hasAutomatedCosts) {
  * @param {Document} doc
  * @param {Spell} spell
  * @param {CastControlDeps<Spell>} deps
- * @returns {HTMLAnchorElement}
+ * @returns {HTMLButtonElement}
  */
 function buildCastControl (doc, spell, { tooltipFor, canCastHidden, cast }) {
   const label = tooltipFor(spell)
-  const control = doc.createElement('a')
+  // A native button, so it can be reached with Tab and activated with Enter or Space.
+  const control = doc.createElement('button')
+  control.type = 'button'
   control.classList.add('item-control', CAST_CONTROL_CLASS)
   control.dataset.action = CAST_ACTION
   control.dataset.tooltip = label
   control.setAttribute('aria-label', label)
-  control.setAttribute('role', 'button')
 
   const icon = doc.createElement('i')
   icon.classList.add(...ICON_CLASSES)

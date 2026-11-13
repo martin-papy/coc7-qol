@@ -98,7 +98,18 @@ test('the cast control is labelled by tooltipFor, for the tooltip and for screen
   const control = controlOf(root, 'Actor.a1.Item.s2')
   assert.equal(control.dataset.tooltip, 'Cast Elder Sign')
   assert.equal(control.getAttribute('aria-label'), 'Cast Elder Sign')
-  assert.equal(control.getAttribute('role'), 'button')
+})
+
+test('the cast control is a native button that cannot submit the sheet form', () => {
+  const { root } = buildSheet()
+  const { deps } = buildDeps()
+
+  addCastControls(root, deps)
+
+  const control = controlOf(root, 'Actor.a1.Item.s1')
+  assert.equal(control.tagName, 'BUTTON')
+  assert.equal(control.type, 'button')
+  assert.equal(control.hasAttribute('role'), false, 'a native button needs no role')
 })
 
 test('clicking the cast control casts that spell in the open and does not reach the row', () => {

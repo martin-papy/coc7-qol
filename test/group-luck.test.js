@@ -1,6 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { buildCandidates, resolveRoller } from '../scripts/group-luck/candidates.js'
+import { LUCK_LINK, buildRequestMessage } from '../scripts/group-luck/request.js'
 
 const PLAYERS = [
   { id: 'u1', isActive: true, characterId: 'a1' },   // connected, assigned character
@@ -87,4 +88,40 @@ test('resolveRoller ignores a preferred row that is no longer tied or ticked', (
 
 test('resolveRoller returns no roller when nothing is ticked', () => {
   assert.deepEqual(resolveRoller([{ id: 'x', name: 'Ada', luck: 35 }], []), { roller: null, tied: [], presentCount: 0 })
+})
+
+const i18n = {
+  t: key => `T(${key})`,
+  tf: (key, data) => `F(${key}|${Object.entries(data).map(([k, v]) => `${k}=${v}`).join(',')})`
+}
+const ROLLER = { id: 'a1', name: 'Harvey', luck: 35, ownerIds: ['u1', 'u9'], isOnline: true, isDefault: true }
+
+test('LUCK_LINK is the CoC7 Luck check link without label or difficulty', () => {
+  assert.equal(LUCK_LINK, '@coc7.check[subtype:attribute,name:lck]')
+})
+
+test('buildRequestMessage whispers to the roller\'s owners under the Keeper\'s name', () => {
+  const message = buildRequestMessage(ROLLER, 4, { ...i18n, userName: 'Keeper' })
+  assert.deepEqual(message.speaker, { alias: 'Keeper' })
+  assert.deepEqual(message.whisper, ['u1', 'u9'])
+  assert.notEqual(message.whisper, ROLLER.ownerIds)
+})
+
+test('buildRequestMessage names the roller, the Luck and the head count, then the link', () => {
+  const { content } = buildRequestMessage(ROLLER, 4, { ...i18n, userName: 'Keeper' })
+  assert.equal(content,
+    '<p><strong>T(COC7QOL.GroupLuck.Title)</strong> — F(COC7QOL.GroupLuck.Message.Lowest|name=Harvey,luck=35,count=4)</p>' +
+    `<p>${LUCK_LINK}</p>`)
+})
+
+test('buildRequestMessage drops the comparison when a single investigator is present', () => {
+  const { content } = buildRequestMessage(ROLLER, 1, { ...i18n, userName: 'Keeper' })
+  assert.ok(content.includes('F(COC7QOL.GroupLuck.Message.Single|name=Harvey)'))
+})
+
+test('buildRequestMessage escapes the investigator name', () => {
+  const roller = { ...ROLLER, name: '<img src=x onerror=alert(1)>' }
+  const { content } = buildRequestMessage(roller, 4, { ...i18n, userName: 'Keeper' })
+  assert.ok(!content.includes('<img'))
+  assert.ok(content.includes('&lt;img'))
 })

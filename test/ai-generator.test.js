@@ -314,3 +314,12 @@ test('npc toFoundryData labels the Keeper notes through game.i18n', () => {
   assert.ok(keeper.includes('COC7QOL.AIGenerator.NPCDialog.SectionBackground'))
   assert.equal(keeper.includes('<strong>Personality:'), false)
 })
+
+test('npc toFoundryData drops a weapon whose name cannot be turned into text, without throwing', () => {
+  const weapons = [llmWeapon({ name: { toString: null }, damage: 3 }), llmWeapon({ name: 'Knife', skill: 'Fighting (Brawl)' })]
+
+  const result = npcMapper.toFoundryData(llmNpc({ weapons }))
+
+  assert.deepEqual(result.weaponsData.map(w => w.name), ['Knife'])
+  assert.ok(result.warnings.some(w => w.includes('WeaponDropped')))
+})

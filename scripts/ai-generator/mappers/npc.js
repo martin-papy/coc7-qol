@@ -468,7 +468,8 @@ export default {
       try {
         weaponMapper.validate(raw)
       } catch (err) {
-        warnings.push(tf('COC7QOL.AIGenerator.Warning.WeaponDropped', { name: text(raw.name) || String(raw.name), error: err.message }))
+        // text(), not String(): a non-string name can make String() throw (e.g. { toString: null }).
+        warnings.push(tf('COC7QOL.AIGenerator.Warning.WeaponDropped', { name: text(raw.name), error: err.message }))
         continue
       }
       mapped.push(weaponMapper.toFoundryData(raw))

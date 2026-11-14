@@ -6,3 +6,5 @@ temp/
 module.json.tmp
 .playwright-mcp/
 node_modules/
+.DS_Store
+*.zip

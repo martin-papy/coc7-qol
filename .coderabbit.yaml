@@ -18,10 +18,12 @@ reviews:
   path_filters:
     # Include all files by default
     - "**/*"
-    # Exclude markdown files (mostly documentation)
-    - "!**/*.md"
-    # Exclude test directories
-    - "!**/tests/**"
+    # Exclude documentation. Not "!**/*.md": the LLM system prompts in
+    # scripts/ai-generator/prompts/*.md ship with the module and are reviewed.
+    - "!*.md"
+    - "!docs/**"
+    # Exclude the unit tests
+    - "!test/**"
 
 # Chat settings
 chat:

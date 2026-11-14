@@ -28,7 +28,7 @@ export default class CloseAllCardsDialog extends foundry.applications.api.Applic
     id: 'coc7qol-close-all-cards',
     tag: 'div',
     window: {},
-    position: { width: 520, height: 'auto' },
+    position: { width: 580, height: 'auto' },
     actions: {
       closeSelected: CloseAllCardsDialog.#handleCloseSelected,
       cancel: CloseAllCardsDialog.#handleCancel,

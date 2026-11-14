@@ -42,7 +42,7 @@
 
 .coc7-ai-error {
   display: none;
-  color: var(--color-text-dark-error, red);
+  color: var(--color-level-error, red);
   margin-top: 0.25rem;
   font-size: 0.875em;
 }
@@ -78,12 +78,6 @@
   bottom: 0;
   background: var(--color-cool-5, #1a1a2e);
   border-top: 1px solid var(--color-border-dark, #333);
-}
-
-/* ─── Image popout cursor ────────────────────────────────────────────────── */
-
-.item-image-popout-trigger {
-  cursor: pointer;
 }
 
 /* ─── NPC review dialog ──────────────────────────────────────────────────── */
@@ -123,7 +117,7 @@
 }
 
 .coc7-npc-identity-meta-label {
-  color: var(--color-text-light-8, #888);
+  color: var(--color-text-subtle, #888);
 }
 
 .coc7-npc-section {
@@ -135,7 +129,7 @@
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--color-text-light-8, #888);
+  color: var(--color-text-subtle, #888);
   margin-bottom: 0.5rem;
 }
 
@@ -154,7 +148,7 @@
 
 .coc7-npc-char-label {
   font-size: 0.65rem;
-  color: var(--color-text-light-8, #888);
+  color: var(--color-text-subtle, #888);
 }
 
 .coc7-npc-char-value {

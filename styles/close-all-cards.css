@@ -35,7 +35,7 @@
 }
 
 .close-cards-row:hover {
-  background: var(--color-hover-bg, rgba(0, 0, 0, 0.05));
+  background: color-mix(in srgb, currentColor 8%, transparent);
 }
 
 .close-cards-type {

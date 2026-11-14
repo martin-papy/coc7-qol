@@ -33,6 +33,7 @@
     "styles/close-all-cards.css",
     "styles/group-luck.css",
     "styles/ai-generator.css",
+    "styles/item-image-popout.css",
     "styles/gm-visibility.css",
     "styles/rest-targets.css",
     "styles/npc-sheets.css",

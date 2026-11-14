@@ -1,7 +1,13 @@
 import { escapeHtml } from '../../utils.js'
 import { loadPrompt } from '../prompts/loader.js'
+import { intInRange, invalidFields, isNonEmptyString, isPlainObject, text } from './coerce.js'
 
-const REQUIRED_FIELDS = ['name', 'damage', 'skill']
+const REQUIRED_STRING_FIELDS = ['name', 'damage', 'skill']
+// Generous upper bounds: they only reject nonsense, the prompt asks for realistic values.
+const MAX_RANGE = 10_000
+const MAX_BULLETS = 1_000
+const MALFUNCTION_MIN = 1
+const MALFUNCTION_MAX = 100
 
 /**
  * Split the LLM's usesPerRound into the CoC7 schema's separate normal/max strings.
@@ -34,29 +40,30 @@ export default {
   },
 
   validate (data) {
-    const missing = REQUIRED_FIELDS.filter(f => !data[f])
-    if (missing.length) {
-      throw new Error(`LLM response missing required fields: ${missing.join(', ')}`)
-    }
+    if (!isPlainObject(data)) throw invalidFields(REQUIRED_STRING_FIELDS)
+    const invalid = REQUIRED_STRING_FIELDS.filter(f => !isNonEmptyString(data[f]))
+    if (invalid.length) throw invalidFields(invalid)
   },
 
+  /** Expects data that passed validate(). Optional fields of the wrong type are dropped, not rejected. */
   toFoundryData (data) {
+    const bullets = intInRange(data.bullets, 0, MAX_BULLETS)
     return {
-      name: data.name,
+      name: text(data.name),
       type: 'weapon',
       system: {
         description: {
           // CoC7 renders this as enriched HTML, and 8.16 declares no htmlFields for the server to sanitise.
-          value: escapeHtml(data.description || ''),
+          value: escapeHtml(text(data.description)),
           special: '',
           keeper: ''
         },
         skill: {
-          main: { name: data.skill || '', id: '' },
+          main: { name: text(data.skill), id: '' },
           alternativ: { name: '', id: '' }
         },
         range: {
-          normal: { value: Number.isFinite(data.range) ? data.range : null, damage: data.damage || '' },
+          normal: { value: intInRange(data.range, 0, MAX_RANGE), damage: text(data.damage) },
           long: { value: '', damage: '' },
           extreme: { value: '', damage: '' }
         },
@@ -64,21 +71,21 @@ export default {
           ...parseUsesPerRound(data.usesPerRound, data.usesPerRoundMax),
           burst: null
         },
-        bullets: data.bullets ?? null,
-        ammo: (typeof data.bullets === 'number' && Number.isFinite(data.bullets) && data.bullets > 0) ? data.bullets : 0,
-        malfunction: data.malfunction ?? null,
+        bullets,
+        ammo: bullets ?? 0,
+        malfunction: intInRange(data.malfunction, MALFUNCTION_MIN, MALFUNCTION_MAX),
         blastRadius: null,
         properties: {
-          rngd: data.properties?.rngd ?? false,
+          rngd: data.properties?.rngd === true,
           mnvr: false,
           thrown: false,
           shotgun: false,
           dbrl: false,
-          impl: data.properties?.impl ?? false,
+          impl: data.properties?.impl === true,
           brst: false,
           auto: false,
-          ahdb: data.properties?.ahdb ?? false,
-          addb: data.properties?.addb ?? false,
+          ahdb: data.properties?.ahdb === true,
+          addb: data.properties?.addb === true,
           slnt: false,
           spcl: false,
           mont: false,

@@ -162,8 +162,8 @@ Dialogs, buttons, settings, and notifications follow your configured Foundry lan
 
 ### Manual
 
-1. Download the latest release from the [Releases](https://github.com/martin-papy/coc7-qol/releases) page
-2. Extract into your `Data/modules/` directory
+1. Download `coc7-qol.zip` from the latest release on the [Releases](https://github.com/martin-papy/coc7-qol/releases) page
+2. Create a new `Data/modules/coc7-qol/` folder and extract the zip into it (the zip has no top-level folder, so `module.json` should end up directly inside `coc7-qol/`)
 3. Restart FoundryVTT
 
 ## Compatibility

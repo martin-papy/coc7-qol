@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [1.0.0] - 2026-11-15
 
 ### Added
 
@@ -39,6 +39,7 @@ All notable changes to this project will be documented in this file.
 - **AI Generator: provider change wrote settings from every client** — Changing the provider no longer fails on players' clients or overwrites a custom endpoint entered at the same time ([#43](https://github.com/martin-papy/coc7-qol/issues/43)).
 - **AI Generator: failed or repeated Accept** — If creating the document fails, the review stays open with the result. Accept is disabled while it runs, so a double-click creates one document. Closing the review by any route returns the Create dialog to a usable state ([#50](https://github.com/martin-papy/coc7-qol/issues/50)).
 - **AI Generator: Cancel reset the Create dialog** — The Type and Folder choices are kept after Cancel, and the AI button still follows the type ([#51](https://github.com/martin-papy/coc7-qol/issues/51)).
+- **AI Generator: a cancelled generation still opened the review** — Cancelling while the provider is working, or closing the Create dialog, now drops the reply.
 - **AI Generator: replies in a code fence or with extra text** — These now parse. A reply cut off at the output limit or refused by the provider says so, instead of "not valid JSON" ([#52](https://github.com/martin-papy/coc7-qol/issues/52)).
 - **AI Generator: out-of-range or malformed values** — Characteristics and skills are kept within 1–99 and 0–99, duplicate skills are dropped, overlong lists capped, and values of the wrong type corrected or reported clearly instead of raising a raw error ([#53](https://github.com/martin-papy/coc7-qol/issues/53)).
 - **AI Generator: weapon skill shown as `Rifle&#x2F;Shotgun`** in the NPC review ([#54](https://github.com/martin-papy/coc7-qol/issues/54)).

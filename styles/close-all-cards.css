@@ -60,3 +60,29 @@
   gap: 0.5rem;
   margin-top: 0.5rem;
 }
+
+/* Card state: only "finished" cards start selected, so the state must read at a glance. */
+.coc7qol-close-cards-state {
+  flex: 0 0 auto;
+  padding: 0 0.4rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.75em;
+  line-height: 1.6;
+  white-space: nowrap;
+  color: var(--color-text-secondary, #666);
+}
+
+.coc7qol-close-cards-state.coc7qol-is-resolved {
+  color: var(--color-level-success, #2e7d32);
+}
+
+.coc7qol-close-cards-state.coc7qol-is-pending {
+  color: var(--color-level-warning, #b26a00);
+}
+
+.coc7qol-close-cards-hint {
+  margin: 0;
+  font-size: 0.85em;
+  color: var(--color-text-secondary, #666);
+}

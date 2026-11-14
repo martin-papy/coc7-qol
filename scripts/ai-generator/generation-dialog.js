@@ -35,13 +35,13 @@ export default class CoC7AIGenerationDialog extends foundry.applications.api.App
   async _renderHTML (_context, _options) {
     const s = this.#itemData.system
     const div = document.createElement('div')
-    div.className = 'coc7-ai-generation-dialog'
+    div.className = 'coc7qol-ai-generation-dialog'
     div.innerHTML = `
       <div class="form-group">
         <label>${t('CoC7.Name')}</label>
         <input type="text" name="ai-item-name" value="${escapeHtml(this.#itemData.name)}">
       </div>
-      <dl class="ai-item-stats">
+      <dl class="coc7qol-ai-item-stats">
         <div><dt>${t('COC7QOL.AIGenerator.WeaponDialog.FieldDamage')}</dt><dd>${escapeHtml(s.range.normal.damage)}</dd></div>
         <div><dt>${t('COC7QOL.AIGenerator.WeaponDialog.FieldSkill')}</dt><dd>${escapeHtml(s.skill.main.name)}</dd></div>
         <div><dt>${t('COC7QOL.AIGenerator.WeaponDialog.FieldRange')}</dt><dd>${escapeHtml(s.range.normal.value || '—')}</dd></div>
@@ -49,7 +49,7 @@ export default class CoC7AIGenerationDialog extends foundry.applications.api.App
         <div><dt>${t('COC7QOL.AIGenerator.WeaponDialog.FieldBullets')}</dt><dd>${escapeHtml(String(s.bullets ?? '—'))}</dd></div>
         <div><dt>${t('COC7QOL.AIGenerator.WeaponDialog.FieldMalfunction')}</dt><dd>${escapeHtml(String(s.malfunction ?? '—'))}</dd></div>
       </dl>
-      <div class="ai-item-description">
+      <div class="coc7qol-ai-item-description">
         <p>${s.description.value /* escaped by the weapon mapper; rendered as the item sheet will */}</p>
       </div>
       <div class="form-footer">

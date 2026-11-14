@@ -1,16 +1,16 @@
-.coc7-qol-group-luck {
+.coc7qol-group-luck {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   padding: 0.5rem;
 }
 
-.group-luck-hint {
+.coc7qol-group-luck-hint {
   margin: 0;
   color: var(--color-text-secondary, #666);
 }
 
-.group-luck-list {
+.coc7qol-group-luck-list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -21,7 +21,7 @@
   overflow-y: auto;
 }
 
-.group-luck-row {
+.coc7qol-group-luck-row {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -29,23 +29,23 @@
   border-radius: 4px;
 }
 
-.group-luck-row:hover {
+.coc7qol-group-luck-row:hover {
   background: color-mix(in srgb, currentColor 8%, transparent);
 }
 
-.group-luck-row:focus-within {
+.coc7qol-group-luck-row:focus-within {
   outline: 1px solid var(--color-border-highlight, #ff6400);
 }
 
-.group-luck-row.is-roller {
+.coc7qol-group-luck-row.coc7qol-is-roller {
   background: color-mix(in srgb, var(--color-border-highlight, #ff6400) 18%, transparent);
 }
 
-.group-luck-row.is-roller .group-luck-name {
+.coc7qol-group-luck-row.coc7qol-is-roller .coc7qol-group-luck-name {
   font-weight: bold;
 }
 
-.group-luck-present {
+.coc7qol-group-luck-present {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -53,45 +53,45 @@
   cursor: pointer;
 }
 
-.group-luck-name {
+.coc7qol-group-luck-name {
   flex: 1;
 }
 
-.group-luck-value {
+.coc7qol-group-luck-value {
   min-width: 2.5ch;
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-.group-luck-offline,
-.group-luck-divider {
+.coc7qol-group-luck-offline,
+.coc7qol-group-luck-divider {
   font-size: 0.85em;
   color: var(--color-text-secondary, #666);
 }
 
-.group-luck-marker {
+.coc7qol-group-luck-marker {
   flex: 0 0 auto;
   font-size: 0.85em;
 }
 
-.group-luck-footer {
+.coc7qol-group-luck-footer {
   display: flex;
   flex-direction: row;
   gap: 0.5rem;
   margin-top: 0.5rem;
 }
 
-.group-luck-footer button {
+.coc7qol-group-luck-footer button {
   height: auto;
   min-height: var(--button-size);
   padding-block: 0.25rem;
   line-height: 1.3;
 }
 
-.group-luck-footer [data-action="confirm"] {
+.coc7qol-group-luck-footer [data-action="confirm"] {
   flex: 1;
 }
 
-.group-luck-footer [data-action="cancel"] {
+.coc7qol-group-luck-footer [data-action="cancel"] {
   flex: 0 0 auto;
 }

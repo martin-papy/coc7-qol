@@ -5,10 +5,10 @@ import { escapeHtml, tf } from '../utils.js'
 
 function rowHtml (kind, index, removed, removeTitle, name, detail) {
   return `
-        <div class="coc7-npc-equip-row${removed ? ' coc7-ai-removed' : ''}" data-equip-kind="${kind}" data-equip-index="${index}">
-          <span class="coc7-npc-equip-name">${escapeHtml(name)}</span>
-          <span class="coc7-npc-equip-detail">${escapeHtml(detail)}</span>
-          <button type="button" class="coc7-npc-equip-remove" title="${escapeHtml(removeTitle)}" aria-label="${escapeHtml(removeTitle)}">×</button>
+        <div class="coc7qol-npc-equip-row${removed ? ' coc7qol-ai-removed' : ''}" data-equip-kind="${kind}" data-equip-index="${index}">
+          <span class="coc7qol-npc-equip-name">${escapeHtml(name)}</span>
+          <span class="coc7qol-npc-equip-detail">${escapeHtml(detail)}</span>
+          <button type="button" class="coc7qol-npc-equip-remove" title="${escapeHtml(removeTitle)}" aria-label="${escapeHtml(removeTitle)}">×</button>
         </div>`
 }
 

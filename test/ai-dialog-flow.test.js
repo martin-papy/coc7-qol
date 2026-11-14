@@ -10,7 +10,7 @@ function createDialog () {
       <div class="form-group"><input name="name" value=""></div>
       <div class="form-group"><select name="type"><option value="character">Investigator</option><option value="npc">NPC</option></select></div>
       <div class="form-group"><select name="folder"><option value="">-</option><option value="f1">Cultists</option></select></div>
-      <footer class="form-footer"><button type="submit" data-action="ok">Create Actor</button><button type="button" class="coc7-ai-generate-btn"></button></footer>
+      <footer class="form-footer"><button type="submit" data-action="ok">Create Actor</button><button type="button" class="coc7qol-ai-generate-btn"></button></footer>
     </form>`)
   const doc = dom.window.document
   return { dom, form: doc.querySelector('form'), footer: doc.querySelector('footer') }
@@ -44,7 +44,7 @@ test('stashChildren leaves the kept node in place and removes the others', () =>
 test('listeners on stashed nodes still fire after restore', () => {
   const { dom, form, footer } = createDialog()
   const typeSelect = form.querySelector('[name="type"]')
-  const aiBtn = footer.querySelector('.coc7-ai-generate-btn')
+  const aiBtn = footer.querySelector('.coc7qol-ai-generate-btn')
   let changes = 0
   let clicks = 0
   typeSelect.addEventListener('change', () => changes++)
@@ -57,7 +57,7 @@ test('listeners on stashed nodes still fire after restore', () => {
   restoreFields()
 
   form.querySelector('[name="type"]').dispatchEvent(new dom.window.Event('change'))
-  footer.querySelector('.coc7-ai-generate-btn').click()
+  footer.querySelector('.coc7qol-ai-generate-btn').click()
   assert.equal(changes, 1)
   assert.equal(clicks, 1)
 })

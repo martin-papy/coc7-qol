@@ -29,7 +29,7 @@ const SUPPORTED_ACTOR_TYPES = ['npc']
 const WEAPON_PROMPT_CONFIG = {
   get label () { return t('COC7QOL.AIGenerator.Weapon.Label') },
   textareaName: 'ai-prompt',
-  textareaId: 'coc7-ai-prompt',
+  textareaId: 'coc7qol-ai-prompt',
   get placeholder () { return t('COC7QOL.AIGenerator.Weapon.Placeholder') },
   get prefillPrefix () { return t('COC7QOL.AIGenerator.Weapon.PrefillPrefix') },
   get emptyError () { return t('COC7QOL.AIGenerator.Error.EmptyWeaponDescription') },
@@ -59,16 +59,16 @@ const WEAPON_PROMPT_CONFIG = {
 const NPC_PROMPT_CONFIG = {
   get label () { return t('COC7QOL.AIGenerator.NPC.Label') },
   textareaName: 'ai-npc-prompt',
-  textareaId: 'coc7-ai-npc-prompt',
+  textareaId: 'coc7qol-ai-npc-prompt',
   get placeholder () { return t('COC7QOL.AIGenerator.NPC.Placeholder') },
   get prefillPrefix () { return t('COC7QOL.AIGenerator.NPC.PrefillPrefix') },
   get emptyError () { return t('COC7QOL.AIGenerator.Error.EmptyNPCDescription') },
   mapperKey: 'npc',
   ConfirmationDialog: CoC7NPCConfirmationDialog,
   get extraHTML () {
-    return `<label class="coc7-ai-random-chars-label">
+    return `<label class="coc7qol-ai-random-chars-label">
       <input type="checkbox" name="ai-random-characteristics">
-      ${t('COC7QOL.AIGenerator.NPC.RandomCharsLabel')} <span class="coc7-ai-hint">${t('COC7QOL.AIGenerator.NPC.RandomCharsHint')}</span>
+      ${t('COC7QOL.AIGenerator.NPC.RandomCharsLabel')} <span class="coc7qol-ai-hint">${t('COC7QOL.AIGenerator.NPC.RandomCharsHint')}</span>
     </label>`
   },
   buildDialogData: (npcData, { form }) => {
@@ -155,7 +155,7 @@ function _injectButton (dialog, html, { knownTypes, supportedTypes, buttonTitle,
 
   const aiBtn = document.createElement('button')
   aiBtn.type = 'button'
-  aiBtn.className = 'coc7-ai-generate-btn'
+  aiBtn.className = 'coc7qol-ai-generate-btn'
   aiBtn.title = buttonTitle
   aiBtn.innerHTML = SPARKLE_SVG
   buttonRow.appendChild(aiBtn)
@@ -200,7 +200,7 @@ function _transformToPromptView (dialog, html, nameInput, config) {
   }
 
   const promptArea = document.createElement('div')
-  promptArea.className = 'coc7-ai-prompt-area'
+  promptArea.className = 'coc7qol-ai-prompt-area'
   // Safe static HTML — config values are module-level constants, not user input
   promptArea.innerHTML = `
     <label for="${config.textareaId}">${config.label}</label>
@@ -211,7 +211,7 @@ function _transformToPromptView (dialog, html, nameInput, config) {
       placeholder="${config.placeholder}"
     ></textarea>
     ${config.extraHTML ?? ''}
-    <div class="coc7-ai-error"></div>
+    <div class="coc7qol-ai-error"></div>
   `
   form.insertBefore(promptArea, buttonRow)
 
@@ -219,12 +219,12 @@ function _transformToPromptView (dialog, html, nameInput, config) {
   if (capturedName) promptTextarea.value = `${config.prefillPrefix} "${capturedName}". `
 
   buttonRow.innerHTML = `
-    <button type="button" class="coc7-btn-generate">${t('COC7QOL.AIGenerator.Button.Generate')}</button>
-    <button type="button" class="coc7-btn-back">${t('COC7QOL.AIGenerator.Button.Cancel')}</button>
+    <button type="button" class="coc7qol-btn-generate">${t('COC7QOL.AIGenerator.Button.Generate')}</button>
+    <button type="button" class="coc7qol-btn-back">${t('COC7QOL.AIGenerator.Button.Cancel')}</button>
   `
 
-  buttonRow.querySelector('.coc7-btn-back').addEventListener('click', restore)
-  buttonRow.querySelector('.coc7-btn-generate').addEventListener('click', () => {
+  buttonRow.querySelector('.coc7qol-btn-back').addEventListener('click', restore)
+  buttonRow.querySelector('.coc7qol-btn-generate').addEventListener('click', () => {
     _run(dialog, form, buttonRow, config, restore)
   })
 }
@@ -236,8 +236,8 @@ function _transformToPromptView (dialog, html, nameInput, config) {
 async function _run (dialog, form, buttonRow, config, restore) {
   const textarea = form.querySelector(`[name="${config.textareaName}"]`)
   const userPrompt = textarea?.value?.trim()
-  const errorDiv = form.querySelector('.coc7-ai-error')
-  const generateBtn = buttonRow.querySelector('.coc7-btn-generate')
+  const errorDiv = form.querySelector('.coc7qol-ai-error')
+  const generateBtn = buttonRow.querySelector('.coc7qol-btn-generate')
 
   if (!userPrompt) {
     errorDiv.textContent = config.emptyError

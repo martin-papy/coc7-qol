@@ -26,13 +26,13 @@ export default class CloseAllCardsDialog extends foundry.applications.api.Applic
 
   async _renderHTML (context, options) {
     const container = document.createElement('div');
-    container.className = 'coc7-qol-close-all-cards';
+    container.className = 'coc7qol-close-all-cards';
 
     // Header with count and select-all
     const header = document.createElement('div');
-    header.className = 'close-cards-header';
+    header.className = 'coc7qol-close-cards-header';
     header.innerHTML = `
-      <label class="close-cards-toggle-all">
+      <label class="coc7qol-close-cards-toggle-all">
         <input type="checkbox" data-action="toggleAll" checked>
         <strong>${tf(this.#cards.length === 1 ? 'COC7QOL.CloseAllCards.Header.OpenCard' : 'COC7QOL.CloseAllCards.Header.OpenCards', { count: this.#cards.length })}</strong>
       </label>
@@ -41,15 +41,15 @@ export default class CloseAllCardsDialog extends foundry.applications.api.Applic
 
     // Card list
     const list = document.createElement('div');
-    list.className = 'close-cards-list';
+    list.className = 'coc7qol-close-cards-list';
     for (const card of this.#cards) {
       const row = document.createElement('label');
-      row.className = 'close-cards-row';
+      row.className = 'coc7qol-close-cards-row';
       row.innerHTML = `
         <input type="checkbox" data-action="toggleCard" data-message-id="${escapeHtml(card.messageId)}" checked>
-        <span class="close-cards-type">${escapeHtml(card.type)}</span>
-        <span class="close-cards-actor">${escapeHtml(card.actor)}</span>
-        <span class="close-cards-time">${escapeHtml(card.timestamp)}</span>
+        <span class="coc7qol-close-cards-type">${escapeHtml(card.type)}</span>
+        <span class="coc7qol-close-cards-actor">${escapeHtml(card.actor)}</span>
+        <span class="coc7qol-close-cards-time">${escapeHtml(card.timestamp)}</span>
       `;
       list.appendChild(row);
     }
@@ -57,7 +57,7 @@ export default class CloseAllCardsDialog extends foundry.applications.api.Applic
 
     // Footer buttons
     const footer = document.createElement('div');
-    footer.className = 'close-cards-footer';
+    footer.className = 'coc7qol-close-cards-footer';
     footer.innerHTML = `
       <button type="button" data-action="closeSelected" class="bright">${t('COC7QOL.CloseAllCards.Button.CloseSelected')}</button>
       <button type="button" data-action="cancel">${t('COC7QOL.CloseAllCards.Button.Cancel')}</button>
@@ -72,18 +72,18 @@ export default class CloseAllCardsDialog extends foundry.applications.api.Applic
   }
 
   #getSelectedMessageIds () {
-    const checkboxes = this.element.querySelectorAll('.close-cards-row input[type="checkbox"]:checked');
+    const checkboxes = this.element.querySelectorAll('.coc7qol-close-cards-row input[type="checkbox"]:checked');
     return Array.from(checkboxes).map(cb => cb.dataset.messageId);
   }
 
   #updateCloseButton () {
-    const anyChecked = this.element.querySelector('.close-cards-row input[type="checkbox"]:checked');
+    const anyChecked = this.element.querySelector('.coc7qol-close-cards-row input[type="checkbox"]:checked');
     const closeBtn = this.element.querySelector('[data-action="closeSelected"]');
     if (closeBtn) closeBtn.disabled = !anyChecked;
   }
 
   #updateToggleAll () {
-    const allCheckboxes = this.element.querySelectorAll('.close-cards-row input[type="checkbox"]');
+    const allCheckboxes = this.element.querySelectorAll('.coc7qol-close-cards-row input[type="checkbox"]');
     const allChecked = Array.from(allCheckboxes).every(cb => cb.checked);
     const toggleAll = this.element.querySelector('[data-action="toggleAll"]');
     if (toggleAll) toggleAll.checked = allChecked;
@@ -119,7 +119,7 @@ export default class CloseAllCardsDialog extends foundry.applications.api.Applic
 
   static #handleToggleAll (event, target) {
     const checked = target.checked;
-    const checkboxes = this.element.querySelectorAll('.close-cards-row input[type="checkbox"]');
+    const checkboxes = this.element.querySelectorAll('.coc7qol-close-cards-row input[type="checkbox"]');
     checkboxes.forEach(cb => { cb.checked = checked; });
     this.#updateCloseButton();
   }

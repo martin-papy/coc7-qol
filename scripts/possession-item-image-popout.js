@@ -3,7 +3,7 @@ Hooks.on('renderActorSheetV2', (application, element) => {
   if (application.document.type !== 'character') return;
 
   element.querySelectorAll('.inventory .item-image').forEach((img) => {
-    img.classList.add('item-image-popout-trigger');
+    img.classList.add('coc7qol-image-popout-trigger');
 
     img.addEventListener('click', async (event) => {
       event.preventDefault();

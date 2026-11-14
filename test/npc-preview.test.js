@@ -21,10 +21,10 @@ const weapon = (damage, skill, name = 'Shotgun') => ({ name, system: { range: { 
 function shown (html) {
   const doc = new JSDOM(`<div>${html}</div>`).window.document
   return {
-    name: doc.querySelector('.coc7-npc-equip-name').textContent,
-    detail: doc.querySelector('.coc7-npc-equip-detail').textContent,
-    elements: doc.querySelectorAll('.coc7-npc-equip-detail *, .coc7-npc-equip-name *').length,
-    row: doc.querySelector('.coc7-npc-equip-row')
+    name: doc.querySelector('.coc7qol-npc-equip-name').textContent,
+    detail: doc.querySelector('.coc7qol-npc-equip-detail').textContent,
+    elements: doc.querySelectorAll('.coc7qol-npc-equip-detail *, .coc7qol-npc-equip-name *').length,
+    row: doc.querySelector('.coc7qol-npc-equip-row')
   }
 }
 
@@ -48,8 +48,8 @@ test('a weapon row carries its index and kind, and the removed class only when r
 
   assert.equal(kept.dataset.equipIndex, '3')
   assert.equal(kept.dataset.equipKind, 'weapon')
-  assert.equal(kept.classList.contains('coc7-ai-removed'), false)
-  assert.equal(removed.classList.contains('coc7-ai-removed'), true)
+  assert.equal(kept.classList.contains('coc7qol-ai-removed'), false)
+  assert.equal(removed.classList.contains('coc7qol-ai-removed'), true)
 })
 
 test('a possession row shows its quantity only above one, and its name as text', () => {

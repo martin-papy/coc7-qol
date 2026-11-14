@@ -16,6 +16,8 @@ Each feature is a self-contained ES module in `scripts/` that registers FoundryV
 
 **Shared constants:** import the module ID and console prefix from `scripts/constants.js` (`MODULE_ID`, `LOG_PREFIX`) rather than repeating the literal. `scripts/utils.js` holds `escapeHtml`, `t` / `tf` and `formatApiError`; both are imported by features, never listed in `esmodules`.
 
+**CSS classes and element IDs** the module adds carry the `coc7qol-` prefix (e.g. `coc7qol-npc-section`, `coc7qol-group-luck-row`, state classes like `coc7qol-is-roller`). Never use the bare `coc7-` prefix: it is the CoC7 system's own namespace.
+
 ### AI Generator
 
 The `scripts/ai-generator/` directory uses an extensible registry pattern:

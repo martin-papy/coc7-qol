@@ -29,9 +29,11 @@ const MAX_POSSESSIONS = 20
 const WEAPON_SKILL_FALLBACK_VALUE = 25
 
 // Matches an unnamed specialization template, e.g. "Survival (any)",
-// "Science ( Any )". CoC7's isAnySpec (document-class.js) matches these on
-// the NAME ALONE — even a non-compendium fallback skill with this exact name
-// trips it — and opens a blocking CoC7SkillSpecializationSelectDialog that
+// "Science ( Any )". CoC7's isAnySpec (models/item/document-class.js) flags a
+// specialization skill whose parsed skill name is "any" (or the localised
+// CoC7.AnySpecName), or one with requiresname / picknameonly set. The fallback
+// skill built by guessNameParts is a specialization, so the name is enough to
+// trip it. The actor then opens a blocking specialization-select dialog that
 // DROPS the skill if the GM dismisses it. Must never reach an actor.
 const ANY_SPEC_PATTERN = /\(\s*any\s*\)\s*$/i
 
@@ -414,8 +416,8 @@ export default {
 
   /**
    * Drop any skill whose name is an unnamed specialization template (e.g.
-   * "Survival (any)", "Science ( Any )"). CoC7's isAnySpec matches these on
-   * the name alone and opens a blocking specialization-select dialog that
+   * "Survival (any)", "Science ( Any )"). CoC7's isAnySpec flags these (see
+   * ANY_SPEC_PATTERN) and opens a blocking specialization-select dialog that
    * drops the skill entirely if the GM dismisses it — that modal has already
    * wedged a browser session during this feature's development, so these
    * must never reach toFoundryData's output. Builds a new array; the input

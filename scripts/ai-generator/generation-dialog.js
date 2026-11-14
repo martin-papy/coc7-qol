@@ -32,7 +32,7 @@ export default class CoC7AIGenerationDialog extends foundry.applications.api.App
     this.#cancelCallback = onCancel ?? (() => {})
   }
 
-  async _renderHTML (context, options) {
+  async _renderHTML (_context, _options) {
     const s = this.#itemData.system
     const div = document.createElement('div')
     div.className = 'coc7-ai-generation-dialog'
@@ -61,7 +61,7 @@ export default class CoC7AIGenerationDialog extends foundry.applications.api.App
     return div
   }
 
-  _replaceHTML (result, content, options) {
+  _replaceHTML (result, content, _options) {
     content.replaceChildren(result)
   }
 

@@ -180,12 +180,10 @@ class CloseAllCardsDialog extends foundry.applications.api.ApplicationV2 {
 }
 
 Hooks.on('getSceneControlButtons', (controls) => {
-  const coc7menu = Array.isArray(controls)
-    ? controls.find(c => c.name === 'coc7menu')
-    : controls.coc7menu;
+  const coc7menu = controls.coc7menu;
   if (!coc7menu) return;
 
-  const tool = {
+  coc7menu.tools['coc7-close-all-cards'] = {
     button: true,
     icon: 'fa-solid fa-xmarks-lines',
     name: 'coc7-close-all-cards',
@@ -199,10 +197,4 @@ Hooks.on('getSceneControlButtons', (controls) => {
       new CloseAllCardsDialog(openCards).render(true);
     }
   };
-
-  if (Array.isArray(coc7menu.tools)) {
-    coc7menu.tools.push(tool);
-  } else {
-    coc7menu.tools['coc7-close-all-cards'] = tool;
-  }
 });

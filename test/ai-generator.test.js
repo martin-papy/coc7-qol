@@ -2,7 +2,7 @@ import { test, before, after } from 'node:test'
 import assert from 'node:assert/strict'
 import weaponMapper from '../scripts/ai-generator/mappers/weapon.js'
 import npcMapper from '../scripts/ai-generator/mappers/npc.js'
-import { tierForValue, isAboveTier, isAtOrAboveTier, tierCeiling } from '../scripts/ai-generator/skill-tiers.js'
+import { tierForValue, isAboveTier, isAtOrAboveTier } from '../scripts/ai-generator/skill-tiers.js'
 
 // The mappers localise their messages through game.i18n; echo the key and data so tests can match on them.
 before(() => {
@@ -60,7 +60,6 @@ test('tierForValue resolves a fractional value between tiers to the lower tier',
 })
 
 test('isAboveTier flags only values over the tier ceiling, and never for an unknown tier', () => {
-  assert.equal(tierCeiling('professional'), 74)
   assert.equal(isAboveTier(74, 'professional'), false)
   assert.equal(isAboveTier(75, 'professional'), true)
   assert.equal(isAboveTier(99, 'unknown'), false)

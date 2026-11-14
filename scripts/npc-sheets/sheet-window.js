@@ -1,5 +1,5 @@
 /** Actor types whose system sheet gets a resize handle. The Creature sheet extends the NPC sheet. */
-export const ACTOR_TYPES = ['npc', 'creature']
+const ACTOR_TYPES = ['npc', 'creature']
 
 /**
  * Put on the window of every sheet this module makes resizable; styles/npc-sheets.css keys

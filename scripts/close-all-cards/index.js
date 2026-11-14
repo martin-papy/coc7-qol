@@ -23,8 +23,8 @@ function getOpenCards () {
 }
 
 Hooks.on('getSceneControlButtons', (controls) => {
-  const coc7menu = controls.coc7menu;
-  if (!coc7menu) return;
+  const coc7menu = controls.coc7menu
+  if (!coc7menu) return
 
   coc7menu.tools['coc7-close-all-cards'] = {
     button: true,
@@ -32,12 +32,12 @@ Hooks.on('getSceneControlButtons', (controls) => {
     name: 'coc7-close-all-cards',
     title: t('COC7QOL.CloseAllCards.Title'),
     onChange: () => {
-      const openCards = getOpenCards();
+      const openCards = getOpenCards()
       if (openCards.length === 0) {
-        ui.notifications.info('COC7QOL.CloseAllCards.Notification.NoCardsFound', { localize: true });
-        return;
+        ui.notifications.info('COC7QOL.CloseAllCards.Notification.NoCardsFound', { localize: true })
+        return
       }
-      new CloseAllCardsDialog(openCards).render(true);
+      new CloseAllCardsDialog(openCards).render(true)
     }
-  };
-});
+  }
+})

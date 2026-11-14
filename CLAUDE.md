@@ -86,8 +86,11 @@ Two layers: unit tests for logic that does not need Foundry, and manual testing 
 ### Unit tests
 
     npm test
+    npm run lint
 
-runs `node --test "test/**/*.test.js"` (Node 22+, built-in test runner, `jsdom` for DOM work). `.github/workflows/test.yml` runs it on every pull request and on pushes to `develop` and `main`. `test/`, `package.json` and `node_modules/` are repo-only and never shipped in the release zip.
+`npm test` runs `node --test "test/**/*.test.js"` (Node 22+, built-in test runner, `jsdom` for DOM work). `.github/workflows/test.yml` runs it on every pull request and on pushes to `develop` and `main`. `test/`, `package.json` and `node_modules/` are repo-only and never shipped in the release zip.
+
+`npm run lint` runs ESLint with `neostandard` (standard style: no semicolons, space before function parentheses) over `scripts/` and `test/`; CI runs it before the tests, and `npm run lint:fix` applies the formatting. Foundry globals the code may use are declared in `eslint.config.js`.
 
 Only modules that do not touch Foundry globals at import time can be tested this way. Keep a feature's rules and DOM transforms in such a module and pass Foundry data in as arguments, leaving `game`, `Hooks`, `ui` and `CONFIG` access to the feature's `index.js` — see `scripts/spell-cast/cast-control.js` with `test/spell-cast.test.js`, or `scripts/rest-targets/restructure.js` with `test/rest-targets.test.js`. New logic of this kind gets a test file in `test/`.
 

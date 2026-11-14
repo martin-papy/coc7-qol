@@ -4,10 +4,14 @@
   "type": "module",
   "description": "Test tooling for the coc7-qol FoundryVTT module (not shipped in the release zip)",
   "scripts": {
-    "test": "node --test \"test/**/*.test.js\""
+    "test": "node --test \"test/**/*.test.js\"",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "devDependencies": {
-    "jsdom": "^30.0.1"
+    "eslint": "^10.15.0",
+    "jsdom": "^30.0.1",
+    "neostandard": "^0.14.1"
   },
   "engines": {
     "node": ">=22"

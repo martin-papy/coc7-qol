@@ -116,11 +116,13 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
 
     const aboveTierCount = skills.filter(s => !isNativeLanguageSkill(s) && isAboveTier(s.value, declaredTier)).length
 
-    const skillsHtml = skills.length ? `
+    const skillsHtml = skills.length
+      ? `
       <div class="coc7qol-npc-section">
         <div class="coc7qol-npc-section-label">${t('COC7QOL.AIGenerator.NPCDialog.SectionSkills')}</div>
         <div class="coc7qol-npc-skills-grid">${skillRows}</div>
-      </div>` : ''
+      </div>`
+      : ''
 
     // --- Weapons section ---
     const weaponsData = this.#npcData.weaponsData ?? []
@@ -155,12 +157,12 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
         <button type="button" data-action="cancel">${t('COC7QOL.AIGenerator.Button.Cancel')}</button>
       </div>`
 
-    div.innerHTML = identityHtml + charsHtml + skillsHtml + weaponsHtml + possessionsHtml
-      + narrativeSection(t('COC7QOL.AIGenerator.NPCDialog.SectionAppearance'), llm.physicalDescription)
-      + narrativeSection(t('COC7QOL.AIGenerator.NPCDialog.SectionPersonality'), llm.personalityTraits)
-      + narrativeSection(t('COC7QOL.AIGenerator.NPCDialog.SectionBackground'), llm.background)
-      + warningsHtml
-      + buttonsHtml
+    div.innerHTML = identityHtml + charsHtml + skillsHtml + weaponsHtml + possessionsHtml +
+      narrativeSection(t('COC7QOL.AIGenerator.NPCDialog.SectionAppearance'), llm.physicalDescription) +
+      narrativeSection(t('COC7QOL.AIGenerator.NPCDialog.SectionPersonality'), llm.personalityTraits) +
+      narrativeSection(t('COC7QOL.AIGenerator.NPCDialog.SectionBackground'), llm.background) +
+      warningsHtml +
+      buttonsHtml
 
     return div
   }

@@ -70,9 +70,7 @@ function reviewDialog () {
 
 /** A promise with its resolve/reject exposed, to hold an accept callback open. */
 function deferred () {
-  let resolve, reject
-  const promise = new Promise((res, rej) => { resolve = res; reject = rej })
-  return { promise, resolve, reject }
+  return Promise.withResolvers()
 }
 
 test('runAccept disables every button while the accept callback runs', async () => {

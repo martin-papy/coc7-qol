@@ -175,8 +175,8 @@ function _injectButton (dialog, html, { knownTypes, supportedTypes, buttonTitle,
  * renders the footer inside the form), then falls back to the outer html.
  */
 function _findButtonRow (form, html) {
-  return (form?.querySelector('.dialog-buttons') ?? form?.querySelector('footer'))
-    ?? (html.querySelector('.dialog-buttons') ?? html.querySelector('footer'))
+  return (form?.querySelector('.dialog-buttons') ?? form?.querySelector('footer')) ??
+    (html.querySelector('.dialog-buttons') ?? html.querySelector('footer'))
 }
 
 /**
@@ -288,7 +288,6 @@ async function _run (dialog, form, buttonRow, config, restore) {
       // Also called when the review dialog is closed from its header or with Escape.
       onCancel: restore
     }).render({ force: true })
-
   } catch (err) {
     console.error(LOG_PREFIX, `${config.logPrefix} generation failed:`, err)
     errorDiv.textContent = err.message

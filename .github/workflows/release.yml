@@ -4,13 +4,39 @@ on:
   push:
     tags:
       - 'v*'
+  # Manual run for a tag whose original run can no longer be re-run: pick the tag
+  # under "Use workflow from". Every step is safe to repeat (see the release job).
+  workflow_dispatch:
 
-permissions:
-  contents: write
+# Jobs ask for what they need; nothing is granted by default.
+permissions: {}
+
+# Two runs for one tag (a re-run next to a manual run) must not race on the release.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
+  # Lint and unit tests gate the release: test.yml also runs on the push to main,
+  # but in parallel with this workflow, so it could not stop a tag on its own.
+  test:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/test.yml
+
   release:
+    needs: test
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      tag: ${{ steps.parse.outputs.TAG }}
+      module_id: ${{ steps.parse.outputs.MODULE_ID }}
+      module_version: ${{ steps.parse.outputs.MODULE_VERSION }}
+      compat_min: ${{ steps.parse.outputs.COMPAT_MIN }}
+      compat_verified: ${{ steps.parse.outputs.COMPAT_VERIFIED }}
+      compat_max: ${{ steps.parse.outputs.COMPAT_MAX }}
+      is_stable: ${{ steps.parse.outputs.IS_STABLE }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -48,11 +74,13 @@ jobs:
             echo "COMPAT_VERIFIED=$COMPAT_VERIFIED"
             echo "COMPAT_MAX=$COMPAT_MAX"
             echo "IS_STABLE=$IS_STABLE"
-          } >> "$GITHUB_ENV"
+          } | tee -a "$GITHUB_ENV" >> "$GITHUB_OUTPUT"
 
           echo "Parsed: tag=$TAG version=$MODULE_VERSION id=$MODULE_ID stable=$IS_STABLE"
 
       - name: Preflight assertions
+        env:
+          FOUNDRY_RELEASE_TOKEN: ${{ secrets.FOUNDRY_RELEASE_TOKEN }}
         run: |
           set -euo pipefail
 
@@ -85,6 +113,13 @@ jobs:
             fail "Tag '$TAG' points at $GITHUB_SHA, which is not on main"
           fi
 
+          # 6. A stable release is published to Foundry afterwards. Check the token is there
+          #    before the GitHub release exists: once it does, "latest" already serves this
+          #    version's manifest.
+          if [[ "$IS_STABLE" == "true" && -z "${FOUNDRY_RELEASE_TOKEN:-}" ]]; then
+            fail "FOUNDRY_RELEASE_TOKEN secret is not set"
+          fi
+
           echo "Preflight OK: id=$MODULE_ID version=$MODULE_VERSION download=$MODULE_DOWNLOAD"
 
       - name: Build release zip
@@ -94,7 +129,7 @@ jobs:
           echo "Zip contents:"
           unzip -l coc7-qol.zip
 
-      - name: Create GitHub release
+      - name: Create or update GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -122,16 +157,52 @@ jobs:
             NOTES_ARGS=(--generate-notes)
           fi
 
-          gh release create "$TAG" \
-            coc7-qol.zip module.json \
-            --title "$TAG" \
-            "${NOTES_ARGS[@]}" \
-            $PRERELEASE_FLAG
+          # Repeatable: a second run for the same tag (re-run, manual run) finds the release
+          # and replaces its two assets instead of failing on "release already exists".
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" coc7-qol.zip module.json --clobber
+            echo "GitHub release already existed, assets replaced: https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG}"
+          else
+            gh release create "$TAG" \
+              coc7-qol.zip module.json \
+              --title "$TAG" \
+              "${NOTES_ARGS[@]}" \
+              $PRERELEASE_FLAG
+            echo "GitHub release created: https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG}"
+          fi
 
-          echo "GitHub release created: https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG}"
+      - name: Job summary
+        if: always()
+        run: |
+          set -euo pipefail
+          {
+            echo "## Release ${TAG:-$GITHUB_REF_NAME}"
+            echo ""
+            echo "- GitHub release: https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG:-$GITHUB_REF_NAME}"
+            if [[ "${IS_STABLE:-false}" == "true" ]]; then
+              echo "- Manifest: https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/module.json"
+              echo "- Compatibility: min ${COMPAT_MIN:-?} / verified ${COMPAT_VERIFIED:-?}"
+              echo "- Foundry publish: see the foundry job"
+            else
+              echo "- Foundry publish: skipped (pre-release tag)"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Foundry publish (stable only)
-        if: ${{ !contains(github.ref_name, '-') }}
+  # Its own job, so that a failed publish (expired token, 429, 5xx) is completed with
+  # "Re-run failed jobs": the GitHub release is left alone and only this job runs again.
+  foundry:
+    needs: release
+    if: ${{ needs.release.outputs.is_stable == 'true' }}
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ needs.release.outputs.tag }}
+      MODULE_ID: ${{ needs.release.outputs.module_id }}
+      MODULE_VERSION: ${{ needs.release.outputs.module_version }}
+      COMPAT_MIN: ${{ needs.release.outputs.compat_min }}
+      COMPAT_VERIFIED: ${{ needs.release.outputs.compat_verified }}
+      COMPAT_MAX: ${{ needs.release.outputs.compat_max }}
+    steps:
+      - name: Foundry publish
         env:
           FOUNDRY_RELEASE_TOKEN: ${{ secrets.FOUNDRY_RELEASE_TOKEN }}
         run: |
@@ -220,14 +291,7 @@ jobs:
         run: |
           set -euo pipefail
           {
-            echo "## Release ${TAG}"
+            echo "## Foundry publish ${TAG}"
             echo ""
-            echo "- GitHub release: https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG}"
-            if [[ "${IS_STABLE:-false}" == "true" ]]; then
-              echo "- Foundry publish: ${FOUNDRY_PAGE:-N/A}"
-              echo "- Manifest: https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/module.json"
-              echo "- Compatibility: min ${COMPAT_MIN:-?} / verified ${COMPAT_VERIFIED:-?}"
-            else
-              echo "- Foundry publish: skipped (pre-release tag)"
-            fi
+            echo "- Foundry package page: ${FOUNDRY_PAGE:-not published}"
           } >> "$GITHUB_STEP_SUMMARY"

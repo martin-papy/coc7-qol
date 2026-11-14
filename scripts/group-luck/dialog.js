@@ -7,7 +7,7 @@ import { buildGroupLuckView } from './dialog-view.js'
  */
 export default class GroupLuckDialog extends foundry.applications.api.ApplicationV2 {
   static DEFAULT_OPTIONS = {
-    id: 'coc7-group-luck',
+    id: 'coc7qol-group-luck',
     tag: 'div',
     window: {},
     position: { width: 420, height: 'auto' },

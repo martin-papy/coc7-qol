@@ -3,7 +3,7 @@ import { stripCardControls } from './card-closing.js'
 
 export default class CloseAllCardsDialog extends foundry.applications.api.ApplicationV2 {
   static DEFAULT_OPTIONS = {
-    id: 'coc7-close-all-cards',
+    id: 'coc7qol-close-all-cards',
     tag: 'div',
     window: {},
     position: { width: 420, height: 'auto' },

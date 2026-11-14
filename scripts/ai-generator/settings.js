@@ -6,15 +6,15 @@ export const AI_SETTING_KEYS = ['ai-provider', 'ai-api-key', 'ai-endpoint', 'ai-
 export const PROVIDER_DEFAULTS = {
   anthropic: {
     endpoint: 'https://api.anthropic.com/v1/messages',
-    model: 'claude-sonnet-4-6'
+    model: 'claude-sonnet-5-5'
   },
   openai: {
     endpoint: 'https://api.openai.com/v1/chat/completions',
-    model: 'gpt-4o'
+    model: 'gpt-6.1-terra'
   },
   gemini: {
     endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent',
-    model: 'gemini-2.0-flash'
+    model: 'gemini-3.8-flash'
   }
 }
 

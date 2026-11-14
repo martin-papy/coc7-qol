@@ -28,10 +28,11 @@ function insideMarkedRegion (el) {
  *
  * Idempotent: every step is guarded on its own marker class so repeated passes over the
  * same card are no-ops. The late-content watcher relies on that.
+ * Exported for unit tests only (test/gm-visibility.test.js).
  * @param {HTMLElement} html
  * @returns {boolean} whether this pass marked anything
  */
-function applyChatHighlights (html) {
+export function applyChatHighlights (html) {
   // Rule-resolved regions run first: they are the coarsest unit, so marking them lets
   // any .keeper-only-block nested inside be skipped as redundant below.
   const regions = gmOnlyChatRegions(html)

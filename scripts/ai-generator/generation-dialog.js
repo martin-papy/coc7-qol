@@ -45,7 +45,7 @@ export default class CoC7AIGenerationDialog extends foundry.applications.api.App
         <div><dt>${t('COC7QOL.AIGenerator.WeaponDialog.FieldMalfunction')}</dt><dd>${escapeHtml(String(s.malfunction ?? '—'))}</dd></div>
       </dl>
       <div class="ai-item-description">
-        <p>${escapeHtml(s.description.value)}</p>
+        <p>${s.description.value /* escaped by the weapon mapper; rendered as the item sheet will */}</p>
       </div>
       <div class="form-footer">
         <button type="button" data-action="accept" class="bright">${t('COC7QOL.AIGenerator.Button.Accept')}</button>

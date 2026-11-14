@@ -1,3 +1,4 @@
+import { escapeHtml } from '../../utils.js'
 import { loadPrompt } from '../prompts/loader.js'
 
 const REQUIRED_FIELDS = ['name', 'damage', 'skill']
@@ -45,7 +46,8 @@ export default {
       type: 'weapon',
       system: {
         description: {
-          value: data.description || '',
+          // CoC7 renders this as enriched HTML, and 8.16 declares no htmlFields for the server to sanitise.
+          value: escapeHtml(data.description || ''),
           special: '',
           keeper: ''
         },

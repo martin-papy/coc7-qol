@@ -3,6 +3,7 @@
 import { escapeHtml, t, tf } from '../utils.js'
 import { CHARACTERISTIC_FORMULAS } from './mappers/npc.js'
 import { tierForValue, isAboveTier, isAtOrAboveTier, tierLabel } from './skill-tiers.js'
+import { weaponRowHtml, possessionRowHtml } from './npc-preview.js'
 
 export default class CoC7NPCConfirmationDialog extends foundry.applications.api.ApplicationV2 {
   static DEFAULT_OPTIONS = {
@@ -222,22 +223,9 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
       : tf('COC7QOL.AIGenerator.NPC.Preview.WeaponsHeader', { count: total })
     const removeTitle = t('COC7QOL.AIGenerator.NPC.Button.RemoveItem')
 
-    const rows = weaponsData.map((w, i) => {
-      const name = w?.name ?? ''
-      const damage = w?.system?.range?.normal?.damage ?? ''
-      const skill = w?.system?.skill?.main?.name ?? ''
-      const detail = tf('COC7QOL.AIGenerator.NPC.Preview.WeaponRowDamage', {
-        damage: escapeHtml(damage),
-        skill: escapeHtml(skill)
-      })
-      const removed = this.#removedWeaponIndexes.has(i) ? ' coc7-ai-removed' : ''
-      return `
-        <div class="coc7-npc-equip-row${removed}" data-equip-kind="weapon" data-equip-index="${i}">
-          <span class="coc7-npc-equip-name">${escapeHtml(name)}</span>
-          <span class="coc7-npc-equip-detail">${escapeHtml(detail)}</span>
-          <button type="button" class="coc7-npc-equip-remove" title="${escapeHtml(removeTitle)}" aria-label="${escapeHtml(removeTitle)}">×</button>
-        </div>`
-    }).join('')
+    const rows = weaponsData
+      .map((w, i) => weaponRowHtml(w, i, this.#removedWeaponIndexes.has(i), removeTitle))
+      .join('')
 
     return `
       <div class="coc7-npc-section" data-section="weapons">
@@ -255,20 +243,9 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
       : tf('COC7QOL.AIGenerator.NPC.Preview.PossessionsHeader', { count: total })
     const removeTitle = t('COC7QOL.AIGenerator.NPC.Button.RemoveItem')
 
-    const rows = possessionsData.map((p, i) => {
-      const name = p?.name ?? ''
-      const quantity = p?.system?.quantity ?? 1
-      const qtyText = quantity > 1
-        ? tf('COC7QOL.AIGenerator.NPC.Preview.PossessionRowQuantity', { quantity })
-        : ''
-      const removed = this.#removedPossessionIndexes.has(i) ? ' coc7-ai-removed' : ''
-      return `
-        <div class="coc7-npc-equip-row${removed}" data-equip-kind="possession" data-equip-index="${i}">
-          <span class="coc7-npc-equip-name">${escapeHtml(name)}</span>
-          <span class="coc7-npc-equip-detail">${escapeHtml(qtyText)}</span>
-          <button type="button" class="coc7-npc-equip-remove" title="${escapeHtml(removeTitle)}" aria-label="${escapeHtml(removeTitle)}">×</button>
-        </div>`
-    }).join('')
+    const rows = possessionsData
+      .map((p, i) => possessionRowHtml(p, i, this.#removedPossessionIndexes.has(i), removeTitle))
+      .join('')
 
     return `
       <div class="coc7-npc-section" data-section="possessions">

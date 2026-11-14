@@ -32,6 +32,7 @@ All notable changes to this project will be documented in this file.
 - **AI Generator: provider change wrote settings from every client** — Changing the provider no longer fails on players' clients or overwrites a custom endpoint entered at the same time ([#43](https://github.com/martin-papy/coc7-qol/issues/43)).
 - **AI Generator: replies in a code fence or with extra text** — These now parse. A reply cut off at the output limit or refused by the provider says so, instead of "not valid JSON" ([#52](https://github.com/martin-papy/coc7-qol/issues/52)).
 - **AI Generator: out-of-range or malformed values** — Characteristics and skills are kept within 1–99 and 0–99, duplicate skills are dropped, overlong lists capped, and values of the wrong type corrected or reported clearly instead of raising a raw error ([#53](https://github.com/martin-papy/coc7-qol/issues/53)).
+- **AI Generator: weapon skill shown as `Rifle&#x2F;Shotgun`** in the NPC review ([#54](https://github.com/martin-papy/coc7-qol/issues/54)).
 - **Keeper-only highlights setting reloaded every client** — Toggling it no longer reloads anyone; the Keeper's open chat cards and item sheets update at once ([#56](https://github.com/martin-papy/coc7-qol/issues/56)).
 - **Cast control missing on NPC and Creature sheets on CoC7 8.16** ([#44](https://github.com/martin-papy/coc7-qol/issues/44)).
 - **README: manual install** — The steps now extract into a `Data/modules/coc7-qol/` folder ([#45](https://github.com/martin-papy/coc7-qol/issues/45)).

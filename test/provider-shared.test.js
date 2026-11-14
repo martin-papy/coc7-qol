@@ -137,3 +137,12 @@ test('postJson reports a network failure as unreachable, keeping the browser rea
     /^Error: Could not reach OpenAI \(Failed to fetch\)/
   )
 })
+
+for (const [label, text] of [
+  ['an array of objects', '[{"name":"Ada","damage":"1D6","skill":"Fighting (Brawl)"}]'],
+  ['a fenced array of objects', '```json\n[{"name":"Ada"}]\n```']
+]) {
+  test(`readReply rejects ${label} instead of unwrapping its first object`, () => {
+    assert.throws(() => readReply('OpenAI', { text }), /OpenAI response is not a JSON object/)
+  })
+}

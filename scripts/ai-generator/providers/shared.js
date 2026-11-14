@@ -48,7 +48,7 @@ export async function postJson (provider, endpoint, headers, body, { fetchImpl =
 /**
  * Turn a provider's reply into the JSON object the mappers expect.
  * Refusals and truncation are reported as such before any parsing. The text may be wrapped
- * in a code fence or surrounded by prose: the object is taken from the first `{` to the last `}`.
+ * in a code fence or surrounded by prose (see parseReplyJson).
  * @param {string} provider
  * @param {{ text?: string, truncated?: boolean, refusal?: string | boolean }} reply
  * @returns {object} a plain object (never null, an array or a primitive)
@@ -66,19 +66,27 @@ export function readReply (provider, { text, truncated = false, refusal = false 
   const trimmed = typeof text === 'string' ? text.trim() : ''
   if (!trimmed) throw new Error(tf('COC7QOL.AIGenerator.Error.EmptyResponse', { provider }))
 
-  const parsed = parseJson(provider, extractJson(trimmed))
+  const parsed = parseReplyJson(provider, trimmed)
   if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
     throw new Error(tf('COC7QOL.AIGenerator.Error.NotAnObject', { provider, preview: trimmed.slice(0, PREVIEW_LENGTH) }))
   }
   return parsed
 }
 
-/** Strip a surrounding code fence, then keep the span from the first `{` to the last `}` if there is one. */
-function extractJson (text) {
+/**
+ * Strip a surrounding code fence and parse what is left. Only when that is not valid JSON
+ * (prose around the object) is the span from the first `{` to the last `}` parsed instead,
+ * so a complete reply that is an array or a primitive keeps its shape and is rejected.
+ */
+function parseReplyJson (provider, text) {
   const unfenced = text.match(FENCE_PATTERN)?.[1]?.trim() ?? text
-  const start = unfenced.indexOf('{')
-  const end = unfenced.lastIndexOf('}')
-  return start !== -1 && end > start ? unfenced.slice(start, end + 1) : unfenced
+  try {
+    return JSON.parse(unfenced)
+  } catch (_) {
+    const start = unfenced.indexOf('{')
+    const end = unfenced.lastIndexOf('}')
+    return parseJson(provider, start !== -1 && end > start ? unfenced.slice(start, end + 1) : unfenced)
+  }
 }
 
 function parseJson (provider, text) {

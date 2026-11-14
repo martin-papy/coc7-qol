@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 
 - **Module settings grouped into sections** — One heading per feature, with shorter labels.
 - **CoC7 8.16 or later is required.**
+- **CoC7 9.2 is the verified system version.**
 
 ### Removed
 

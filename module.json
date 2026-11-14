@@ -20,7 +20,7 @@
         "type": "system",
         "compatibility": {
           "minimum": "8.16",
-          "verified": "9.1"
+          "verified": "9.2"
         }
       }
     ]

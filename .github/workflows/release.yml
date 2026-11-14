@@ -4,16 +4,46 @@ on:
   push:
     tags:
       - 'v*'
+  # Manual run for a tag whose original run can no longer be re-run: pick the tag
+  # under "Use workflow from" (a branch is refused by the preflight). Every step is
+  # safe to repeat (see the release and foundry jobs).
+  workflow_dispatch:
 
-permissions:
-  contents: write
+# Jobs ask for what they need; nothing is granted by default.
+permissions: {}
+
+# Two runs for one tag (a re-run next to a manual run) must not race on the release.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
+  # Lint and unit tests gate the release: test.yml also runs on the push to main,
+  # but in parallel with this workflow, so it could not stop a tag on its own.
+  test:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/test.yml
+
   release:
+    needs: test
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      tag: ${{ steps.parse.outputs.TAG }}
+      module_id: ${{ steps.parse.outputs.MODULE_ID }}
+      module_version: ${{ steps.parse.outputs.MODULE_VERSION }}
+      compat_min: ${{ steps.parse.outputs.COMPAT_MIN }}
+      compat_verified: ${{ steps.parse.outputs.COMPAT_VERIFIED }}
+      compat_max: ${{ steps.parse.outputs.COMPAT_MAX }}
+      is_stable: ${{ steps.parse.outputs.IS_STABLE }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Full history and branches, so the preflight can check the tag is on main.
+          fetch-depth: 0
 
       - name: Parse module.json and tag
         id: parse
@@ -45,47 +75,68 @@ jobs:
             echo "COMPAT_VERIFIED=$COMPAT_VERIFIED"
             echo "COMPAT_MAX=$COMPAT_MAX"
             echo "IS_STABLE=$IS_STABLE"
-          } >> "$GITHUB_ENV"
+          } | tee -a "$GITHUB_ENV" >> "$GITHUB_OUTPUT"
 
           echo "Parsed: tag=$TAG version=$MODULE_VERSION id=$MODULE_ID stable=$IS_STABLE"
 
       - name: Preflight assertions
+        env:
+          FOUNDRY_RELEASE_TOKEN: ${{ secrets.FOUNDRY_RELEASE_TOKEN }}
         run: |
           set -euo pipefail
 
           fail() { echo "::error::$1"; exit 1; }
 
-          # 1. Tag format
+          # 1. Run from a tag. A manual run can be started from a branch, and a branch named
+          #    like a version would otherwise pass every check below with that branch's code.
+          if [[ "$GITHUB_REF_TYPE" != "tag" ]]; then
+            fail "The release must run from a tag, not from $GITHUB_REF_TYPE '$GITHUB_REF_NAME'"
+          fi
+
+          # 2. Tag format
           if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?$ ]]; then
             fail "Tag '$TAG' does not match vX.Y.Z[-suffix]"
           fi
 
-          # 2. Tag version matches module.json
+          # 3. Tag version matches module.json
           if [[ "$VERSION_FROM_TAG" != "$MODULE_VERSION" ]]; then
             fail "Tag version '$VERSION_FROM_TAG' does not match module.json .version '$MODULE_VERSION'"
           fi
 
-          # 3. download URL points at this tag's zip
+          # 4. download URL points at this tag's zip
           EXPECTED_DOWNLOAD="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/coc7-qol.zip"
           if [[ "$MODULE_DOWNLOAD" != "$EXPECTED_DOWNLOAD" ]]; then
             fail "module.json .download is '$MODULE_DOWNLOAD' but expected '$EXPECTED_DOWNLOAD'"
           fi
 
-          # 4. Required Foundry fields are non-empty
+          # 5. Required Foundry fields are non-empty
           [[ -n "$MODULE_ID"        ]] || fail "module.json .id is empty"
           [[ -n "$COMPAT_MIN"       ]] || fail "module.json .compatibility.minimum is empty"
           [[ -n "$COMPAT_VERIFIED"  ]] || fail "module.json .compatibility.verified is empty"
+
+          # 6. A stable release is cut from main (release.sh tags on main). Pre-releases may come
+          #    from any branch.
+          if [[ "$IS_STABLE" == "true" ]] && ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            fail "Tag '$TAG' points at $GITHUB_SHA, which is not on main"
+          fi
+
+          # 7. A stable release is published to Foundry afterwards. Check the token is there
+          #    before the GitHub release exists: once it does, "latest" already serves this
+          #    version's manifest.
+          if [[ "$IS_STABLE" == "true" && -z "${FOUNDRY_RELEASE_TOKEN:-}" ]]; then
+            fail "FOUNDRY_RELEASE_TOKEN secret is not set"
+          fi
 
           echo "Preflight OK: id=$MODULE_ID version=$MODULE_VERSION download=$MODULE_DOWNLOAD"
 
       - name: Build release zip
         run: |
           set -euo pipefail
-          zip -r coc7-qol.zip module.json scripts/ styles/ lang/
+          zip -r coc7-qol.zip module.json LICENSE scripts/ styles/ lang/
           echo "Zip contents:"
           unzip -l coc7-qol.zip
 
-      - name: Create GitHub release
+      - name: Create or update GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -96,16 +147,92 @@ jobs:
             PRERELEASE_FLAG="--latest"
           fi
 
-          gh release create "$TAG" \
-            coc7-qol.zip module.json \
-            --title "$TAG" \
-            --generate-notes \
-            $PRERELEASE_FLAG
+          # Release notes: the curated CHANGELOG section for this version (release.sh requires
+          # one for stable releases). A pre-release without a section falls back to GitHub's
+          # generated notes.
+          awk -v header="## [$MODULE_VERSION]" '
+            index($0, header) == 1 { found = 1; next }
+            found && /^## \[/ { exit }
+            found { print }
+          ' CHANGELOG.md > release-notes.md
+          if grep -q '[^[:space:]]' release-notes.md; then
+            NOTES_ARGS=(--notes-file release-notes.md)
+          elif [[ "$IS_STABLE" == "true" ]]; then
+            echo "::error::CHANGELOG.md has no '## [$MODULE_VERSION]' section"
+            exit 1
+          else
+            NOTES_ARGS=(--generate-notes)
+          fi
 
-          echo "GitHub release created: https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG}"
+          # Repeatable: a second run for the same tag (re-run, manual run) finds the release
+          # instead of failing on "release already exists". A published asset is never
+          # replaced: `gh release upload --clobber` deletes it first, and a failed upload
+          # would leave "latest/download/module.json" missing. Both assets are built from
+          # the tag, so the ones already there are the right ones; only a missing one is
+          # uploaded. An upload that failed half-way can leave an empty asset behind (GitHub
+          # reports it with a state other than "uploaded"): that one serves nothing, so it
+          # is removed and uploaded again. `gh release create` works through a draft, so a
+          # run that died while uploading left a draft behind: that one is completed and
+          # published.
+          if gh release view "$TAG" --json assets,isDraft > existing-release.json 2>/dev/null; then
+            for asset in coc7-qol.zip module.json; do
+              if jq -e --arg name "$asset" '.assets | any(.name == $name and .state == "uploaded" and .size > 0)' existing-release.json >/dev/null; then
+                echo "Asset $asset is already on the release, left as is"
+                continue
+              fi
+              if jq -e --arg name "$asset" '.assets | any(.name == $name)' existing-release.json >/dev/null; then
+                echo "Asset $asset is on the release but incomplete, replacing it"
+                gh release delete-asset "$TAG" "$asset" --yes
+              fi
+              gh release upload "$TAG" "$asset"
+            done
+            if [[ "$(jq -r '.isDraft' existing-release.json)" == "true" ]]; then
+              gh release edit "$TAG" --draft=false $PRERELEASE_FLAG
+            fi
+            echo "GitHub release already existed, completed: https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG}"
+          else
+            # --verify-tag: never let gh create a missing tag (it would put it on the default branch).
+            gh release create "$TAG" \
+              --verify-tag \
+              coc7-qol.zip module.json \
+              --title "$TAG" \
+              "${NOTES_ARGS[@]}" \
+              $PRERELEASE_FLAG
+            echo "GitHub release created: https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG}"
+          fi
 
-      - name: Foundry publish (stable only)
-        if: ${{ !contains(github.ref_name, '-') }}
+      - name: Job summary
+        if: always()
+        run: |
+          set -euo pipefail
+          {
+            echo "## Release ${TAG:-$GITHUB_REF_NAME}"
+            echo ""
+            echo "- GitHub release: https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG:-$GITHUB_REF_NAME}"
+            if [[ "${IS_STABLE:-false}" == "true" ]]; then
+              echo "- Manifest: https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/module.json"
+              echo "- Compatibility: min ${COMPAT_MIN:-?} / verified ${COMPAT_VERIFIED:-?}"
+              echo "- Foundry publish: see the foundry job"
+            else
+              echo "- Foundry publish: skipped (pre-release tag)"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # Its own job, so that a failed publish (expired token, 429, 5xx) is completed with
+  # "Re-run failed jobs": the GitHub release is left alone and only this job runs again.
+  foundry:
+    needs: release
+    if: ${{ needs.release.outputs.is_stable == 'true' }}
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ needs.release.outputs.tag }}
+      MODULE_ID: ${{ needs.release.outputs.module_id }}
+      MODULE_VERSION: ${{ needs.release.outputs.module_version }}
+      COMPAT_MIN: ${{ needs.release.outputs.compat_min }}
+      COMPAT_VERIFIED: ${{ needs.release.outputs.compat_verified }}
+      COMPAT_MAX: ${{ needs.release.outputs.compat_max }}
+    steps:
+      - name: Foundry publish
         env:
           FOUNDRY_RELEASE_TOKEN: ${{ secrets.FOUNDRY_RELEASE_TOKEN }}
         run: |
@@ -119,9 +246,25 @@ jobs:
           MANIFEST_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/module.json"
           NOTES_URL="https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG}"
 
+          # Foundry refuses a version it already has with a single "unique_together" error
+          # (https://foundryvtt.com/article/package-release-api/). On a re-run that means an
+          # earlier run got as far as publishing, so the job is done. The response does not
+          # say what the stored version points at; any other error still fails the job.
+          already_published() {
+            jq -e '.status == "error"
+                   and (.errors | keys == ["__all__"])
+                   and (.errors.__all__ | length == 1)
+                   and .errors.__all__[0].code == "unique_together"' <<< "$1" >/dev/null 2>&1
+          }
+          finish_already_published() {
+            echo "::warning::Foundry already has version ${MODULE_VERSION} of ${MODULE_ID}; nothing was submitted."
+            echo "FOUNDRY_PAGE=already published (version ${MODULE_VERSION} was on Foundry before this run)" >> "$GITHUB_ENV"
+            exit 0
+          }
+
           # 1. Reachability: up to 3 attempts with 5s backoff
           for attempt in 1 2 3; do
-            if curl -fsSL --head -o /dev/null "$MANIFEST_URL"; then
+            if curl -fsSL --connect-timeout 10 --max-time 30 --head -o /dev/null "$MANIFEST_URL"; then
               echo "Manifest reachable on attempt $attempt: $MANIFEST_URL"
               break
             fi
@@ -160,12 +303,13 @@ jobs:
           cat payload.json
 
           # 3. Dry-run POST
-          DRY_RESPONSE=$(curl -sS -X POST https://foundryvtt.com/_api/packages/release_version/ \
+          DRY_RESPONSE=$(curl -sS --connect-timeout 10 --max-time 60 -X POST https://foundryvtt.com/_api/packages/release_version/ \
             -H "Authorization: $FOUNDRY_RELEASE_TOKEN" \
             -H "Content-Type: application/json" \
             -d @payload.json)
 
           echo "Dry-run response: $DRY_RESPONSE"
+          if already_published "$DRY_RESPONSE"; then finish_already_published; fi
           if [[ "$(echo "$DRY_RESPONSE" | jq -r '.status')" != "success" ]]; then
             echo "::error::Foundry dry-run failed: $DRY_RESPONSE"
             exit 1
@@ -174,12 +318,13 @@ jobs:
           # 4. Real POST (strip dry-run field)
           jq 'del(."dry-run")' payload.json > payload-real.json
 
-          REAL_RESPONSE=$(curl -sS -X POST https://foundryvtt.com/_api/packages/release_version/ \
+          REAL_RESPONSE=$(curl -sS --connect-timeout 10 --max-time 60 -X POST https://foundryvtt.com/_api/packages/release_version/ \
             -H "Authorization: $FOUNDRY_RELEASE_TOKEN" \
             -H "Content-Type: application/json" \
             -d @payload-real.json)
 
           echo "Real submit response: $REAL_RESPONSE"
+          if already_published "$REAL_RESPONSE"; then finish_already_published; fi
           if [[ "$(echo "$REAL_RESPONSE" | jq -r '.status')" != "success" ]]; then
             echo "::error::Foundry real submit failed: $REAL_RESPONSE"
             exit 1
@@ -194,14 +339,7 @@ jobs:
         run: |
           set -euo pipefail
           {
-            echo "## Release ${TAG}"
+            echo "## Foundry publish ${TAG}"
             echo ""
-            echo "- GitHub release: https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG}"
-            if [[ "${IS_STABLE:-false}" == "true" ]]; then
-              echo "- Foundry publish: ${FOUNDRY_PAGE:-N/A}"
-              echo "- Manifest: https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/module.json"
-              echo "- Compatibility: min ${COMPAT_MIN:-?} / verified ${COMPAT_VERIFIED:-?}"
-            else
-              echo "- Foundry publish: skipped (pre-release tag)"
-            fi
+            echo "- Foundry package page: ${FOUNDRY_PAGE:-not published}"
           } >> "$GITHUB_STEP_SUMMARY"

@@ -2,189 +2,228 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.0] - 2026-11-15
+
+### Added
+
+- **Group Luck roll request** — A **Group Luck** button in the Keeper's tools lists the investigators present, highlights the lowest Luck, and whispers that player a Luck check link, or rolls it for the Keeper if they are offline (CoC7 issue [#1984](https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT/issues/1984)).
+- **Resizable NPC and Creature sheets** — The sheets can be resized, scroll inside their window, and stay on screen when sections open (CoC7 issues [#1416](https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT/issues/1416) and [#1621](https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT/issues/1621)). Setting: *Resizable*.
+- **NPC skills in columns** — NPC and Creature skills read down each column like the investigator sheet, with more columns on a wider sheet (CoC7 issue [#1622](https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT/issues/1622)). Setting: *Skills in columns*.
+- **Cast spells from the actor sheet** — Each spell row has a cast icon; the Keeper can right-click it to cast hidden (CoC7 issue [#926](https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT/issues/926)).
+- **Strong skills highlighted** — Skills at 50% or more stand out on all actor sheets (CoC7 issue [#1884](https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT/issues/1884)). Settings: *Highlight strong skills*, *Strong skill threshold*.
+
+### Changed
+
+- **Module settings grouped into sections** — One heading per feature, with shorter labels.
+- **CoC7 8.16 or later is required.**
+- **CoC7 9.2 is the verified system version.**
+
+### Removed
+
+- **Hidden Initiative Rolls** — Fixed in CoC7 itself (issue [#2149](https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT/issues/2149)).
+
+### Fixed
+
+- **Close All Cards skipped what CoC7's own Close does** — A finished card is now closed by CoC7's own *Close card* button, so the winner of an opposed roll and the successful skills of a combined roll are flagged for development ([#47](https://github.com/martin-papy/coc7-qol/issues/47)).
+- **Close All Cards listed cards that cannot be closed** — Melee, ranged, damage, Constitution and chase obstacle cards are no longer listed: CoC7 never marks them as closed.
+- **Close All Cards closed unfinished rolls by default** — Each card shows its state (*Finished*, *In progress*, *Waiting for roll*) and only finished cards start selected.
+- **Close All Cards removed the difficulty buttons** of an unknown-difficulty roll.
+- **Close All Cards could stop half-way without a word** — A failure is reported with the number of cards still open, and *Close Selected* cannot be started twice.
+- **A blind roll picked in the roll dialog was not a real blind roll** — A success ticked the skill on the player's own sheet, giving the result away, and the Keeper's card had no *Reveal* / *Force pass* / *Force fail* buttons. The card is now the one CoC7 makes for a blind roll, and the tick is left to the Keeper. With the chat box on Blind, picking Public or Private now gives an ordinary card and the usual tick ([#48](https://github.com/martin-papy/coc7-qol/issues/48)).
+- **Roll visibility leaking onto the next message** — The visibility picked in the roll dialog now applies only to that roll's card.
+- **Empty module page in a player's settings** — The API key setting is now listed for GMs only.
+- **AI Generator: missing French strings** — Twelve strings of the NPC review dialog are now translated.
+- **AI Generator: retired default models** — The Gemini default `gemini-2.0-flash` was shut down by Google. Defaults are now `gemini-3.8-flash`, `gpt-6.1-terra` (was `gpt-4o`) and `claude-sonnet-5-5` (was `claude-sonnet-4-6`). Worlds that already stored a model keep it.
+- **AI Generator: unknown model error** — A retired or mistyped model now points to the *Model* setting instead of showing the raw provider error.
+- **AI Generator: weapon description shown as HTML** — Markup in a generated weapon's description now shows as text ([#61](https://github.com/martin-papy/coc7-qol/issues/61)).
+- **AI Generator: provider change wrote settings from every client** — Changing the provider no longer fails on players' clients or overwrites a custom endpoint entered at the same time ([#43](https://github.com/martin-papy/coc7-qol/issues/43)).
+- **AI Generator: failed or repeated Accept** — If creating the document fails, the review stays open with the result. Accept is disabled while it runs, so a double-click creates one document. Closing the review by any route returns the Create dialog to a usable state ([#50](https://github.com/martin-papy/coc7-qol/issues/50)).
+- **AI Generator: Cancel reset the Create dialog** — The Type and Folder choices are kept after Cancel, and the AI button still follows the type ([#51](https://github.com/martin-papy/coc7-qol/issues/51)).
+- **AI Generator: a cancelled generation still opened the review** — Cancelling while the provider is working, or closing the Create dialog, now drops the reply.
+- **AI Generator: replies in a code fence or with extra text** — These now parse. A reply cut off at the output limit or refused by the provider says so, instead of "not valid JSON" ([#52](https://github.com/martin-papy/coc7-qol/issues/52)).
+- **AI Generator: out-of-range or malformed values** — Characteristics and skills are kept within 1–99 and 0–99, duplicate skills are dropped, overlong lists capped, and values of the wrong type corrected or reported clearly instead of raising a raw error ([#53](https://github.com/martin-papy/coc7-qol/issues/53)).
+- **AI Generator: weapon skill shown as `Rifle&#x2F;Shotgun`** in the NPC review ([#54](https://github.com/martin-papy/coc7-qol/issues/54)).
+- **Keeper-only highlights setting reloaded every client** — Toggling it no longer reloads anyone; the Keeper's open chat cards and item sheets update at once ([#56](https://github.com/martin-papy/coc7-qol/issues/56)).
+- **English text in a French game** — AI Generator errors, warnings and the generated NPC's Keeper notes now follow the Foundry language, and a generated occupation follows the prompt's language. The Keeper-only highlights hint and tooltips now describe the actual styling and CoC7's trusted-player settings ([#59](https://github.com/martin-papy/coc7-qol/issues/59)).
+- **Cast control missing on NPC and Creature sheets on CoC7 8.16** ([#44](https://github.com/martin-papy/coc7-qol/issues/44)).
+- **README: manual install** — The steps now extract into a `Data/modules/coc7-qol/` folder ([#45](https://github.com/martin-papy/coc7-qol/issues/45)).
+- **Module description** — The manifest and README intro now list every feature ([#46](https://github.com/martin-papy/coc7-qol/issues/46)).
+
 ## [0.8.0] - 2026-11-11
 
 ### Fixed
 
-- **Close All Cards left closed cards actionable** — Closing a card from the dialog only removed its *Close card* button, so *Push* and the bonus/penalty-die buttons still worked on a closed roll. The dialog now removes every live action button, as the system's own *Close card* does.
-- **Close All Cards listed some cards under "Unknown"** — Cards posted without a speaker (chat box on *Self*) now show the actor recorded on the card, and opposed or combined rolls list every actor.
-- **Blind and private rolls could turn public on Foundry v14 with CoC7 9.x** — The roll visibility dropdown stored the mode under its Foundry v13 name, which CoC7 9.x does not recognise on v14, so the roll fell back to the chat box's mode on the card's next update. The mode is now stored under the running Foundry version's name. Foundry v13 is unaffected.
-- **Roll visibility row misaligned in the CoC7 9.x roll dialog** — The row now uses CoC7 9.x's new row markup, so its label lines up again.
+- **Close All Cards left closed cards actionable** — *Push* and bonus/penalty-die buttons are now removed too.
+- **Close All Cards listed some cards under "Unknown"** — Cards without a speaker now show their actor.
+- **Blind and private rolls could turn public on Foundry v14 with CoC7 9.x.**
+- **Roll visibility row misaligned in the CoC7 9.x roll dialog.**
 
 ### Changed
 
-- **CoC7 9.x compatibility** — Every feature reviewed against CoC7 9.1 and Foundry v14 (build 370). The roll visibility selector no longer uses the APIs deprecated in v14, so it logs no compatibility warnings there.
+- **CoC7 9.x compatibility** — All features checked against CoC7 9.1 and Foundry v14; no more v14 deprecation warnings.
 
 ## [0.7.1] - 2026-10-12
 
 ### Changed
 
-- **Hidden Initiative Rolls defer to CoC7 8.16** — CoC7 8.16 fixed issue [#2149](https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT/issues/2149) itself by rolling hidden combatants' initiative as a blind roll. On CoC7 8.16 and later the module no longer rewrites these rolls (no GM whisper, no silencing), so it cannot conflict with the system's fix. It still hides Foundry's "*privately rolled some dice*" placeholder on the players' side. CoC7 versions before 8.16 keep the full workaround.
+- **Hidden Initiative Rolls defer to CoC7 8.16** — On CoC7 8.16+, which fixes issue [#2149](https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT/issues/2149), the module only hides the "*privately rolled some dice*" placeholder.
 
 ## [0.7.0] - 2026-08-25
 
 ### Added
 
-- **Grouped Trade / Store Targets** — The **Trade / Store Item** dropdown on the character sheet listed every visible actor in world order, investigators mixed in with NPCs, creatures and storage. It is now grouped into Investigators / Storage / NPCs / Creatures (empty groups hidden), sorted by name, and opens on a *Choose a character* placeholder with **Validate** disabled until a target is picked — no more accidental hand-offs to whoever was first in the list. The transfer itself is unchanged.
-- **Grouped Rest Targets** — The Keeper's **Start Rest** dialog used to list every actor in the world as one flat, unticked list, so resting just the party meant scrolling past every NPC and creature. Actors are now grouped into Investigators / NPCs / Creatures / Vehicles (empty groups hidden), the Investigators come pre-selected with their group expanded, and each group heading carries its own select-all checkbox that mirrors the group's state. The system's **All Actors** box now ticks and unticks every row (and shows a partial state) instead of silently overriding them. The rest itself is unchanged.
-- **Hidden Initiative Rolls** — With CoC7's *Optional* initiative rule, the initiative roll of a combatant hidden in the tracker or on the canvas was posted publicly, revealing the hidden NPC's name and result to every player (CoC7 issue [#2149](https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT/issues/2149); Foundry core keeps these rolls GM-only, but the system's initiative override drops that rule). The module now whispers such rolls to the GMs, creates them silent, and hides Foundry's "*privately rolled some dice*" placeholder on the players' side, so neither the cards nor the dice sounds can be used as a head-count of hidden NPCs. It only ever tightens visibility — a roll that already reaches only the GMs (GM whisper or blind) is left alone, while one CoC7 whispers to the players (*Self Roll* with *whisper target: everyone*) is narrowed to the GMs — so it cannot conflict with the upstream fix once it ships, and it prints a console note the day it notices it has become redundant.
+- **Grouped Trade / Store Targets** — The **Trade / Store Item** dropdown is grouped by actor type, sorted by name, and requires an explicit choice.
+- **Grouped Rest Targets** — The **Start Rest** dialog groups actors by type, pre-selects the investigators, and adds a select-all box per group.
+- **Hidden Initiative Rolls** — Initiative rolls of hidden combatants are whispered to the GMs instead of revealed to players (CoC7 issue [#2149](https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT/issues/2149)).
 
 ## [0.6.0] - 2026-07-29
 
 ### Fixed
 
-- **AI-generated NPCs were systematically over-skilled** — A beat constable came out with Fighting (Brawl) at 60%, the range for someone who fights for a living, with every other skill bunched in the same band. The generator now follows the rulebook's expertise ladder: an NPC declares its peak competence, only the two-to-four skills its occupation is actually built on may reach it, and combat skills stay amateur unless the role is genuinely violent. Base values act as a floor, and the 14 core skills are always present.
-- **Skill values did not survive to the NPC sheet** — Every generated skill arrived inflated by its own base value (Spot Hidden 40% became 65%; Dodge and the native language doubled), so the sheet disagreed with the review dialog. They now match.
-- **The NPC's native language was a placeholder** — A native English speaker now gets `Language (English)` at EDU, marked as their own tongue, instead of the unnamed `Language (Own)` template.
-- **Auto-added weapon skills could sit below their base value** — The 20% fallback was illegal for Fighting (Brawl), whose base is 25%.
+- **AI-generated NPCs were over-skilled** — Skills now follow the rulebook's expertise ladder.
+- **Skill values changed on the NPC sheet** — The sheet now matches the review dialog.
+- **NPC native language was a placeholder** — It is now named, e.g. `Language (English)`.
+- **Auto-added weapon skills could sit below their base value.**
 
 ### Added
 
-- **Expertise tiers in the NPC review dialog** — Skills at or above the NPC's declared peak are labelled with their tier, anything overshooting it is flagged, and the count appears in the warnings box, so an over-tuned skill is visible before you accept.
+- **Expertise tiers in the NPC review dialog** — Skills above the NPC's declared tier are flagged.
 
 ## [0.5.1] - 2026-07-29
 
 ### Fixed
 
-- **GM-only highlighting missed the damage/heal buttons on plain roll cards** — The Keeper's-view highlight never marked the `Set as damage/heal` and `Remove from <resource>` buttons, so the Keeper had no cue that players see neither. 
+- **GM-only highlighting missed the damage/heal buttons on plain roll cards.**
 
 ## [0.5.0] - 2026-06-18
 
 ### Added
 
-- **GM-only visibility highlighting** — For Keepers, a new world setting (on by default) highlights the parts of item sheets and chat cards that players cannot see. On item sheets, the non-obvious GM-only tabs (a book's Details/Content/Spells) get a crimson label and a tinted content panel, while the self-explanatory Keeper-notes tab is left alone. On chat cards, sections the player cannot see at all get a solid crimson outline/tint + eye-slash badge, while controls the player can see but not change (read-only) get a dashed amber outline + lock icon. Toggle it in the module settings (page reload applies the change to existing chat messages).
+- **GM-only visibility highlighting** — Highlights, for Keepers, the parts of item sheets and chat cards players cannot see (crimson) or cannot change (amber). On by default.
 
 ## [0.4.9] - 2026-06-01
 
 ### Fixed
 
-- **AI generator dialogs unusable on small displays** — The AI NPC review dialog (and the weapon review dialog) could grow taller than the viewport, and because Foundry caps ApplicationV2 windows at the screen height while clipping `.window-content` overflow, the Accept / Regenerate / Cancel buttons fell off-screen with no scrollbar — making NPC creation impossible. The dialog content now fills the window and scrolls internally, the action footer is pinned so it stays visible while scrolling, and both dialogs are resizable. ([#8](https://github.com/martin-papy/coc7-qol/issues/8))
+- **AI generator dialogs unusable on small displays** — The review dialogs now scroll, keep their buttons visible, and are resizable ([#8](https://github.com/martin-papy/coc7-qol/issues/8)).
 
 ## [0.4.8] - 2026-05-22
 
 ### Fixed
 
-- **Roll visibility with 'Self' chat mode** — Blind and private rolls now correctly reach the GM when the Foundry chat box is set to `Self`. Foundry v13's `ChatMessage.applyRollMode` preserves pre-existing whisper recipients, so CoC7's `[self.id]` pre-population was overriding the GM list for `blindroll` and `gmroll`. The whisper array is now reset before applying the chosen roll mode.
+- **Roll visibility with 'Self' chat mode** — Blind and private rolls now reach the GM.
 
 ### Changed
 
-- CI: bumped `actions/checkout` to v5 for Node.js 24 support in the release workflow.
+- CI: `actions/checkout` bumped to v5.
 
 ## [0.4.7] - 2026-05-19
 
 ### Changed
 
-- Small updates in documentation and various housekeeping
+- Documentation updates and housekeeping.
 
 ## [0.4.6] - 2026-05-17
 
 ### Added
 
-- **AI NPC equipment** — NPC generation now returns weapons and possessions alongside characteristics and skills. Weapons render in a dedicated section of the confirmation dialog (name, skill, damage, range, ammo); possessions render as a flat list. Items can be toggled on/off before acceptance and are created in a single batch on accept.
-- **AI NPC warnings** — A warnings section in the confirmation dialog surfaces non-blocking issues raised by the generator (e.g. ambiguous skill, suspicious value) so the GM can review them before creating the actor.
-- **Language-aware prompts** — The NPC system prompt now instructs the model to honour the world locale for names and prose, so output matches the language of the campaign.
-- **Roll visibility selector** — A roll visibility dropdown (public / private / blind / self) is now embedded in the CoC7 bonus dialog. The last choice is remembered per user and persisted through CoC7 standby flags so it survives the standby → resolve roundtrip.
+- **AI NPC equipment** — Generated NPCs come with weapons and possessions, which can be toggled before accepting.
+- **AI NPC warnings** — The review dialog lists issues raised by the generator.
+- **Language-aware prompts** — NPC output follows the world's language.
+- **Roll visibility selector** — A public / private / blind / self dropdown in the CoC7 roll dialog, remembered per user.
 
 ### Fixed
 
-- AI-generated NPCs that reference a weapon now also get the matching skill auto-added when it is missing from the skills list (e.g. *Pocket Knife* → *Fighting (Brawl)*), with a fallback skill value of 20.
-- Civilian NPCs default to 0 weapons unless the role is explicitly combat — pharmacists no longer ship with revolvers.
-- Weapon `usesPerRound` split into `normal` and `max` so multi-shot weapons map correctly to CoC7's data model, and default ammo now falls back to magazine capacity instead of zero.
-- Weapon detail span in the NPC confirmation dialog is HTML-escaped, and remove listeners are deduplicated to avoid double-firing on re-render.
+- Weapons on AI NPCs now bring their missing skill.
+- Civilian NPCs no longer get weapons by default.
+- Multi-shot weapons and default ammo now map correctly.
+- NPC review dialog: escaping and duplicate listener fixes.
 
 ## [0.4.5] - 2026-05-13
 
 ### Security
 
-- `escapeHtml` extended to the full OWASP attribute-value set (`&`, `<`, `>`, `"`, `'`, `/`, backtick) in a single-pass regex, closing escape gaps that surfaced with French apostrophes (`l'Arkham`, `d'âge moyen`) breaking the placeholder attribute.
-- Gemini API key moved from the URL query string to the `x-goog-api-key` request header so the key no longer leaks into browser history, proxy logs, or `Referer` headers.
-- Provider error responses sanitized before display: `formatApiError()` maps 401/429/5xx to friendly strings, strips HTML tags, and truncates unknown bodies to 300 chars — Cloudflare/proxy HTML interstitials no longer reach `ui.notifications.error`.
-- API key setting hint strengthened to surface the direct-browser-access caveat (the key is sent from the player's browser and is readable by any module on the client). Users are now advised to use a provider-scoped, spend-limited key.
+- Stricter HTML escaping (full OWASP set).
+- Gemini API key sent in a header instead of the URL.
+- Provider error responses sanitized before display.
+- API key hint warns that the key is sent from the browser.
 
 ### Fixed
 
-- 60 s `AbortController` timeout added to all three LLM providers (Anthropic, OpenAI, Gemini). Stuck requests now fail cleanly through the existing error surface instead of leaving the UI in "Generating…" indefinitely.
-- Anthropic `max_tokens` raised from 1024 to 4096, matching the OpenAI/Gemini ceiling. Long NPC responses (characteristics + skills + narrative) no longer get truncated mid-JSON and crash `JSON.parse`.
-- `applyRandomCharacteristics` now returns a new object instead of mutating its argument — the call site in `dialog-injector` was updated to capture the returned value.
-- Weapon range enforced as a finite integer or `null` for melee. The system prompt requests no unit, and `toFoundryData` writes `system.range.normal.value` as a number — string units (e.g. `"50 m"`) can no longer slip through.
-- Single quotes (`'` → `&#39;`) added to `escapeHtml`; placeholder attribute switched from single to double quotes in `dialog-injector` so French strings render correctly.
+- 60 s timeout on all AI provider requests.
+- Long Anthropic responses no longer truncated.
+- Weapon range always stored as a number.
+- French strings with apostrophes render correctly.
 
 ### Changed
 
-- Module compatibility bumped: FoundryVTT minimum **v13**, verified **v14**. CoC7 system minimum **v8**.
+- Requires FoundryVTT v13+ (verified v14) and CoC7 v8+.
 
 ## [0.4.4] - 2026-04-17
 
 ### Added
 
-- **Internationalization (i18n)** — All user-visible strings are now extracted into translation JSON files. Module supports English and French at launch. Strings are managed via FoundryVTT's built-in i18n system (`game.i18n.localize()`). Settings automatically display in the user's configured language.
+- **Internationalization** — English and French translations.
 
 ## [0.4.3] - 2026-04-16
 
 ### Added
 
-- **NPC random characteristics** — A new **Random characteristics** checkbox in the NPC generation prompt lets the AI return rulebook dice formulas (e.g. `5*(3d6)`) instead of fixed values. Characteristics are then rolled on token drop, giving each NPC a unique stat spread while preserving the AI-generated flavour. The confirmation dialog displays the formula strings for review before accepting.
+- **NPC random characteristics** — AI NPCs can use dice formulas, rolled on token drop.
 
 ### Fixed
 
-- Null guard added to `applyRandomCharacteristics` to prevent errors when characteristic data is missing.
-- Removed double-escaping of formula strings in the non-random confirmation dialog cell renderer.
+- Errors when characteristic data was missing.
+- Double-escaped formulas in the review dialog.
 
 ## [0.4.2] - 2026-04-16
 
 ### Changed
 
-- Extracted AI generator styles into a dedicated CSS file (previously inline).
-- Extracted Close All Cards styles into a dedicated CSS file.
-- Extracted shared `escapeHtml` helper into `scripts/utils.js`, removing duplication across modules.
-- Merged duplicate weapon/NPC prompt-view functions in `dialog-injector.js`.
-- Replaced inline `img.style.cursor` assignments with a CSS class for the image popout trigger.
+- Internal refactoring: styles moved to CSS files, shared helpers deduplicated.
 
 ### Fixed
 
-- Restored inline comments and fixed config propagation through `runGeneration`.
+- Generation config propagation.
 
 ## [0.4.1] - 2026-04-15
 
 ### Fixed
 
-- Improved error logging for AI generation failures: invalid JSON responses from LLM providers now log the full raw response to the browser console, and all FoundryVTT operation errors (actor/item creation, skill attachment) are consistently logged with their full stack trace.
+- Better console logging of AI generation failures.
 
 ## [0.4.0] - 2026-04-15
 
 ### Added
 
-- **AI Weapon Generator** — GMs can generate CoC7 weapon items from a natural-language description inside FoundryVTT.
-- **AI NPC Generator** — GMs can generate CoC7 NPC actors with full stat block, AI-curated skills, and narrative prose (appearance, personality, background).
-- **Close All Cards** — GMs can bulk-close all open chat message cards from the Keeper toolbar, with a card selection dialog.
-- Three LLM providers: Anthropic (Claude), OpenAI (GPT), Google Gemini.
-- Module settings for provider, API key, endpoint, and model. API key stored client-side only.
-- AI button appears only when a supported type is selected in creation dialogs.
+- **AI Weapon Generator** — Generate weapon items from a description.
+- **AI NPC Generator** — Generate NPCs with characteristics, skills and narrative.
+- **Close All Cards** — Bulk-close open chat cards from the Keeper toolbar.
+- Anthropic, OpenAI and Gemini providers, configured in the module settings.
 
 ### Fixed
 
-- NPC skills resolved against the CoC7 compendium when available, with specialization fallback.
-- HTML escaping for all LLM-generated content to prevent XSS.
+- NPC skills resolved against the CoC7 compendium.
+- AI-generated content HTML-escaped.
 
 ## [0.3.0] - 2026-04-08
 
 ### Added
 
-- **Possession Tab Item Image Popout** — Players and GMs can click on the small item icon in the Gear & Cash tab of the character sheet to view the full-size illustration in a popout window.
+- **Possession Tab Item Image Popout** — Click an item icon in the Gear & Cash tab to view its image.
 
 ## [0.2.0] - 2026-04-08
 
 ### Added
 
-- CoC7 8.x system compatibility (AppV2 sheets).
+- CoC7 8.x compatibility.
 
 ### Fixed
 
-- Item image popout hook updated for CoC7 8.x AppV2 sheets.
-- Guard against null document in ImagePopout title.
+- Item image popout on CoC7 8.x sheets.
 
 ## [0.1.0] - 2026-03-28
 
 ### Added
 
-- **Item Image Popout** — Players can click on any item image to view the full-size illustration in a draggable, resizable popout window. GMs retain the default file picker behavior.
+- **Item Image Popout** — Players can click an item image to view it full size.

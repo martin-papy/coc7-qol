@@ -1,50 +1,30 @@
-import { formatApiError } from '../../utils.js'
+import { postJson, readReply } from './shared.js'
+import { MODULE_ID } from '../../constants.js'
 
-const MODULE = 'coc7-qol'
+const NAME = 'Gemini'
+
+// finishReason values that mean the reply was withheld rather than completed.
+const BLOCKED_FINISH_REASONS = ['SAFETY', 'RECITATION', 'BLOCKLIST', 'PROHIBITED_CONTENT', 'SPII', 'IMAGE_SAFETY']
 
 export default class GeminiProvider {
   async generate (systemPrompt, userPrompt) {
-    const apiKey = game.settings.get(MODULE, 'ai-api-key')
-    const endpointTemplate = game.settings.get(MODULE, 'ai-endpoint')
-    const model = game.settings.get(MODULE, 'ai-model')
-    const endpoint = endpointTemplate.replace('{model}', model)
+    const model = game.settings.get(MODULE_ID, 'ai-model')
+    const endpoint = game.settings.get(MODULE_ID, 'ai-endpoint').replace('{model}', model)
+    const data = await postJson(NAME, endpoint, {
+      'x-goog-api-key': game.settings.get(MODULE_ID, 'ai-api-key')
+    }, {
+      system_instruction: { parts: [{ text: systemPrompt }] },
+      contents: [{ parts: [{ text: userPrompt }] }],
+      generationConfig: { responseMimeType: 'application/json' }
+    })
 
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 60_000)
-
-    let response
-    try {
-      response = await fetch(endpoint, {
-        signal: controller.signal,
-        method: 'POST',
-        headers: { 'content-type': 'application/json', 'x-goog-api-key': apiKey },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: systemPrompt }] },
-          contents: [{ parts: [{ text: userPrompt }] }],
-          generationConfig: { responseMimeType: 'application/json' }
-        })
-      })
-    } catch (err) {
-      if (err.name === 'AbortError') throw new Error('Gemini request timed out after 60 s')
-      throw err
-    } finally {
-      clearTimeout(timeoutId)
-    }
-
-    if (!response.ok) {
-      const error = await response.text()
-      throw new Error(formatApiError('Gemini', response.status, error))
-    }
-
-    const data = await response.json()
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text
-    if (!text?.trim()) throw new Error('Gemini returned an empty response')
-
-    try {
-      return JSON.parse(text)
-    } catch (e) {
-      console.error('[coc7-qol] Gemini returned invalid JSON.\nParse error:', e, '\nFull response text:\n', text)
-      throw new Error(`Gemini response is not valid JSON: ${text.slice(0, 200)}`, { cause: e })
-    }
+    const candidate = data.candidates?.[0]
+    const blockReason = data.promptFeedback?.blockReason
+    const finishReason = candidate?.finishReason
+    return readReply(NAME, {
+      text: candidate?.content?.parts?.[0]?.text,
+      truncated: finishReason === 'MAX_TOKENS',
+      refusal: blockReason || (BLOCKED_FINISH_REASONS.includes(finishReason) && finishReason)
+    })
   }
 }

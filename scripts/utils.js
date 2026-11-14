@@ -12,17 +12,21 @@ export function escapeHtml (str) {
 /**
  * Formats an LLM provider API error into a GM-readable message.
  * Strips HTML (proxy/CDN error pages), truncates, and maps common status codes.
+ * A 404 is treated as a retired or mistyped model: all three providers answer an unknown model
+ * with 404 (OpenAI also tags it `model_not_found`), and Gemini puts the model in the URL path.
  * @param {string} provider
  * @param {number} status
  * @param {string} body
  * @returns {string}
  */
 export function formatApiError (provider, status, body) {
-  if (status === 401) return `${provider} API error 401: Invalid API key — check your settings.`
-  if (status === 429) return `${provider} API error 429: Rate limit reached — please wait before trying again.`
-  if (status >= 500) return `${provider} API error ${status}: Provider server error — try again later.`
-  const stripped = body.replace(/<[^>]*>/g, '').trim().slice(0, 300)
-  return `${provider} API error ${status}: ${stripped}`
+  const data = { provider, status }
+  if (status === 404 || body.includes('model_not_found')) return tf('COC7QOL.AIGenerator.Error.ApiModelNotFound', data)
+  if (status === 401) return tf('COC7QOL.AIGenerator.Error.ApiInvalidKey', data)
+  if (status === 429) return tf('COC7QOL.AIGenerator.Error.ApiRateLimit', data)
+  if (status >= 500) return tf('COC7QOL.AIGenerator.Error.ApiServer', data)
+  const details = body.replace(/<[^>]*>/g, '').trim().slice(0, 300)
+  return tf('COC7QOL.AIGenerator.Error.ApiOther', { ...data, details })
 }
 
 /**
@@ -39,12 +43,3 @@ export const t = key => game.i18n.localize(key)
  * @returns {string}
  */
 export const tf = (key, data) => game.i18n.format(key, data)
-
-/**
- * Chat messages whose visibility this module has already retargeted in a
- * preCreateChatMessage hook (roll-visibility). Lets sibling hooks tell
- * "we did this" from "something external did this". In-memory only — the
- * pending document instance is the key, nothing is written to the message.
- * @type {WeakSet<ChatMessage>}
- */
-export const retargetedMessages = new WeakSet()

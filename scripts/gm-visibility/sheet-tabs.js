@@ -1,11 +1,10 @@
 import { isHighlightEnabled, ROOT_CLASS, MARKER_CLASS } from './settings.js'
 import { gmOnlyTabKeys } from './tab-rules.js'
+import { LOG_PREFIX } from '../constants.js'
 
 /**
- * Mark GM-only tabs (nav button + panel) on a rendered item or actor sheet.
- * Document-type-agnostic: the GM-only tab keys come from the tab-rules registry,
- * keyed by document type, so the same routine serves renderItemSheetV2 and
- * renderActorSheetV2.
+ * Mark GM-only tabs (nav button + panel) on a rendered item sheet (renderItemSheetV2).
+ * The GM-only tab keys come from the tab-rules registry, keyed by document type.
  * @param {DocumentSheetV2} application
  * @param {HTMLElement} element
  */
@@ -31,9 +30,10 @@ export function highlightSheetTabs (application, element) {
       }
     })
 
-    // No ROOT_CLASS removal needed: the render hooks hand a freshly rebuilt element each render.
+    // ROOT_CLASS is never removed. It only scopes the styles: without MARKER_CLASS on the
+    // re-rendered tabs and panels it has no visible effect.
     if (marked) element.classList.add(ROOT_CLASS)
   } catch (err) {
-    console.warn('[coc7-qol] GM-visibility sheet-tab highlight failed:', err)
+    console.warn(LOG_PREFIX, 'GM-visibility sheet-tab highlight failed:', err)
   }
 }

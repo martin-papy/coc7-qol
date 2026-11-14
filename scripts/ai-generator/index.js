@@ -2,7 +2,7 @@
 // All other files in this directory are imported from here.
 // Only this file is listed in module.json esmodules.
 
-import { registerSettings, registerSettingsHooks } from './settings.js'
+import { registerSettings, registerApiKeySetting, registerSettingsHooks } from './settings.js'
 import * as providers from './providers/registry.js'
 import AnthropicProvider from './providers/anthropic.js'
 import OpenAIProvider from './providers/openai.js'
@@ -21,12 +21,14 @@ mappers.register('npc', NPCMapper)
 
 // Settings must be registered during the 'init' hook
 Hooks.once('init', registerSettings)
+// ...except the API key, which is listed for GMs only and so needs `game.user` ('setup').
+Hooks.once('setup', registerApiKeySetting)
 
 // Attach live-update listener so changing provider in the settings UI immediately
 // updates the endpoint and model inputs without requiring a save/reopen.
 Hooks.once('init', registerSettingsHooks)
 
-// Inject the AI button whenever any dialog renders — injectAIButton checks internally
-// whether the dialog is the "Create Item" dialog before doing anything.
+// Both run on every DialogV2 render and return early unless the dialog is a Create
+// dialog: injectAIButton for Create Item (weapons), injectNPCButton for Create Actor (NPCs).
 Hooks.on('renderDialogV2', injectAIButton)
 Hooks.on('renderDialogV2', injectNPCButton)

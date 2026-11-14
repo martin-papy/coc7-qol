@@ -3,9 +3,9 @@ import * as mappers from './mappers/registry.js'
 import CoC7AIGenerationDialog from './generation-dialog.js'
 import CoC7NPCConfirmationDialog from './npc-confirmation-dialog.js'
 import { applyRandomCharacteristics } from './mappers/npc.js'
+import { openPromptView } from './dialog-flow.js'
 import { t, tf } from '../utils.js'
-
-const MODULE = 'coc7-qol'
+import { LOG_PREFIX, MODULE_ID } from '../constants.js'
 
 // Inline sparkle SVG icon — represents AI generation
 const SPARKLE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
@@ -29,21 +29,28 @@ const SUPPORTED_ACTOR_TYPES = ['npc']
 const WEAPON_PROMPT_CONFIG = {
   get label () { return t('COC7QOL.AIGenerator.Weapon.Label') },
   textareaName: 'ai-prompt',
-  textareaId: 'coc7-ai-prompt',
+  textareaId: 'coc7qol-ai-prompt',
   get placeholder () { return t('COC7QOL.AIGenerator.Weapon.Placeholder') },
   get prefillPrefix () { return t('COC7QOL.AIGenerator.Weapon.PrefillPrefix') },
   get emptyError () { return t('COC7QOL.AIGenerator.Error.EmptyWeaponDescription') },
   mapperKey: 'weapon',
   ConfirmationDialog: CoC7AIGenerationDialog,
   buildDialogData: (foundryData, _ctx) => ({ itemData: foundryData }),
+  /** @returns {Promise<boolean>} whether the item was created */
   onAccept: async (data, { dialog }) => {
     try {
       const item = await Item.create(data)
-      item?.sheet?.render(true)
+      if (!item) {
+        ui.notifications.error('COC7QOL.AIGenerator.Error.WeaponCreationCancelled', { localize: true })
+        return false
+      }
+      item.sheet?.render(true)
       dialog.close()
+      return true
     } catch (err) {
-      console.error('[coc7-qol] Weapon item creation failed:', err)
-      ui.notifications.error(tf('COC7QOL.AIGenerator.Error.WeaponCreationFailed', { error: err.message }))
+      console.error(LOG_PREFIX, 'Weapon item creation failed:', err)
+      ui.notifications.error('COC7QOL.AIGenerator.Error.WeaponCreationFailed', { format: { error: err.message } })
+      return false
     }
   },
   logPrefix: 'Weapon'
@@ -52,16 +59,16 @@ const WEAPON_PROMPT_CONFIG = {
 const NPC_PROMPT_CONFIG = {
   get label () { return t('COC7QOL.AIGenerator.NPC.Label') },
   textareaName: 'ai-npc-prompt',
-  textareaId: 'coc7-ai-npc-prompt',
+  textareaId: 'coc7qol-ai-npc-prompt',
   get placeholder () { return t('COC7QOL.AIGenerator.NPC.Placeholder') },
   get prefillPrefix () { return t('COC7QOL.AIGenerator.NPC.PrefillPrefix') },
   get emptyError () { return t('COC7QOL.AIGenerator.Error.EmptyNPCDescription') },
   mapperKey: 'npc',
   ConfirmationDialog: CoC7NPCConfirmationDialog,
   get extraHTML () {
-    return `<label class="coc7-ai-random-chars-label">
+    return `<label class="coc7qol-ai-random-chars-label">
       <input type="checkbox" name="ai-random-characteristics">
-      ${t('COC7QOL.AIGenerator.NPC.RandomCharsLabel')} <span class="coc7-ai-hint">${t('COC7QOL.AIGenerator.NPC.RandomCharsHint')}</span>
+      ${t('COC7QOL.AIGenerator.NPC.RandomCharsLabel')} <span class="coc7qol-ai-hint">${t('COC7QOL.AIGenerator.NPC.RandomCharsHint')}</span>
     </label>`
   },
   buildDialogData: (npcData, { form }) => {
@@ -69,13 +76,17 @@ const NPC_PROMPT_CONFIG = {
     if (useRandom) npcData = applyRandomCharacteristics(npcData)
     return { npcData }
   },
+  /**
+   * @returns {Promise<boolean>} whether the actor was created. A failure to attach its items
+   * still counts as created: the actor exists, and accepting again would duplicate it.
+   */
   onAccept: async (data, { mapper, dialog }) => {
     try {
       const resolvedSkills = await mapper.resolveSkills(data.skillsRaw, data.llmData?.characteristics)
       const actor = await Actor.create(data.actorData)
       if (!actor) {
-        ui.notifications.error(t('COC7QOL.AIGenerator.Error.NPCCreationCancelled'))
-        return
+        ui.notifications.error('COC7QOL.AIGenerator.Error.NPCCreationCancelled', { localize: true })
+        return false
       }
       const items = [
         ...resolvedSkills,
@@ -86,15 +97,17 @@ const NPC_PROMPT_CONFIG = {
         try {
           await actor.createEmbeddedDocuments('Item', items)
         } catch (itemErr) {
-          console.warn('[coc7-qol] Item attachment failed:', itemErr)
-          ui.notifications.warn(tf('COC7QOL.AIGenerator.Error.NPCItemsFailed', { error: itemErr.message }))
+          console.warn(LOG_PREFIX, 'Item attachment failed:', itemErr)
+          ui.notifications.warn('COC7QOL.AIGenerator.Error.NPCItemsFailed', { format: { error: itemErr.message } })
         }
       }
-      actor?.sheet?.render(true)
+      actor.sheet?.render(true)
       dialog.close()
+      return true
     } catch (err) {
-      console.error('[coc7-qol] NPC actor creation failed:', err)
-      ui.notifications.error(tf('COC7QOL.AIGenerator.Error.NPCCreationFailed', { error: err.message }))
+      console.error(LOG_PREFIX, 'NPC actor creation failed:', err)
+      ui.notifications.error('COC7QOL.AIGenerator.Error.NPCCreationFailed', { format: { error: err.message } })
+      return false
     }
   },
   logPrefix: 'NPC'
@@ -142,7 +155,7 @@ function _injectButton (dialog, html, { knownTypes, supportedTypes, buttonTitle,
 
   const aiBtn = document.createElement('button')
   aiBtn.type = 'button'
-  aiBtn.className = 'coc7-ai-generate-btn'
+  aiBtn.className = 'coc7qol-ai-generate-btn'
   aiBtn.title = buttonTitle
   aiBtn.innerHTML = SPARKLE_SVG
   buttonRow.appendChild(aiBtn)
@@ -153,7 +166,7 @@ function _injectButton (dialog, html, { knownTypes, supportedTypes, buttonTitle,
   })
 
   aiBtn.addEventListener('click', () => {
-    _transformToPromptView(dialog, html, nameInput, aiBtn, config)
+    _transformToPromptView(dialog, html, nameInput, config)
   })
 }
 
@@ -162,32 +175,27 @@ function _injectButton (dialog, html, { knownTypes, supportedTypes, buttonTitle,
  * renders the footer inside the form), then falls back to the outer html.
  */
 function _findButtonRow (form, html) {
-  return (form?.querySelector('.dialog-buttons') ?? form?.querySelector('footer'))
-    ?? (html.querySelector('.dialog-buttons') ?? html.querySelector('footer'))
+  return (form?.querySelector('.dialog-buttons') ?? form?.querySelector('footer')) ??
+    (html.querySelector('.dialog-buttons') ?? html.querySelector('footer'))
 }
 
 /**
  * Replaces Name + Type form fields with a prompt textarea.
  * Works for both weapon and NPC flows via the config object.
+ * The original fields and buttons are detached, not cloned, so Cancel puts back the same
+ * nodes: selections, typed values and every listener (Foundry's and this module's) survive.
  */
-function _transformToPromptView (dialog, html, nameInput, aiBtn, config) {
+function _transformToPromptView (dialog, html, nameInput, config) {
   const capturedName = nameInput.value.trim()
 
   const form = html.querySelector('form') ?? html.querySelector('.dialog-content') ?? nameInput.closest('div')
   const buttonRow = _findButtonRow(form, html)
   if (!form || !buttonRow) return
 
-  const originalButtonHTML = buttonRow.innerHTML
-  const originalFieldNodes = [...form.children]
-    .filter(child => child !== buttonRow)
-    .map(child => child.cloneNode(true))
-
-  for (const child of [...form.children]) {
-    if (child !== buttonRow) child.remove()
-  }
+  const view = openPromptView(form, buttonRow)
 
   const promptArea = document.createElement('div')
-  promptArea.className = 'coc7-ai-prompt-area'
+  promptArea.className = 'coc7qol-ai-prompt-area'
   // Safe static HTML — config values are module-level constants, not user input
   promptArea.innerHTML = `
     <label for="${config.textareaId}">${config.label}</label>
@@ -198,58 +206,33 @@ function _transformToPromptView (dialog, html, nameInput, aiBtn, config) {
       placeholder="${config.placeholder}"
     ></textarea>
     ${config.extraHTML ?? ''}
-    <div class="coc7-ai-error"></div>
+    <div class="coc7qol-ai-error"></div>
   `
   form.insertBefore(promptArea, buttonRow)
 
   const promptTextarea = form.querySelector(`[name="${config.textareaName}"]`)
   if (capturedName) promptTextarea.value = `${config.prefillPrefix} "${capturedName}". `
 
-  aiBtn.style.display = 'none'
-
   buttonRow.innerHTML = `
-    <button type="button" class="coc7-btn-generate">${t('COC7QOL.AIGenerator.Button.Generate')}</button>
-    <button type="button" class="coc7-btn-back">${t('COC7QOL.AIGenerator.Button.Cancel')}</button>
+    <button type="button" class="coc7qol-btn-generate">${t('COC7QOL.AIGenerator.Button.Generate')}</button>
+    <button type="button" class="coc7qol-btn-back">${t('COC7QOL.AIGenerator.Button.Cancel')}</button>
   `
 
-  buttonRow.querySelector('.coc7-btn-back').addEventListener('click', () => {
-    _restoreOriginalForm(form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn, dialog, html, config)
+  buttonRow.querySelector('.coc7qol-btn-back').addEventListener('click', () => view.close())
+  buttonRow.querySelector('.coc7qol-btn-generate').addEventListener('click', () => {
+    _run(dialog, form, buttonRow, config, view)
   })
-
-  buttonRow.querySelector('.coc7-btn-generate').addEventListener('click', () => {
-    _run(dialog, html, form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn, config)
-  })
-}
-
-/**
- * Restores the form to its original Name + Type state.
- * @param {object} config - Type-specific configuration (passed through to re-attach the correct click listener).
- */
-function _restoreOriginalForm (form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn, dialog, html, config) {
-  promptArea.remove()
-  for (const node of originalFieldNodes) {
-    form.insertBefore(node, buttonRow)
-  }
-  buttonRow.innerHTML = originalButtonHTML
-  aiBtn.style.display = ''
-
-  const restoredBtn = buttonRow.querySelector('.coc7-ai-generate-btn')
-  if (restoredBtn) {
-    const newNameInput = form.querySelector('[name="name"]')
-    restoredBtn.addEventListener('click', () => {
-      _transformToPromptView(dialog, html, newNameInput, restoredBtn, config)
-    })
-  }
 }
 
 /**
  * Calls the configured LLM provider and opens the type-specific confirmation dialog.
+ * @param {{ readonly isOpen: boolean, close: () => void }} view  The prompt view (see openPromptView).
  */
-async function _run (dialog, html, form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn, config) {
+async function _run (dialog, form, buttonRow, config, view) {
   const textarea = form.querySelector(`[name="${config.textareaName}"]`)
   const userPrompt = textarea?.value?.trim()
-  const errorDiv = form.querySelector('.coc7-ai-error')
-  const generateBtn = buttonRow.querySelector('.coc7-btn-generate')
+  const errorDiv = form.querySelector('.coc7qol-ai-error')
+  const generateBtn = buttonRow.querySelector('.coc7qol-btn-generate')
 
   if (!userPrompt) {
     errorDiv.textContent = config.emptyError
@@ -257,7 +240,7 @@ async function _run (dialog, html, form, buttonRow, promptArea, originalFieldNod
     return
   }
 
-  const apiKey = game.settings.get(MODULE, 'ai-api-key')
+  const apiKey = game.settings.get(MODULE_ID, 'ai-api-key')
   if (!apiKey) {
     errorDiv.textContent = t('COC7QOL.AIGenerator.Error.NoAPIKey')
     errorDiv.style.display = 'block'
@@ -269,27 +252,30 @@ async function _run (dialog, html, form, buttonRow, promptArea, originalFieldNod
   errorDiv.style.display = 'none'
 
   try {
-    const providerId = game.settings.get(MODULE, 'ai-provider')
+    const providerId = game.settings.get(MODULE_ID, 'ai-provider')
     const ProviderClass = providers.get(providerId)
-    if (!ProviderClass) throw new Error(`Unknown provider: ${providerId}`)
+    if (!ProviderClass) throw new Error(tf('COC7QOL.AIGenerator.Error.UnknownProvider', { provider: providerId }))
 
     const mapper = mappers.get(config.mapperKey)
     const systemPrompt = await mapper.buildSystemPrompt()
 
     const provider = new ProviderClass()
     const llmData = await provider.generate(systemPrompt, userPrompt)
+    // Cancel stays usable while the provider works. A reply for a prompt view the GM has
+    // cancelled, or whose Create dialog was closed, is dropped instead of opening a review.
+    if (!view.isOpen || !dialog.rendered) return
 
     mapper.validate(llmData)
     const foundryData = mapper.toFoundryData(llmData)
 
     const dialogData = config.buildDialogData(foundryData, { form })
 
-    new config.ConfirmationDialog({
+    // Awaited so a render failure reaches the catch below and re-enables Generate.
+    await new config.ConfirmationDialog({
       ...dialogData,
 
-      onAccept: async (data) => {
-        await config.onAccept(data, { mapper, dialog })
-      },
+      // Resolves true only when the document was created; the review dialog stays open otherwise.
+      onAccept: (data) => config.onAccept(data, { mapper, dialog }),
 
       onRegenerate: () => {
         generateBtn.disabled = false
@@ -297,13 +283,11 @@ async function _run (dialog, html, form, buttonRow, promptArea, originalFieldNod
         textarea.focus()
       },
 
-      onCancel: () => {
-        _restoreOriginalForm(form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn, dialog, html, config)
-      }
+      // Also called when the review dialog is closed from its header or with Escape.
+      onCancel: () => view.close()
     }).render({ force: true })
-
   } catch (err) {
-    console.error(`[coc7-qol] ${config.logPrefix} generation failed:`, err)
+    console.error(LOG_PREFIX, `${config.logPrefix} generation failed:`, err)
     errorDiv.textContent = err.message
     errorDiv.style.display = 'block'
     generateBtn.disabled = false

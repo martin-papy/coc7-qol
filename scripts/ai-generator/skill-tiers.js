@@ -7,7 +7,7 @@
 
 import { t } from '../utils.js'
 
-export const SKILL_TIERS = Object.freeze([
+const SKILL_TIERS = Object.freeze([
   Object.freeze({ key: 'novice', min: 1, max: 5 }),
   Object.freeze({ key: 'neophyte', min: 6, max: 19 }),
   Object.freeze({ key: 'amateur', min: 20, max: 49 }),
@@ -47,7 +47,7 @@ export function tierForValue (value) {
  * @param {string} tierKey
  * @returns {number|null}
  */
-export function tierCeiling (tierKey) {
+function tierCeiling (tierKey) {
   const tier = SKILL_TIERS.find(candidate => candidate.key === tierKey)
   return tier ? tier.max : null
 }

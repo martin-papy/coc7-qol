@@ -1,18 +1,33 @@
-import { t, retargetedMessages } from './utils.js'
-import { VISIBILITY_CHOICES, choiceForCoreMode, visibilityUpdate } from './roll-mode-keys.js'
+import { t } from './utils.js'
+import { VISIBILITY_CHOICES, choiceForCoreMode, coreModeKey, visibilityUpdate } from './roll-mode-keys.js'
+import { createPendingRollMode } from './pending-roll-mode.js'
+import { CREATION_TTL_MS, createDevelopmentGuard, findRefreshEntry, resyncFor } from './roll-mode-resync.js'
+import { LOG_PREFIX, MODULE_ID } from './constants.js'
 
-const MODULE = 'coc7-qol'
 const LAST_MODE_SETTING = 'last-roll-mode'
 const DEFAULT_CHOICE = 'publicroll'
 
-// Module-level state: the last value picked in the CoC7 roll dialog,
-// consumed by the next preCreateChatMessage. Cancelled dialogs leave it null.
-let pendingRollMode = null
+// The value picked in the CoC7 roll dialog, armed on OK and consumed by the
+// next CoC7 card created on this client. Cancelled dialogs never arm it; see
+// pending-roll-mode.js for the guards against stale choices.
+const pendingRollMode = createPendingRollMode()
+
+// A check whose blindness the dropdown changed is brought in line once its card
+// exists (see roll-mode-resync.js): `awaitingResync` identifies the card this
+// client is about to create, `developmentGuard` refuses the tick of a roll
+// turned blind.
+const developmentGuard = createDevelopmentGuard()
+/** @type {{token: string, since: number}|null} */
+let awaitingResync = null
+
+/** Flag that ties a created card to the roll that asked for a resync. */
+const RESYNC_TOKEN_FLAG = 'resyncToken'
 
 let unsupportedModeReported = false
+let refreshMissingReported = false
 
 Hooks.once('init', () => {
-  game.settings.register(MODULE, LAST_MODE_SETTING, {
+  game.settings.register(MODULE_ID, LAST_MODE_SETTING, {
     scope: 'client',
     config: false,
     type: String,
@@ -22,7 +37,7 @@ Hooks.once('init', () => {
 
 function readLastRollMode () {
   try {
-    const stored = game.settings.get(MODULE, LAST_MODE_SETTING)
+    const stored = game.settings.get(MODULE_ID, LAST_MODE_SETTING)
     if (VISIBILITY_CHOICES.includes(stored)) return stored
   } catch (_) { /* setting not yet registered — fall through */ }
   return null
@@ -30,8 +45,8 @@ function readLastRollMode () {
 
 function writeLastRollMode (mode) {
   if (!VISIBILITY_CHOICES.includes(mode)) return
-  game.settings.set(MODULE, LAST_MODE_SETTING, mode).catch(err => {
-    console.warn('[coc7-qol] Failed to persist last roll mode:', err)
+  game.settings.set(MODULE_ID, LAST_MODE_SETTING, mode).catch(err => {
+    console.warn(LOG_PREFIX, 'Failed to persist last roll mode:', err)
   })
 }
 
@@ -115,21 +130,21 @@ Hooks.on('renderDialogV2', (dialog, element) => {
   const okButton = element.querySelector('[data-action="ok"]')
   okButton?.addEventListener('click', () => {
     const select = element.querySelector('[name="coc7qol-rollMode"]')
-    if (select && VISIBILITY_CHOICES.includes(select.value)) {
-      pendingRollMode = select.value
-      writeLastRollMode(select.value)
-    }
+    if (!select) return
+    pendingRollMode.arm({
+      choice: select.value,
+      cardType: element.querySelector('[name="cardType"]')?.value
+    })
+    writeLastRollMode(select.value)
   }, true)
 })
 
 Hooks.on('preCreateChatMessage', (document, data) => {
-  if (!pendingRollMode) return
-
-  // Consume immediately — only the first message generated after the dialog
-  // should be retargeted (e.g. the skill check card). Subsequent messages
-  // (damage, follow-ups) fall back to their default roll mode.
-  const choice = pendingRollMode
-  pendingRollMode = null
+  // Only the first CoC7 card generated after the dialog is retargeted (e.g. the
+  // skill check card). Later messages (damage, follow-ups) keep their default
+  // roll mode, and non-CoC7 messages are never touched.
+  const choice = pendingRollMode.consume(data)
+  if (!choice) return
 
   // The dropdown speaks the module's own keys; Foundry and CoC7 speak the keys
   // of the running version ('blindroll' on v13, 'blind' on v14) — the
@@ -163,11 +178,71 @@ Hooks.on('preCreateChatMessage', (document, data) => {
   if (!update) {
     if (!unsupportedModeReported) {
       unsupportedModeReported = true
-      console.warn(`[coc7-qol] Roll visibility "${choice}" is not a registered message mode on this Foundry version — the roll was left as is.`)
+      console.warn(LOG_PREFIX, `Roll visibility "${choice}" is not a registered message mode on this Foundry version — the roll was left as is.`)
     }
     return
   }
 
-  document.updateSource(update)
-  retargetedMessages.add(document)
+  // A new roll supersedes whatever the previous one left pending.
+  developmentGuard.clear()
+  const resync = resyncFor({
+    load: data.flags?.CoC7?.load,
+    mode: update['flags.CoC7.load.rollMode'],
+    blindMode: coreModeKey('blindroll', registeredModes())
+  })
+  // The card carries a token, so that createChatMessage recognises it and no other
+  // check created by this client can be taken for it.
+  awaitingResync = resync ? { token: foundry.utils.randomID(), since: Date.now() } : null
+  document.updateSource(awaitingResync
+    ? { ...update, [`flags.${MODULE_ID}.${RESYNC_TOKEN_FLAG}`]: awaitingResync.token }
+    : update)
+  if (resync?.skillUuid) developmentGuard.arm(resync.skillUuid)
+})
+
+/**
+ * Rebuild a CoC7 card from its flags with the system's own "Refresh" action.
+ * CoC7 exposes it only as a chat message context option, so the option is
+ * collected the way the chat log does and its callback is called.
+ * @param {ChatMessage} message
+ */
+async function refreshCard (message) {
+  const entries = []
+  Hooks.callAll('getChatMessageContextOptions', ui.chat, entries)
+  const refresh = findRefreshEntry(entries)
+  if (!refresh) {
+    if (!refreshMissingReported) {
+      refreshMissingReported = true
+      console.warn(LOG_PREFIX, 'CoC7\'s "Refresh" chat option was not found — a roll whose visibility was changed in the dialog keeps the card it was created with.')
+    }
+    return
+  }
+  try {
+    await refresh.callback({ dataset: { messageId: message.id } })
+  } catch (err) {
+    console.warn(LOG_PREFIX, 'Could not refresh the card of a roll whose visibility was changed in the dialog:', err)
+  }
+}
+
+Hooks.on('createChatMessage', (message, options, userId) => {
+  if (!awaitingResync || userId !== game.user.id) return
+  // Forget a card that never came (cancelled by another module, refused by the server).
+  if (Date.now() - awaitingResync.since > CREATION_TTL_MS) {
+    awaitingResync = null
+    return
+  }
+  // Only the card announced in preCreateChatMessage: any other message leaves the wait in place.
+  if (message.flags?.[MODULE_ID]?.[RESYNC_TOKEN_FLAG] !== awaitingResync.token) return
+  awaitingResync = null
+  developmentGuard.attach(message.id)
+  refreshCard(message)
+})
+
+// Returning false cancels the update. CoC7 does not await a result from either
+// write, so a refused one is simply not made.
+Hooks.on('preUpdateItem', (item, changes) => {
+  if (developmentGuard.refusesItemUpdate(item.uuid, changes)) return false
+})
+
+Hooks.on('preUpdateChatMessage', (message, changes) => {
+  if (developmentGuard.refusesMessageUpdate(message.id, changes)) return false
 })

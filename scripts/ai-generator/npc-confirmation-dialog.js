@@ -1,8 +1,10 @@
 // Rich read-only preview dialog for AI-generated NPC actors.
 
 import { escapeHtml, t, tf } from '../utils.js'
+import { runAccept } from './dialog-flow.js'
 import { CHARACTERISTIC_FORMULAS } from './mappers/npc.js'
 import { tierForValue, isAboveTier, isAtOrAboveTier, tierLabel } from './skill-tiers.js'
+import { weaponRowHtml, possessionRowHtml } from './npc-preview.js'
 
 export default class CoC7NPCConfirmationDialog extends foundry.applications.api.ApplicationV2 {
   static DEFAULT_OPTIONS = {
@@ -22,6 +24,10 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
   #acceptCallback
   #regenerateCallback
   #cancelCallback
+  // Set once Accept succeeds or Regenerate is chosen; any other close counts as Cancel.
+  #settled = false
+  // True while the accept callback runs; close() is refused meanwhile.
+  #accepting = false
   #removedWeaponIndexes = new Set()
   #removedPossessionIndexes = new Set()
 
@@ -39,16 +45,16 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
     const skills = llm.skills ?? []
 
     const div = document.createElement('div')
-    div.className = 'coc7-ai-npc-dialog'
+    div.className = 'coc7qol-ai-npc-dialog'
 
     // --- Identity bar ---
     const identityHtml = `
-      <div class="coc7-npc-identity">
-        <div class="coc7-npc-identity-name">${escapeHtml(llm.name)}</div>
-        <div class="coc7-npc-identity-meta">
-          ${llm.occupation ? `<span><span class="coc7-npc-identity-meta-label">${t('CoC7.Occupation')}</span>&nbsp;${escapeHtml(llm.occupation)}</span>` : ''}
-          ${llm.age ? `<span><span class="coc7-npc-identity-meta-label">${t('CoC7.Age')}</span>&nbsp;${escapeHtml(String(llm.age))}</span>` : ''}
-          ${llm.expertiseTier ? `<span><span class="coc7-npc-identity-meta-label">${t('COC7QOL.AIGenerator.NPCDialog.TierLabel')}</span>&nbsp;${escapeHtml(tierLabel(llm.expertiseTier))}</span>` : ''}
+      <div class="coc7qol-npc-identity">
+        <div class="coc7qol-npc-identity-name">${escapeHtml(llm.name)}</div>
+        <div class="coc7qol-npc-identity-meta">
+          ${llm.occupation ? `<span><span class="coc7qol-npc-identity-meta-label">${t('CoC7.Occupation')}</span>&nbsp;${escapeHtml(llm.occupation)}</span>` : ''}
+          ${llm.age ? `<span><span class="coc7qol-npc-identity-meta-label">${t('CoC7.Age')}</span>&nbsp;${escapeHtml(String(llm.age))}</span>` : ''}
+          ${llm.expertiseTier ? `<span><span class="coc7qol-npc-identity-meta-label">${t('COC7QOL.AIGenerator.NPCDialog.TierLabel')}</span>&nbsp;${escapeHtml(tierLabel(llm.expertiseTier))}</span>` : ''}
         </div>
       </div>`
 
@@ -61,16 +67,16 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
         ? CHARACTERISTIC_FORMULAS[k]
         : String(chars[k] ?? '—')
       return `
-      <div class="coc7-npc-char-cell">
-        <div class="coc7-npc-char-label">${charLabels[i]}</div>
-        <div class="coc7-npc-char-value">${escapeHtml(displayValue)}</div>
+      <div class="coc7qol-npc-char-cell">
+        <div class="coc7qol-npc-char-label">${charLabels[i]}</div>
+        <div class="coc7qol-npc-char-value">${escapeHtml(displayValue)}</div>
       </div>`
     }).join('')
 
     const charsHtml = `
-      <div class="coc7-npc-section">
-        <div class="coc7-npc-section-label">${t('COC7QOL.AIGenerator.NPCDialog.SectionCharacteristics')}</div>
-        <div class="coc7-npc-chars-grid">${charCells}</div>
+      <div class="coc7qol-npc-section">
+        <div class="coc7qol-npc-section-label">${t('COC7QOL.AIGenerator.NPCDialog.SectionCharacteristics')}</div>
+        <div class="coc7qol-npc-chars-grid">${charCells}</div>
       </div>`
 
     // --- Skills list ---
@@ -95,26 +101,28 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
       const above = !exempt && isAboveTier(s.value, declaredTier)
       const atOrAbove = !exempt && isAtOrAboveTier(s.value, declaredTier)
       const tierText = atOrAbove
-        ? `<span class="coc7-npc-skill-tier">${escapeHtml(tierLabel(tierForValue(s.value)))}</span>`
+        ? `<span class="coc7qol-npc-skill-tier">${escapeHtml(tierLabel(tierForValue(s.value)))}</span>`
         : ''
       const flag = above
-        ? `<span class="coc7-npc-skill-flag" title="${escapeHtml(aboveTierTitle)}">${t('COC7QOL.AIGenerator.NPCDialog.AboveTierBadge')}</span>`
+        ? `<span class="coc7qol-npc-skill-flag" title="${escapeHtml(aboveTierTitle)}">${t('COC7QOL.AIGenerator.NPCDialog.AboveTierBadge')}</span>`
         : ''
       return `
-      <div class="coc7-npc-skill-row${above ? ' coc7-npc-skill-above-tier' : ''}">
-        <span class="coc7-npc-skill-name">${escapeHtml(s.name)}</span>
+      <div class="coc7qol-npc-skill-row${above ? ' coc7qol-npc-skill-above-tier' : ''}">
+        <span class="coc7qol-npc-skill-name">${escapeHtml(s.name)}</span>
         ${tierText}
-        <span class="coc7-npc-skill-value">${flag}${escapeHtml(String(s.value))}%</span>
+        <span class="coc7qol-npc-skill-value">${flag}${escapeHtml(String(s.value))}%</span>
       </div>`
     }).join('')
 
     const aboveTierCount = skills.filter(s => !isNativeLanguageSkill(s) && isAboveTier(s.value, declaredTier)).length
 
-    const skillsHtml = skills.length ? `
-      <div class="coc7-npc-section">
-        <div class="coc7-npc-section-label">${t('COC7QOL.AIGenerator.NPCDialog.SectionSkills')}</div>
-        <div class="coc7-npc-skills-grid">${skillRows}</div>
-      </div>` : ''
+    const skillsHtml = skills.length
+      ? `
+      <div class="coc7qol-npc-section">
+        <div class="coc7qol-npc-section-label">${t('COC7QOL.AIGenerator.NPCDialog.SectionSkills')}</div>
+        <div class="coc7qol-npc-skills-grid">${skillRows}</div>
+      </div>`
+      : ''
 
     // --- Weapons section ---
     const weaponsData = this.#npcData.weaponsData ?? []
@@ -128,9 +136,9 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
     const narrativeSection = (label, text) => {
       if (!text) return ''
       return `
-        <div class="coc7-npc-section">
-          <div class="coc7-npc-section-label">${label}</div>
-          <p class="coc7-npc-narrative">${escapeHtml(text)}</p>
+        <div class="coc7qol-npc-section">
+          <div class="coc7qol-npc-section-label">${label}</div>
+          <p class="coc7qol-npc-narrative">${escapeHtml(text)}</p>
         </div>`
     }
 
@@ -149,12 +157,12 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
         <button type="button" data-action="cancel">${t('COC7QOL.AIGenerator.Button.Cancel')}</button>
       </div>`
 
-    div.innerHTML = identityHtml + charsHtml + skillsHtml + weaponsHtml + possessionsHtml
-      + narrativeSection(t('COC7QOL.AIGenerator.NPCDialog.SectionAppearance'), llm.physicalDescription)
-      + narrativeSection(t('COC7QOL.AIGenerator.NPCDialog.SectionPersonality'), llm.personalityTraits)
-      + narrativeSection(t('COC7QOL.AIGenerator.NPCDialog.SectionBackground'), llm.background)
-      + warningsHtml
-      + buttonsHtml
+    div.innerHTML = identityHtml + charsHtml + skillsHtml + weaponsHtml + possessionsHtml +
+      narrativeSection(t('COC7QOL.AIGenerator.NPCDialog.SectionAppearance'), llm.physicalDescription) +
+      narrativeSection(t('COC7QOL.AIGenerator.NPCDialog.SectionPersonality'), llm.personalityTraits) +
+      narrativeSection(t('COC7QOL.AIGenerator.NPCDialog.SectionBackground'), llm.background) +
+      warningsHtml +
+      buttonsHtml
 
     return div
   }
@@ -171,12 +179,12 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
   }
 
   #attachEquipRemoveListeners (scope) {
-    scope.querySelectorAll('.coc7-npc-equip-remove').forEach(btn => {
+    scope.querySelectorAll('.coc7qol-npc-equip-remove').forEach(btn => {
       if (btn.dataset.listenerAttached === '1') return
       btn.dataset.listenerAttached = '1'
       btn.addEventListener('click', (event) => {
         event.preventDefault()
-        const row = btn.closest('.coc7-npc-equip-row')
+        const row = btn.closest('.coc7qol-npc-equip-row')
         if (!row) return
         const kind = row.dataset.equipKind
         const idx = Number(row.dataset.equipIndex)
@@ -222,27 +230,14 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
       : tf('COC7QOL.AIGenerator.NPC.Preview.WeaponsHeader', { count: total })
     const removeTitle = t('COC7QOL.AIGenerator.NPC.Button.RemoveItem')
 
-    const rows = weaponsData.map((w, i) => {
-      const name = w?.name ?? ''
-      const damage = w?.system?.range?.normal?.damage ?? ''
-      const skill = w?.system?.skill?.main?.name ?? ''
-      const detail = tf('COC7QOL.AIGenerator.NPC.Preview.WeaponRowDamage', {
-        damage: escapeHtml(damage),
-        skill: escapeHtml(skill)
-      })
-      const removed = this.#removedWeaponIndexes.has(i) ? ' coc7-ai-removed' : ''
-      return `
-        <div class="coc7-npc-equip-row${removed}" data-equip-kind="weapon" data-equip-index="${i}">
-          <span class="coc7-npc-equip-name">${escapeHtml(name)}</span>
-          <span class="coc7-npc-equip-detail">${escapeHtml(detail)}</span>
-          <button type="button" class="coc7-npc-equip-remove" title="${escapeHtml(removeTitle)}" aria-label="${escapeHtml(removeTitle)}">×</button>
-        </div>`
-    }).join('')
+    const rows = weaponsData
+      .map((w, i) => weaponRowHtml(w, i, this.#removedWeaponIndexes.has(i), removeTitle))
+      .join('')
 
     return `
-      <div class="coc7-npc-section" data-section="weapons">
-        <div class="coc7-npc-section-label">${escapeHtml(headerLabel)}</div>
-        <div class="coc7-npc-equip-list">${rows}</div>
+      <div class="coc7qol-npc-section" data-section="weapons">
+        <div class="coc7qol-npc-section-label">${escapeHtml(headerLabel)}</div>
+        <div class="coc7qol-npc-equip-list">${rows}</div>
       </div>`
   }
 
@@ -255,25 +250,14 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
       : tf('COC7QOL.AIGenerator.NPC.Preview.PossessionsHeader', { count: total })
     const removeTitle = t('COC7QOL.AIGenerator.NPC.Button.RemoveItem')
 
-    const rows = possessionsData.map((p, i) => {
-      const name = p?.name ?? ''
-      const quantity = p?.system?.quantity ?? 1
-      const qtyText = quantity > 1
-        ? tf('COC7QOL.AIGenerator.NPC.Preview.PossessionRowQuantity', { quantity })
-        : ''
-      const removed = this.#removedPossessionIndexes.has(i) ? ' coc7-ai-removed' : ''
-      return `
-        <div class="coc7-npc-equip-row${removed}" data-equip-kind="possession" data-equip-index="${i}">
-          <span class="coc7-npc-equip-name">${escapeHtml(name)}</span>
-          <span class="coc7-npc-equip-detail">${escapeHtml(qtyText)}</span>
-          <button type="button" class="coc7-npc-equip-remove" title="${escapeHtml(removeTitle)}" aria-label="${escapeHtml(removeTitle)}">×</button>
-        </div>`
-    }).join('')
+    const rows = possessionsData
+      .map((p, i) => possessionRowHtml(p, i, this.#removedPossessionIndexes.has(i), removeTitle))
+      .join('')
 
     return `
-      <div class="coc7-npc-section" data-section="possessions">
-        <div class="coc7-npc-section-label">${escapeHtml(headerLabel)}</div>
-        <div class="coc7-npc-equip-list">${rows}</div>
+      <div class="coc7qol-npc-section" data-section="possessions">
+        <div class="coc7qol-npc-section-label">${escapeHtml(headerLabel)}</div>
+        <div class="coc7qol-npc-equip-list">${rows}</div>
       </div>`
   }
 
@@ -281,9 +265,9 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
     if (!warnings.length) return ''
     const items = warnings.map(w => `<li>${escapeHtml(w)}</li>`).join('')
     return `
-      <div class="coc7-npc-section coc7-ai-warnings">
-        <div class="coc7-npc-section-label">${escapeHtml(t('COC7QOL.AIGenerator.NPC.Preview.WarningsHeader'))}</div>
-        <ul class="coc7-ai-warnings-list">${items}</ul>
+      <div class="coc7qol-npc-section coc7qol-ai-warnings">
+        <div class="coc7qol-npc-section-label">${escapeHtml(t('COC7QOL.AIGenerator.NPC.Preview.WarningsHeader'))}</div>
+        <ul class="coc7qol-ai-warnings-list">${items}</ul>
       </div>`
   }
 
@@ -293,21 +277,46 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
       .filter((_, i) => !this.#removedWeaponIndexes.has(i))
     const filteredPossessions = (data.possessionsData ?? [])
       .filter((_, i) => !this.#removedPossessionIndexes.has(i))
-    await this.#acceptCallback({
-      ...data,
-      weaponsData: filteredWeapons,
-      possessionsData: filteredPossessions
-    })
+    this.#accepting = true
+    let created
+    try {
+      created = await runAccept(this.element, () => this.#acceptCallback({
+        ...data,
+        weaponsData: filteredWeapons,
+        possessionsData: filteredPossessions
+      }))
+    } finally {
+      this.#accepting = false
+    }
+    if (!created) return
+    this.#settled = true
     this.close()
   }
 
   static async #handleRegenerate (_event, _target) {
+    this.#settled = true
     this.#regenerateCallback()
     this.close()
   }
 
   static async #handleCancel (_event, _target) {
-    this.#cancelCallback()
     this.close()
+  }
+
+  /**
+   * Escape or the header close button while Accept is creating the document would cancel a
+   * creation already under way, so a close is ignored until Accept settles.
+   */
+  close (options) {
+    if (this.#accepting) return Promise.resolve(this)
+    return super.close(options)
+  }
+
+  /** Closing from the header or with Escape cancels, like the Cancel button. */
+  _onClose (options) {
+    super._onClose(options)
+    if (this.#settled) return
+    this.#settled = true
+    this.#cancelCallback()
   }
 }

@@ -1,0 +1,5 @@
+/* styles/item-image-popout.css — item and possession images that open in a popout on click */
+
+.coc7qol-image-popout-trigger {
+  cursor: pointer;
+}

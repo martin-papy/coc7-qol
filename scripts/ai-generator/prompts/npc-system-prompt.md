@@ -5,10 +5,9 @@ The NPC should be a believable person with enough depth to be credible in a tabl
 Respond with ONLY a valid JSON object. No explanation, no markdown fences, no extra text — raw JSON only.
 
 LANGUAGE RULES:
-- Write the free-text narrative fields (physicalDescription, personalityTraits, background, and weapons[].description / possessions[].description) in the SAME LANGUAGE as the user's prompt. If the user wrote in French, write these fields in French. Same for Spanish, German, Japanese, etc.
+- Write "occupation" and the free-text narrative fields (physicalDescription, personalityTraits, background, and weapons[].description / possessions[].description) in the SAME LANGUAGE as the user's prompt. If the user wrote in French, write these fields in French. Same for Spanish, German, Japanese, etc.
 - The "name" field should be culturally appropriate for the setting/era (use your judgement).
 - KEEP THE FOLLOWING IN ENGLISH regardless of prompt language:
-  - "occupation" (required for system lookups)
   - every entry in skills[].name (required for compendium lookup — use the official CoC7 English skill names exactly)
   - "expertiseTier" (fixed enum keys — must be one of the six literal English tokens)
   - "nativeLanguage" (used to construct the "Language (<nativeLanguage>)" skill name)
@@ -30,7 +29,7 @@ Required fields (must always be present):
   - Which skills to include, and what values to give them, is governed by SKILL CALIBRATION and BASE VALUES AND MANDATORY CORE SKILLS below. Follow both sections — they matter more than any other instruction in this prompt.
 
 Optional fields (include when relevant, omit if not applicable):
-- occupation: string — the NPC's job or role, ALWAYS in English (used for system lookup; e.g. "Pharmacist", "Dockworker", "Professor")
+- occupation: string — the NPC's job or role, in the SAME LANGUAGE as the user's prompt (e.g. "Pharmacist", "Dockworker", "Professor"; "Pharmacien" for a French prompt)
 - age: number — age in years
 - physicalDescription: string — 1-2 sentences describing appearance
 - personalityTraits: string — 1-2 sentences describing personality and demeanour

@@ -1,6 +1,6 @@
 # CoC7 QoL Improvements
 
-A module for the Call of Cthulhu 7th Edition (CoC7) system on FoundryVTT. Adds easy setting of dice roll visibility, keeper-only highlights, image popouts, AI-powered weapon and NPC generation, and bulk card management for GMs.
+A module for the Call of Cthulhu 7th Edition (CoC7) system on FoundryVTT. Adds a dice roll visibility selector, bulk closing of chat cards, Group Luck rolls, item image popouts, AI-powered weapon and NPC generation, keeper-only highlights, grouped Rest and Trade / Store targets, resizable NPC and Creature sheets, casting spells straight from the actor sheet, and a highlight for strong skills.
 
 ## Have an idea or a feedback ?
 
@@ -14,12 +14,15 @@ If there's a workflow that annoys you, a small thing that could be smoother, or 
 |---|---|---|
 | [🎲 Roll Visibility Selector](#-roll-visibility-selector) | Easily pick public / private / blind per roll — and remember your last choice | Everyone |
 | [🗂️ Close All Cards](#-close-all-cards) | Sweep stale chat cards out of the way in one click | GM |
+| [🍀 Group Luck](#-group-luck) | Find who rolls Group Luck and send them the request in two clicks | GM |
 | [🖼️ Item Image Popouts](#-item-image-popouts) | Click any item portrait to see it full size, draggable, resizable | Everyone |
 | [✨ AI Generation](#-ai-generation) | Conjure fully-statted weapons and NPCs from a one-line description | GM |
 | [👁️ Keeper-Only Highlights](#-keeper-only-highlights) | See what players can't see vs can't change, on sheets and chat cards | GM |
 | [🛏️ Grouped Rest Targets](#-grouped-rest-targets) | Rest just the Investigators in two clicks — actors grouped by type, PCs pre-selected | GM |
 | [🎁 Grouped Trade / Store Targets](#-grouped-trade--store-targets) | Give or store an item without scanning a flat list — targets grouped Investigators / Storage / NPCs / Creatures | Everyone |
-| [🙈 Hidden Initiative Rolls](#-hidden-initiative-rolls) | Initiative rolls of hidden combatants go to the GMs only, as Foundry intends — works around CoC7 #2149 (fixed upstream in CoC7 8.16) | GM |
+| [↔️ Resizable NPC Sheets](#-resizable-npc-sheets) | Drag NPC and Creature sheets to any size — they scroll inside, stay on screen, and list skills in columns | Everyone |
+| [🪄 Cast Spells from the Sheet](#-cast-spells-from-the-sheet) | Cast a spell in one click from its row on the actor sheet — no need to open the spell first | Everyone |
+| [💪 Strong Skills at a Glance](#-strong-skills-at-a-glance) | See what a character is good at without re-sorting — skills at 50% or more are highlighted | Everyone |
 
 ---
 
@@ -42,6 +45,16 @@ Open the Keeper's toolbar (the tentacle-strike icon), click **Close All Cards**,
 ![Close All Cards selection dialog](images/Close-Cards-2.png)
 
 [**Read more →**](docs/features/close-all-cards.md)
+
+---
+
+## 🍀 Group Luck
+
+The investigator with the lowest Luck among those present rolls Luck for the group. Open the Keeper's toolbar, click **Group Luck**, and tick who is in the scene: the lowest Luck is highlighted, and one click whispers that player a **Luck check** link. Ties let you pick who rolls, and if the player is offline you roll Luck for them.
+
+![Group Luck dialog](images/Group-Luck-1.png)
+
+[**Read more →**](docs/features/group-luck.md)
 
 ---
 
@@ -69,7 +82,7 @@ Plug in your own key for **Anthropic Claude**, **OpenAI GPT**, or **Google Gemin
 
 ## 👁️ Keeper-Only Highlights
 
-See at a glance which parts of item sheets and chat cards your players **can't see** — and which they **can see but can't change**. Content hidden from players gets a solid crimson outline and an 👁️ badge; read-only controls (visible to players but locked) get a dashed amber outline and a 🔒 badge. Keeper-only and on by default; toggle it under **Settings → Module Settings → CoC7 QoL Improvements**.
+See at a glance which parts of item sheets and chat cards your players **can't see** — and which they **can see but can't change**. Content hidden from players gets a crimson left border, a light tint and an 👁️ badge; read-only controls (visible to players but locked) get a dashed amber outline and a 🔒 badge. Keeper-only and on by default; toggle it under **Settings → Module Settings → CoC7 QoL Improvements**.
 
 | Keeper's view | The same card, player's view |
 |---|---|
@@ -101,11 +114,35 @@ The **Trade / Store Item** dropdown on the character sheet listed every visible 
 
 ---
 
-## 🙈 Hidden Initiative Rolls
+## ↔️ Resizable NPC Sheets
 
-Hidden a monster in the combat tracker, rolled initiative, and watched its name and DEX roll land in everyone's chat? That's a CoC7 bug ([#2149](https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT/issues/2149)): the system's own initiative code skips Foundry's "hidden combatants roll privately" rule. With this module, initiative rolls of hidden combatants — hidden in the tracker or on the canvas — are whispered to the GMs, and players don't even get Foundry's "*privately rolled some dice*" placeholder to count them by. Visible combatants roll exactly as before. CoC7 8.16 fixed the bug, so on 8.16+ the whisper half is switched off and only the placeholder hiding remains.
+NPC and Creature sheets can now be **resized** like any other window: drag the bottom-right corner to the size you want, and the sheet scrolls inside it. Open as many sections as you like — the sheet stays on screen instead of running off the bottom.
 
-[**Read more →**](docs/features/hidden-initiative.md)
+Skills also read **down each column**, like on the investigator sheet, and a wider sheet shows more columns.
+
+Both are on by default. The Keeper can switch either one off under **Settings → Module Settings → CoC7 QoL Improvements**.
+
+[**Read more →**](docs/features/resizable-npc-sheets.md)
+
+---
+
+## 🪄 Cast Spells from the Sheet
+
+Every spell listed on an investigator, NPC or Creature sheet gets a **cast icon** at the start of its row. Click it and the spell is cast exactly as if you had opened it and pressed *Cast*: same chat card, same costs taken from the caster.
+
+The icon is there for anyone who owns the actor. The Keeper can also **right-click** it to cast hidden, so only the Keeper sees the card.
+
+[**Read more →**](docs/features/spell-cast.md)
+
+---
+
+## 💪 Strong Skills at a Glance
+
+Keep your skills sorted by name and still see what a character is good at: every skill at **50% or more** gets a soft tint, a bar on its left edge and a bold name. It works on investigator, NPC and Creature sheets, in the light and the dark theme.
+
+It is on by default. The Keeper can change the threshold or switch it off for the whole table under **Settings → Module Settings → CoC7 QoL Improvements**.
+
+[**Read more →**](docs/features/strong-skills.md)
 
 ---
 
@@ -131,18 +168,18 @@ Dialogs, buttons, settings, and notifications follow your configured Foundry lan
 
 ### Manual
 
-1. Download the latest release from the [Releases](https://github.com/martin-papy/coc7-qol/releases) page
-2. Extract into your `Data/modules/` directory
+1. Download `coc7-qol.zip` from the latest release on the [Releases](https://github.com/martin-papy/coc7-qol/releases) page
+2. Create a new `Data/modules/coc7-qol/` folder and extract the zip into it (the zip has no top-level folder, so `module.json` should end up directly inside `coc7-qol/`)
 3. Restart FoundryVTT
 
 ## Compatibility
 
 - **FoundryVTT:** v13+
-- **System:** Call of Cthulhu 7th Edition (CoC7) — v8.x and v9.x
+- **System:** Call of Cthulhu 7th Edition (CoC7) — v8.16+ and v9.x
 
 ## AI Usage Disclaimer
 
-This module has been developped with the help of an AI Coding assistant (Claude Code). The code has been thoroughly reviewed and tested by a human (me).
+This module has been developed with the help of an AI Coding assistant (Claude Code). The code has been thoroughly reviewed and tested by a human (me).
 
 ## License
 

@@ -8,9 +8,12 @@ const SPELLS = {
   'Actor.a1.Item.s2': { name: 'Elder Sign' }
 }
 
-/** An item row as CoC7 renders it in the investigator Possessions tab and the NPC inventory panels (CoC7 8.16 and 9.1). */
-const row = (uuid, name) => `
-  <li class="item" data-item-uuid="${uuid}">
+/**
+ * An item row as CoC7 renders it. `li` is the investigator Possessions tab (8.16 and 9.1) and the
+ * NPC / Creature inventory panels on 9.1; `div` is the NPC / Creature inventory panels on 8.16.
+ */
+const row = (uuid, name, tag = 'li') => `
+  <${tag} class="item flexrow" data-item-uuid="${uuid}">
     <div class="item-image"></div>
     <div class="item-name show-detail">${name}</div>
     <div class="item-controls">
@@ -18,7 +21,7 @@ const row = (uuid, name) => `
       <a class="item-control" data-action="item-edit"></a>
       <a class="item-control" data-action="item-delete"></a>
     </div>
-  </li>`
+  </${tag}>`
 
 function buildSheet (extraRows = '') {
   const dom = new JSDOM(`
@@ -65,6 +68,23 @@ test('addCastControls adds a cast control to every spell row and to no other row
   assert.ok(controlOf(root, 'Actor.a1.Item.s1'))
   assert.ok(controlOf(root, 'Actor.a1.Item.s2'))
   assert.equal(controlOf(root, 'Actor.a1.Item.b1'), null)
+})
+
+test('addCastControls adds a cast control to a CoC7 8.16 NPC inventory row, which is a div', () => {
+  const dom = new JSDOM(`
+    <form class="sheet">
+      <div class="item-list flexcol">
+        ${row('Actor.a1.Item.b1', 'Necronomicon', 'div')}
+        ${row('Actor.a1.Item.s1', 'Shrivelling', 'div')}
+      </div>
+    </form>`)
+  const root = dom.window.document.querySelector('.sheet')
+  const { deps } = buildDeps()
+
+  addCastControls(root, deps)
+
+  assert.equal(controlsIn(root).length, 1)
+  assert.ok(controlOf(root, 'Actor.a1.Item.s1'))
 })
 
 test('the cast control is the first control of its row and is styled like the system controls', () => {

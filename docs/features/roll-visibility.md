@@ -4,9 +4,9 @@
 
 The CoC7 bonus/penalty dialog now includes a **roll visibility** dropdown with three options:
 
-- **Public** — visible to everyone at the table
-- **Private GM Roll** — visible only to you and the GMs
-- **Blind GM Roll** — only visible to the GMs
+- **Public — visible to all**
+- **Private — GM and you**
+- **Blind — GM only**
 
 ![Roll Visibility Selector](../../images/Roll-Visibility.png)
 

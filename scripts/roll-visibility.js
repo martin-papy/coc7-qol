@@ -1,8 +1,8 @@
 import { t } from './utils.js'
 import { VISIBILITY_CHOICES, choiceForCoreMode, visibilityUpdate } from './roll-mode-keys.js'
 import { createPendingRollMode } from './pending-roll-mode.js'
+import { LOG_PREFIX, MODULE_ID } from './constants.js'
 
-const MODULE = 'coc7-qol'
 const LAST_MODE_SETTING = 'last-roll-mode'
 const DEFAULT_CHOICE = 'publicroll'
 
@@ -14,7 +14,7 @@ const pendingRollMode = createPendingRollMode()
 let unsupportedModeReported = false
 
 Hooks.once('init', () => {
-  game.settings.register(MODULE, LAST_MODE_SETTING, {
+  game.settings.register(MODULE_ID, LAST_MODE_SETTING, {
     scope: 'client',
     config: false,
     type: String,
@@ -24,7 +24,7 @@ Hooks.once('init', () => {
 
 function readLastRollMode () {
   try {
-    const stored = game.settings.get(MODULE, LAST_MODE_SETTING)
+    const stored = game.settings.get(MODULE_ID, LAST_MODE_SETTING)
     if (VISIBILITY_CHOICES.includes(stored)) return stored
   } catch (_) { /* setting not yet registered — fall through */ }
   return null
@@ -32,8 +32,8 @@ function readLastRollMode () {
 
 function writeLastRollMode (mode) {
   if (!VISIBILITY_CHOICES.includes(mode)) return
-  game.settings.set(MODULE, LAST_MODE_SETTING, mode).catch(err => {
-    console.warn('[coc7-qol] Failed to persist last roll mode:', err)
+  game.settings.set(MODULE_ID, LAST_MODE_SETTING, mode).catch(err => {
+    console.warn(LOG_PREFIX, 'Failed to persist last roll mode:', err)
   })
 }
 
@@ -165,7 +165,7 @@ Hooks.on('preCreateChatMessage', (document, data) => {
   if (!update) {
     if (!unsupportedModeReported) {
       unsupportedModeReported = true
-      console.warn(`[coc7-qol] Roll visibility "${choice}" is not a registered message mode on this Foundry version — the roll was left as is.`)
+      console.warn(LOG_PREFIX, `Roll visibility "${choice}" is not a registered message mode on this Foundry version — the roll was left as is.`)
     }
     return
   }

@@ -1,29 +1,69 @@
-# CodeRabbit Configuration for CoC7-QoL
-# This configures automated code reviews for pull requests
-# Using CodeRabbit Schema v2
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# CodeRabbit configuration (schema v2). Unset keys use CodeRabbit defaults.
+# CLAUDE.md is also read as coding guidelines (knowledge_base.code_guidelines default);
+# the path_instructions below restate the rules a reviewer should check on every file.
 
-# Enable reviews for specific base branches
 reviews:
-  # Auto review settings
   auto_review:
-    enabled: true
-    # Review PRs targeting these branches:
-    # - Any branch → develop
-    # - Any branch → main
+    # main is the default branch and always reviewed; also review PRs into develop.
     base_branches:
       - develop
-      - main
-  
-  # Path filters
-  path_filters:
-    # Include all files by default
-    - "**/*"
-    # Exclude markdown files (mostly documentation)
-    - "!**/*.md"
-    # Exclude test directories
-    - "!**/tests/**"
 
-# Chat settings
-chat:
-  auto_reply: true
-  art: true
+  path_filters:
+    # Not "!**/*.md": the LLM system prompts in
+    # scripts/ai-generator/prompts/*.md ship with the module and are reviewed.
+    - "!*.md"
+    - "!docs/**"
+    - "!test/**"
+
+  path_instructions:
+    - path: "scripts/**/*.js"
+      instructions: >-
+        FoundryVTT v13+ module for the CoC7 system, loaded as native ES modules with no
+        build step. Flag:
+        (1) Code paths or fallbacks for Foundry v12 or ApplicationV1; render hooks receive
+        an HTMLElement, not jQuery.
+        (2) The 'coc7-qol' literal or a hand-written console prefix instead of MODULE_ID /
+        LOG_PREFIX from scripts/constants.js.
+        (3) User-facing text not localised: use t / tf from scripts/utils.js with a key in lang/*.json.
+        (4) Dynamic values put into innerHTML or insertAdjacentHTML without escapeHtml.
+        (5) CSS classes or element IDs added without the coc7qol- prefix; the bare coc7-
+        prefix belongs to the CoC7 system.
+        (6) Changes that edit or monkey-patch CoC7 internals instead of using Foundry hooks.
+        (7) Settings with the wrong scope: per-user preferences are 'client', and a world
+        setting must only be written by the GM.
+        (8) Logic that touches game, ui, Hooks or CONFIG at import time in a module meant to be
+        unit-tested; rules and DOM transforms take Foundry data as arguments, and only a
+        feature's index.js reads the globals.
+        Behaviour often differs between GM and player: check both roles.
+        Formatting is enforced by ESLint (neostandard); do not comment on style.
+    - path: "scripts/ai-generator/**"
+      instructions: >-
+        LLM output is untrusted input. Check it is validated (type, range, required fields)
+        by the mapper before toFoundryData builds documents, and escaped before being
+        rendered. API keys must never be logged, put in error messages or sent to anything
+        other than their provider. Providers register through providers/registry.js and
+        mappers through mappers/registry.js; new types follow that pattern.
+    - path: "scripts/ai-generator/prompts/*.md"
+      instructions: >-
+        These are LLM system prompts shipped with the module, not documentation.
+        Review them for ambiguity, contradictions, and consistency with the JSON
+        fields the matching mapper in scripts/ai-generator/mappers/ validates.
+    - path: "styles/**/*.css"
+      instructions: >-
+        Every selector the module adds must be scoped by a coc7qol- class or ID, so it
+        cannot restyle Foundry or CoC7 UI elsewhere. Use CSS variables that Foundry v13
+        or CoC7 actually define. A new stylesheet must be listed in module.json "styles".
+    - path: "lang/*.json"
+      instructions: >-
+        en.json and fr.json must define the same set of keys. Flag any key added,
+        removed or renamed in one file but not the other, and French strings left in English.
+    - path: "module.json"
+      instructions: >-
+        Every feature entry point in scripts/ must be listed in "esmodules" (constants.js
+        and utils.js are imported, never listed). "version" and "download" are set by
+        release.sh; flag manual edits to them outside a release PR.
+    - path: ".github/workflows/**"
+      instructions: >-
+        Actions must be pinned to a full commit SHA with a "# vX.Y.Z" comment
+        (Dependabot keeps them current). Keep permissions minimal per workflow.

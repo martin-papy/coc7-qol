@@ -28,7 +28,7 @@ Hooks.once('setup', registerApiKeySetting)
 // updates the endpoint and model inputs without requiring a save/reopen.
 Hooks.once('init', registerSettingsHooks)
 
-// Inject the AI button whenever any dialog renders — injectAIButton checks internally
-// whether the dialog is the "Create Item" dialog before doing anything.
+// Both run on every DialogV2 render and return early unless the dialog is a Create
+// dialog: injectAIButton for Create Item (weapons), injectNPCButton for Create Actor (NPCs).
 Hooks.on('renderDialogV2', injectAIButton)
 Hooks.on('renderDialogV2', injectNPCButton)

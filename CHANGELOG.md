@@ -28,6 +28,18 @@ All notable changes to this project will be documented in this file.
 - **AI Generator: missing French strings** — Twelve strings of the NPC review dialog are now translated.
 - **AI Generator: retired default models** — The Gemini default `gemini-2.0-flash` was shut down by Google. Defaults are now `gemini-3.8-flash`, `gpt-6.1-terra` (was `gpt-4o`) and `claude-sonnet-5-5` (was `claude-sonnet-4-6`). Worlds that already stored a model keep it.
 - **AI Generator: unknown model error** — A retired or mistyped model now points to the *Model* setting instead of showing the raw provider error.
+- **AI Generator: weapon description shown as HTML** — Markup in a generated weapon's description now shows as text ([#61](https://github.com/martin-papy/coc7-qol/issues/61)).
+- **AI Generator: provider change wrote settings from every client** — Changing the provider no longer fails on players' clients or overwrites a custom endpoint entered at the same time ([#43](https://github.com/martin-papy/coc7-qol/issues/43)).
+- **AI Generator: failed or repeated Accept** — If creating the document fails, the review stays open with the result. Accept is disabled while it runs, so a double-click creates one document. Closing the review by any route returns the Create dialog to a usable state ([#50](https://github.com/martin-papy/coc7-qol/issues/50)).
+- **AI Generator: Cancel reset the Create dialog** — The Type and Folder choices are kept after Cancel, and the AI button still follows the type ([#51](https://github.com/martin-papy/coc7-qol/issues/51)).
+- **AI Generator: replies in a code fence or with extra text** — These now parse. A reply cut off at the output limit or refused by the provider says so, instead of "not valid JSON" ([#52](https://github.com/martin-papy/coc7-qol/issues/52)).
+- **AI Generator: out-of-range or malformed values** — Characteristics and skills are kept within 1–99 and 0–99, duplicate skills are dropped, overlong lists capped, and values of the wrong type corrected or reported clearly instead of raising a raw error ([#53](https://github.com/martin-papy/coc7-qol/issues/53)).
+- **AI Generator: weapon skill shown as `Rifle&#x2F;Shotgun`** in the NPC review ([#54](https://github.com/martin-papy/coc7-qol/issues/54)).
+- **Keeper-only highlights setting reloaded every client** — Toggling it no longer reloads anyone; the Keeper's open chat cards and item sheets update at once ([#56](https://github.com/martin-papy/coc7-qol/issues/56)).
+- **English text in a French game** — AI Generator errors, warnings and the generated NPC's Keeper notes now follow the Foundry language, and a generated occupation follows the prompt's language. The Keeper-only highlights hint and tooltips now describe the actual styling and CoC7's trusted-player settings ([#59](https://github.com/martin-papy/coc7-qol/issues/59)).
+- **Cast control missing on NPC and Creature sheets on CoC7 8.16** ([#44](https://github.com/martin-papy/coc7-qol/issues/44)).
+- **README: manual install** — The steps now extract into a `Data/modules/coc7-qol/` folder ([#45](https://github.com/martin-papy/coc7-qol/issues/45)).
+- **Module description** — The manifest and README intro now list every feature ([#46](https://github.com/martin-papy/coc7-qol/issues/46)).
 
 ## [0.8.0] - 2026-11-11
 

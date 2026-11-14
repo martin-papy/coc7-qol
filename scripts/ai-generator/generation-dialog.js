@@ -1,4 +1,5 @@
 import { escapeHtml, t } from '../utils.js'
+import { runAccept } from './dialog-flow.js'
 
 export default class CoC7AIGenerationDialog extends foundry.applications.api.ApplicationV2 {
   static DEFAULT_OPTIONS = {
@@ -18,6 +19,10 @@ export default class CoC7AIGenerationDialog extends foundry.applications.api.App
   #acceptCallback
   #regenerateCallback
   #cancelCallback
+  // Set once Accept succeeds or Regenerate is chosen; any other close counts as Cancel.
+  #settled = false
+  // True while the accept callback runs; close() is refused meanwhile.
+  #accepting = false
 
   constructor ({ itemData, onAccept, onRegenerate, onCancel } = {}, options = {}) {
     super(options)
@@ -27,16 +32,16 @@ export default class CoC7AIGenerationDialog extends foundry.applications.api.App
     this.#cancelCallback = onCancel ?? (() => {})
   }
 
-  async _renderHTML (context, options) {
+  async _renderHTML (_context, _options) {
     const s = this.#itemData.system
     const div = document.createElement('div')
-    div.className = 'coc7-ai-generation-dialog'
+    div.className = 'coc7qol-ai-generation-dialog'
     div.innerHTML = `
       <div class="form-group">
         <label>${t('CoC7.Name')}</label>
         <input type="text" name="ai-item-name" value="${escapeHtml(this.#itemData.name)}">
       </div>
-      <dl class="ai-item-stats">
+      <dl class="coc7qol-ai-item-stats">
         <div><dt>${t('COC7QOL.AIGenerator.WeaponDialog.FieldDamage')}</dt><dd>${escapeHtml(s.range.normal.damage)}</dd></div>
         <div><dt>${t('COC7QOL.AIGenerator.WeaponDialog.FieldSkill')}</dt><dd>${escapeHtml(s.skill.main.name)}</dd></div>
         <div><dt>${t('COC7QOL.AIGenerator.WeaponDialog.FieldRange')}</dt><dd>${escapeHtml(s.range.normal.value || '—')}</dd></div>
@@ -44,8 +49,8 @@ export default class CoC7AIGenerationDialog extends foundry.applications.api.App
         <div><dt>${t('COC7QOL.AIGenerator.WeaponDialog.FieldBullets')}</dt><dd>${escapeHtml(String(s.bullets ?? '—'))}</dd></div>
         <div><dt>${t('COC7QOL.AIGenerator.WeaponDialog.FieldMalfunction')}</dt><dd>${escapeHtml(String(s.malfunction ?? '—'))}</dd></div>
       </dl>
-      <div class="ai-item-description">
-        <p>${escapeHtml(s.description.value)}</p>
+      <div class="coc7qol-ai-item-description">
+        <p>${s.description.value /* escaped by the weapon mapper; rendered as the item sheet will */}</p>
       </div>
       <div class="form-footer">
         <button type="button" data-action="accept" class="bright">${t('COC7QOL.AIGenerator.Button.Accept')}</button>
@@ -56,7 +61,7 @@ export default class CoC7AIGenerationDialog extends foundry.applications.api.App
     return div
   }
 
-  _replaceHTML (result, content, options) {
+  _replaceHTML (result, content, _options) {
     content.replaceChildren(result)
   }
 
@@ -66,18 +71,43 @@ export default class CoC7AIGenerationDialog extends foundry.applications.api.App
     return this.#itemData
   }
 
-  static async #handleAccept (event, target) {
-    await this.#acceptCallback(this.itemData)
+  static async #handleAccept (_event, _target) {
+    this.#accepting = true
+    let created
+    try {
+      created = await runAccept(this.element, () => this.#acceptCallback(this.itemData))
+    } finally {
+      this.#accepting = false
+    }
+    if (!created) return
+    this.#settled = true
     this.close()
   }
 
-  static async #handleRegenerate (event, target) {
+  static async #handleRegenerate (_event, _target) {
+    this.#settled = true
     this.#regenerateCallback()
     this.close()
   }
 
-  static async #handleCancel (event, target) {
-    this.#cancelCallback()
+  static async #handleCancel (_event, _target) {
     this.close()
+  }
+
+  /**
+   * Escape or the header close button while Accept is creating the document would cancel a
+   * creation already under way, so a close is ignored until Accept settles.
+   */
+  close (options) {
+    if (this.#accepting) return Promise.resolve(this)
+    return super.close(options)
+  }
+
+  /** Closing from the header or with Escape cancels, like the Cancel button. */
+  _onClose (options) {
+    super._onClose(options)
+    if (this.#settled) return
+    this.#settled = true
+    this.#cancelCallback()
   }
 }

@@ -2,12 +2,25 @@
 // Skill resolution (compendium lookup) is handled by resolveSkills() called from the injector
 // after the mapper produces the base actor data.
 
-import { escapeHtml, tf } from '../../utils.js'
+import { escapeHtml, t, tf } from '../../utils.js'
 import { loadPrompt } from '../prompts/loader.js'
 import weaponMapper from './weapon.js'
 import { SKILL_TIER_KEYS } from '../skill-tiers.js'
+import { clampInt, invalidFields, isNonEmptyString, isPlainObject, text } from './coerce.js'
 
 const REQUIRED_CHARACTERISTICS = ['str', 'con', 'siz', 'dex', 'app', 'int', 'pow', 'edu']
+
+// The ranges a human NPC's values are kept in. The prompt asks for 15-90 characteristics.
+const CHARACTERISTIC_MIN = 1
+const CHARACTERISTIC_MAX = 99
+const SKILL_MIN = 0
+const SKILL_MAX = 99
+
+// Caps on list lengths: well above what the prompt asks for (a full skill sheet is about
+// 40 entries, weapons 0-3, possessions 3-8), low enough to stop a runaway reply.
+const MAX_SKILLS = 60
+const MAX_WEAPONS = 10
+const MAX_POSSESSIONS = 20
 
 // 25 is the highest base value among weapon skills (Fighting (Brawl) 25,
 // Firearms (Rifle/Shotgun) 25), so this fallback is at or above base for every
@@ -16,9 +29,11 @@ const REQUIRED_CHARACTERISTICS = ['str', 'con', 'siz', 'dex', 'app', 'int', 'pow
 const WEAPON_SKILL_FALLBACK_VALUE = 25
 
 // Matches an unnamed specialization template, e.g. "Survival (any)",
-// "Science ( Any )". CoC7's isAnySpec (document-class.js) matches these on
-// the NAME ALONE — even a non-compendium fallback skill with this exact name
-// trips it — and opens a blocking CoC7SkillSpecializationSelectDialog that
+// "Science ( Any )". CoC7's isAnySpec (models/item/document-class.js) flags a
+// specialization skill whose parsed skill name is "any" (or the localised
+// CoC7.AnySpecName), or one with requiresname / picknameonly set. The fallback
+// skill built by guessNameParts is a specialization, so the name is enough to
+// trip it. The actor then opens a blocking specialization-select dialog that
 // DROPS the skill if the GM dismisses it. Must never reach an actor.
 const ANY_SPEC_PATTERN = /\(\s*any\s*\)\s*$/i
 
@@ -93,47 +108,49 @@ export default {
   },
 
   validate (data) {
+    if (!isPlainObject(data)) throw invalidFields(['name', 'expertiseTier', 'characteristics', 'skills'])
     const errors = []
 
-    if (!data.name) errors.push('name')
+    if (!isNonEmptyString(data.name)) errors.push('name')
 
     if (!SKILL_TIER_KEYS.includes(data.expertiseTier)) {
-      errors.push(`expertiseTier (must be one of: ${SKILL_TIER_KEYS.join(', ')})`)
+      errors.push(`expertiseTier (${SKILL_TIER_KEYS.join(', ')})`)
     }
 
-    if (!data.characteristics || typeof data.characteristics !== 'object') {
+    if (!isPlainObject(data.characteristics)) {
       errors.push('characteristics')
     } else {
-      const missing = REQUIRED_CHARACTERISTICS.filter(c => typeof data.characteristics[c] !== 'number')
-      if (missing.length) errors.push(`characteristics.${missing.join(', characteristics.')}`)
+      const invalid = REQUIRED_CHARACTERISTICS.filter(c => !Number.isFinite(data.characteristics[c]))
+      if (invalid.length) errors.push(`characteristics.${invalid.join(', characteristics.')}`)
     }
 
     if (!Array.isArray(data.skills) || data.skills.length === 0) {
-      errors.push('skills (must be a non-empty array)')
+      errors.push('skills')
     } else {
       data.skills.forEach((entry, index) => {
-        const hasName = typeof entry?.name === 'string' && entry.name.trim() !== ''
-        const hasValue = typeof entry?.value === 'number' && Number.isFinite(entry.value)
-        if (!hasName || !hasValue) {
-          errors.push(`skills[${index}] (must have a non-empty string "name" and a finite numeric "value")`)
-        }
+        if (!isNonEmptyString(entry?.name) || !Number.isFinite(entry?.value)) errors.push(`skills[${index}]`)
       })
     }
 
-    if (errors.length) {
-      throw new Error(`LLM response missing required fields: ${errors.join(', ')}`)
-    }
+    if (errors.length) throw invalidFields(errors)
   },
 
-  toFoundryData (data) {
+  /**
+   * Expects data that passed validate(). Out-of-range numbers are clamped, duplicates and
+   * overlong lists trimmed, and optional fields of the wrong type dropped, each with a warning.
+   * The returned llmData carries the corrected values, since the review dialog renders from it.
+   */
+  toFoundryData (rawData) {
+    const warnings = []
+    const data = this._sanitize(rawData, warnings)
+
     const personalityHtml = data.personalityTraits
-      ? `<p><strong>Personality:</strong> ${escapeHtml(data.personalityTraits)}</p>`
+      ? `<p><strong>${escapeHtml(t('COC7QOL.AIGenerator.NPCDialog.SectionPersonality'))}:</strong> ${escapeHtml(data.personalityTraits)}</p>`
       : ''
     const backgroundHtml = data.background
-      ? `<p><strong>Background:</strong> ${escapeHtml(data.background)}</p>`
+      ? `<p><strong>${escapeHtml(t('COC7QOL.AIGenerator.NPCDialog.SectionBackground'))}:</strong> ${escapeHtml(data.background)}</p>`
       : ''
 
-    const warnings = []
     const weaponsData = this._validateAndMapWeapons(data.weapons, warnings)
     const possessionsData = this._mapPossessions(data.possessions)
     const skillsRaw = this._dropAnySpecializationSkills(
@@ -161,8 +178,8 @@ export default {
             edu: { value: data.characteristics.edu }
           },
           infos: {
-            occupation: data.occupation ?? '',
-            age: String(data.age ?? ''),
+            occupation: data.occupation,
+            age: data.age,
             type: '',
             organization: ''
           },
@@ -180,6 +197,59 @@ export default {
       warnings,
       llmData: data
     }
+  },
+
+  /**
+   * A copy of the LLM data with every value the rest of the mapper and the review dialog read
+   * brought into shape. Builds new objects; the input is left untouched.
+   */
+  _sanitize (data, warnings) {
+    const characteristics = {}
+    for (const key of REQUIRED_CHARACTERISTICS) {
+      const raw = data.characteristics[key]
+      const value = clampInt(raw, CHARACTERISTIC_MIN, CHARACTERISTIC_MAX)
+      if (value !== Math.round(raw)) {
+        warnings.push(tf('COC7QOL.AIGenerator.Warning.CharacteristicClamped', { key: key.toUpperCase(), from: raw, to: value }))
+      }
+      characteristics[key] = value
+    }
+
+    const age = typeof data.age === 'number' && Number.isFinite(data.age) ? String(Math.round(data.age)) : text(data.age)
+
+    return {
+      ...data,
+      name: text(data.name),
+      occupation: text(data.occupation),
+      age,
+      nativeLanguage: text(data.nativeLanguage),
+      physicalDescription: text(data.physicalDescription),
+      personalityTraits: text(data.personalityTraits),
+      background: text(data.background),
+      characteristics,
+      skills: this._sanitizeSkills(data.skills, warnings),
+      weapons: Array.isArray(data.weapons) ? data.weapons.slice(0, MAX_WEAPONS) : [],
+      possessions: Array.isArray(data.possessions) ? data.possessions.slice(0, MAX_POSSESSIONS) : []
+    }
+  },
+
+  /** Clamp skill values into 0-99, keep the first of skills whose names differ only by case, and cap the list. */
+  _sanitizeSkills (skills, warnings) {
+    const seen = new Set()
+    const kept = []
+    for (const skill of skills) {
+      const name = skill.name.trim().replace(/\s+/g, ' ')
+      const key = name.toLowerCase()
+      if (seen.has(key)) {
+        warnings.push(tf('COC7QOL.AIGenerator.Warning.DuplicateSkill', { name }))
+        continue
+      }
+      seen.add(key)
+      kept.push({ ...skill, name, value: clampInt(skill.value, SKILL_MIN, SKILL_MAX) })
+    }
+    if (kept.length > MAX_SKILLS) {
+      warnings.push(tf('COC7QOL.AIGenerator.Warning.TooManySkills', { count: kept.length, max: MAX_SKILLS }))
+    }
+    return kept.slice(0, MAX_SKILLS)
   },
 
   async resolveSkills (skillsRaw, characteristics) {
@@ -204,9 +274,10 @@ export default {
       const skillData = await this._resolveOneSkill(normalized, value, pack, compendiumIndex, own === true, characteristics, resolutionWarnings)
       if (skillData) resolved.push(skillData)
     }
-    resolutionWarnings.forEach(message => {
-      console.warn(`[coc7-qol] ${message}`)
-      ui.notifications?.warn(message)
+    // Kept as key + data so the notification escapes the skill name (Foundry's format option).
+    // notify() also writes the message to the console, so there is no separate console.warn.
+    resolutionWarnings.forEach(({ key, data }) => {
+      ui.notifications?.warn(key, { format: data })
     })
     return resolved
   },
@@ -279,9 +350,9 @@ export default {
           delete data._id
           return data
         }
-        warnings.push(tf('COC7QOL.AIGenerator.Warning.NativeLanguageTemplateMissing', { name: skillName }))
+        warnings.push({ key: 'COC7QOL.AIGenerator.Warning.NativeLanguageTemplateMissing', data: { name: skillName } })
       } else {
-        warnings.push(tf('COC7QOL.AIGenerator.Warning.NativeLanguageNoCompendium', { name: skillName }))
+        warnings.push({ key: 'COC7QOL.AIGenerator.Warning.NativeLanguageNoCompendium', data: { name: skillName } })
       }
     }
 
@@ -339,15 +410,15 @@ export default {
       if (presentLowercase.has(key)) continue
       existing.push({ name: skillName, value: WEAPON_SKILL_FALLBACK_VALUE })
       presentLowercase.add(key)
-      warnings.push(`Auto-added skill "${skillName}" at ${WEAPON_SKILL_FALLBACK_VALUE}% (referenced by a weapon but missing from skills)`)
+      warnings.push(tf('COC7QOL.AIGenerator.Warning.WeaponSkillAdded', { name: skillName, value: WEAPON_SKILL_FALLBACK_VALUE }))
     }
     return existing
   },
 
   /**
    * Drop any skill whose name is an unnamed specialization template (e.g.
-   * "Survival (any)", "Science ( Any )"). CoC7's isAnySpec matches these on
-   * the name alone and opens a blocking specialization-select dialog that
+   * "Survival (any)", "Science ( Any )"). CoC7's isAnySpec flags these (see
+   * ANY_SPEC_PATTERN) and opens a blocking specialization-select dialog that
    * drops the skill entirely if the GM dismisses it — that modal has already
    * wedged a browser session during this feature's development, so these
    * must never reach toFoundryData's output. Builds a new array; the input
@@ -358,7 +429,7 @@ export default {
     for (const skill of skills) {
       const name = (skill?.name ?? '').trim()
       if (ANY_SPEC_PATTERN.test(name)) {
-        warnings.push(`Dropped skill "${name}" — it is an unnamed specialization template, not a usable skill`)
+        warnings.push(tf('COC7QOL.AIGenerator.Warning.AnySpecDropped', { name }))
         continue
       }
       kept.push(skill)
@@ -384,7 +455,7 @@ export default {
       return { ...skill, own: true }
     })
     if (!tagged) {
-      warnings.push(`Native language "${language}" has no matching skill — expected an entry named "Language (${language})"`)
+      warnings.push(tf('COC7QOL.AIGenerator.Warning.NativeLanguageNoSkill', { language }))
     }
     return result
   },
@@ -393,11 +464,12 @@ export default {
     if (!Array.isArray(rawWeapons)) return []
     const mapped = []
     for (const raw of rawWeapons) {
-      if (!raw || typeof raw !== 'object' || !raw.name) continue  // drop silently
+      if (!isPlainObject(raw) || !raw.name) continue  // drop silently
       try {
         weaponMapper.validate(raw)
       } catch (err) {
-        warnings.push(`Weapon "${raw.name}": ${err.message}`)
+        // text(), not String(): a non-string name can make String() throw (e.g. { toString: null }).
+        warnings.push(tf('COC7QOL.AIGenerator.Warning.WeaponDropped', { name: text(raw.name), error: err.message }))
         continue
       }
       mapped.push(weaponMapper.toFoundryData(raw))
@@ -409,14 +481,14 @@ export default {
     if (!Array.isArray(rawPossessions)) return []
     const mapped = []
     for (const raw of rawPossessions) {
-      if (!raw || typeof raw !== 'object' || !raw.name) continue  // drop silently
+      if (!isPlainObject(raw) || !isNonEmptyString(raw.name)) continue  // drop silently
       const n = Math.floor(Number(raw.quantity))
       const quantity = Number.isFinite(n) && n > 0 ? n : 1
       mapped.push({
-        name: raw.name,
+        name: text(raw.name),
         type: 'item',
         system: {
-          description: { value: escapeHtml(raw.description ?? '') },
+          description: { value: escapeHtml(text(raw.description)) },
           quantity
         }
       })

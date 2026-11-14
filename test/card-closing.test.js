@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { JSDOM } from 'jsdom'
-import { stripCardControls, cardActorName } from '../scripts/card-closing.js'
+import { stripCardControls, cardActorName, listOpenCards } from '../scripts/close-all-cards/card-closing.js'
 
 /** Parse card content the way the feature does (DOMParser → body). */
 function parse (html) {
@@ -143,4 +143,51 @@ test('cardActorName skips actors that no longer resolve and returns null when no
 test('cardActorName survives a resolver that throws', () => {
   const throwing = () => { throw new Error('bad uuid') }
   assert.equal(cardActorName({ actorUuids: ['Actor.a1'], resolveName: throwing }), null)
+})
+
+// --- listOpenCards -------------------------------------------------------------
+
+const KEYS = key => `[${key}]`
+const message = (id, load, speaker = {}) => ({ id, timestamp: 0, speaker, flags: { CoC7: { load } } })
+const listDeps = { resolveName: uuid => ({ 'Actor.a': 'Harvey', 'Actor.b': 'Ruth' })[uuid], localize: KEYS, formatTime: () => '10:00' }
+
+test('listOpenCards lists only the cards whose load flag says they are open', () => {
+  const messages = [
+    message('m1', { as: 'CoC7Check', cardOpen: true, actorUuid: 'Actor.a' }),
+    message('m2', { as: 'CoC7Check', cardOpen: false, actorUuid: 'Actor.a' }),
+    message('m3', undefined),
+    { id: 'm4', flags: {} }
+  ]
+
+  assert.deepEqual(listOpenCards(messages, listDeps).map(c => c.messageId), ['m1'])
+})
+
+test('listOpenCards names the card type, the actor and the time', () => {
+  const [card] = listOpenCards([message('m1', { as: 'CoC7SanCheckCard', cardOpen: true, actorUuid: 'Actor.a' })], listDeps)
+
+  assert.deepEqual(card, {
+    messageId: 'm1',
+    type: '[COC7QOL.CloseAllCards.CardType.SanityCheck]',
+    actor: 'Harvey',
+    timestamp: '10:00'
+  })
+})
+
+test('listOpenCards uses the actorUuids of a multi-actor card', () => {
+  const [card] = listOpenCards([message('m1', { as: 'CoC7ChatOpposedMessage', cardOpen: true, actorUuids: ['Actor.a', 'Actor.b'] })], listDeps)
+
+  assert.equal(card.actor, 'Harvey, Ruth')
+})
+
+test('listOpenCards prefers the speaker alias over the card flags', () => {
+  const [card] = listOpenCards([message('m1', { as: 'CoC7Check', cardOpen: true, actorUuid: 'Actor.a' }, { alias: 'The Keeper' })], listDeps)
+
+  assert.equal(card.actor, 'The Keeper')
+})
+
+test('listOpenCards falls back to the unknown type and actor labels', () => {
+  const [card] = listOpenCards([message('m1', { as: 'SomethingNew', cardOpen: true })], listDeps)
+
+  assert.equal(card.type, '[COC7QOL.CloseAllCards.UnknownCardType]')
+  assert.equal(card.actor, '[COC7QOL.CloseAllCards.UnknownActor]')
 })

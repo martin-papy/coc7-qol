@@ -1,6 +1,5 @@
 import { normalizeThreshold, DEFAULT_THRESHOLD, MIN_THRESHOLD, MAX_THRESHOLD } from './highlight.js'
-
-const MODULE = 'coc7-qol'
+import { MODULE_ID } from '../constants.js'
 
 export const ENABLED_SETTING = 'skill-highlight-enabled'
 export const THRESHOLD_SETTING = 'skill-highlight-threshold'
@@ -12,7 +11,7 @@ export const THRESHOLD_SETTING = 'skill-highlight-threshold'
  * @returns {void}
  */
 export function registerSkillHighlightSettings (onChange) {
-  game.settings.register(MODULE, ENABLED_SETTING, {
+  game.settings.register(MODULE_ID, ENABLED_SETTING, {
     name: 'COC7QOL.SkillHighlight.EnabledName',
     hint: 'COC7QOL.SkillHighlight.EnabledHint',
     scope: 'world',
@@ -22,7 +21,7 @@ export function registerSkillHighlightSettings (onChange) {
     onChange
   })
 
-  game.settings.register(MODULE, THRESHOLD_SETTING, {
+  game.settings.register(MODULE_ID, THRESHOLD_SETTING, {
     name: 'COC7QOL.SkillHighlight.ThresholdName',
     hint: 'COC7QOL.SkillHighlight.ThresholdHint',
     scope: 'world',
@@ -40,8 +39,8 @@ export function registerSkillHighlightSettings (onChange) {
  */
 export function activeThreshold () {
   try {
-    if (game.settings.get(MODULE, ENABLED_SETTING) !== true) return null
-    return normalizeThreshold(game.settings.get(MODULE, THRESHOLD_SETTING))
+    if (game.settings.get(MODULE_ID, ENABLED_SETTING) !== true) return null
+    return normalizeThreshold(game.settings.get(MODULE_ID, THRESHOLD_SETTING))
   } catch (_) {
     return null
   }

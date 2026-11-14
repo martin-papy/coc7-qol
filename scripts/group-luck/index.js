@@ -2,6 +2,7 @@ import { t, tf } from '../utils.js'
 import { buildCandidates } from './candidates.js'
 import { buildRequestMessage } from './request.js'
 import GroupLuckDialog from './dialog.js'
+import { LOG_PREFIX } from '../constants.js'
 
 const TOOL_NAME = 'coc7-group-luck'
 
@@ -52,7 +53,7 @@ async function requestRoll ({ roller, presentCount }) {
       await actor.runRoll({ attribute: LUCK_ATTRIBUTE, fastForward: true })
     }
   } catch (err) {
-    console.error('[coc7-qol] Group Luck failed:', err)
+    console.error(LOG_PREFIX, 'Group Luck failed:', err)
     ui.notifications.error('COC7QOL.GroupLuck.Notification.Failed', { format: { name: roller.name, error: err.message } })
   }
 }
@@ -61,7 +62,7 @@ async function requestRoll ({ roller, presentCount }) {
 function openDialog () {
   const candidates = collectCandidates()
   if (candidates.length === 0) {
-    ui.notifications.info(t('COC7QOL.GroupLuck.Notification.NoInvestigators'))
+    ui.notifications.info('COC7QOL.GroupLuck.Notification.NoInvestigators', { localize: true })
     return
   }
   new GroupLuckDialog({ candidates, onConfirm: requestRoll }).render(true)

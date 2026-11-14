@@ -14,8 +14,12 @@ export const CAST_CONTROL_CLASS = 'coc7qol-cast-spell'
  */
 export const CAST_ACTION = 'coc7qol-cast-spell'
 
-/** Item rows in the investigator Possessions tab and the NPC / Creature inventory panels (CoC7 8.16 and 9.1). */
-const ITEM_ROW_SELECTOR = 'li.item[data-item-uuid]'
+/**
+ * Item rows in the investigator Possessions tab and the NPC / Creature inventory panels. The tag
+ * is left out on purpose: the NPC / Creature rows are `<div>` on CoC7 8.16 and `<li>` on 9.1.
+ * Rows that are not spells are skipped by `findSpell`.
+ */
+const ITEM_ROW_SELECTOR = '.item[data-item-uuid]'
 const CONTROLS_SELECTOR = '.item-controls'
 const ICON_CLASSES = ['fa-solid', 'fa-hand-sparkles', 'fa-fw']
 

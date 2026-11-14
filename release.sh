@@ -113,6 +113,14 @@ preflight() {
   jq empty module.json 2>/dev/null \
     || die 2 "module.json is not valid JSON — run 'jq . module.json' to see the parse error"
 
+  # Commit signing works. With commit.gpgsign on, a locked signing agent (e.g. 1Password)
+  # would otherwise fail only at the merge-back step, after the tag has been pushed.
+  # commit-tree writes a dangling commit object and touches no ref.
+  if [[ "$(git config --bool commit.gpgsign || true)" == "true" ]]; then
+    git commit-tree -S "HEAD^{tree}" -m "release.sh signing check" </dev/null >/dev/null 2>&1 \
+      || die 2 "commit signing is enabled but a test signature failed — unlock your signing agent and retry"
+  fi
+
   log "✓ pre-flight checks passed"
 }
 
@@ -170,23 +178,24 @@ pick_target() {
 
     log "The version needs to be bumped."
     log ""
-    log "Bump which?"
-    log "  [P]atch  → ${next_patch}"
-    log "  [M]inor  → ${next_minor}"
-    log "  m[A]jor  → ${next_major}"
-    log "  [Q]uit"
+    log "Bump which? (number or word)"
+    log "  1  patch  → ${next_patch}"
+    log "  2  minor  → ${next_minor}"
+    log "  3  major  → ${next_major}"
+    log "  q  quit"
 
     local ans=""
     while true; do
       printf '> '
       # EOF on stdin means non-interactive use — abort rather than silently picking a default.
       read -r ans || die 1 "aborted (EOF on stdin)"
-      case "$ans" in
-        p|P) TARGET="$next_patch"; break ;;
-        m|M) TARGET="$next_minor"; break ;;
-        a|A) TARGET="$next_major"; break ;;
-        q|Q) die 1 "aborted by user" ;;
-        *)   log "Please answer P, M, A, or Q." ;;
+      # No single letters for the bumps: "M" used to mean minor and was easy to take for major.
+      case "$(printf '%s' "$ans" | tr '[:upper:]' '[:lower:]')" in
+        1|patch) TARGET="$next_patch"; break ;;
+        2|minor) TARGET="$next_minor"; break ;;
+        3|major) TARGET="$next_major"; break ;;
+        q|quit)  die 1 "aborted by user" ;;
+        *)       log "Please answer 1, 2, 3 (or patch, minor, major), or q." ;;
       esac
     done
   fi
@@ -307,7 +316,7 @@ merge_back() {
   fi
 
   git merge --no-edit main \
-    || die 4 "release succeeded but merging main into develop produced conflicts. Resolve them, then run: git push origin develop"
+    || die 4 "release succeeded but merging main into develop failed (conflicts, or the merge commit could not be signed). Check 'git status': resolve any conflicts or unlock the signing agent, run 'git commit --no-edit', then 'git push origin develop'"
 
   git push origin develop \
     || die 4 "release succeeded and main↔develop merged locally, but 'git push origin develop' failed. Manually run: git push origin develop"

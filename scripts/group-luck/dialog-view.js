@@ -46,7 +46,7 @@ function input (doc, type, name, value) {
  */
 function buildMarker (doc, isRoller, isTiedRow, t) {
   if (!isRoller && !isTiedRow) return null
-  const marker = el(doc, 'span', 'group-luck-marker')
+  const marker = el(doc, 'span', 'coc7qol-group-luck-marker')
   if (isRoller) {
     const icon = el(doc, 'i', 'fa-solid fa-dice-d20')
     icon.setAttribute('aria-hidden', 'true')
@@ -70,15 +70,15 @@ function buildRow (doc, candidate, { tickedIds, resolution }, t) {
   const hasTie = tied.length > 1
   const isTiedRow = hasTie && tied.some(entry => entry.id === candidate.id)
   const isRoller = roller?.id === candidate.id
-  const li = el(doc, 'li', 'group-luck-row')
+  const li = el(doc, 'li', 'coc7qol-group-luck-row')
   li.dataset.candidateId = candidate.id
-  li.classList.toggle('is-roller', isRoller)
-  li.classList.toggle('is-tied', isTiedRow)
+  li.classList.toggle('coc7qol-is-roller', isRoller)
+  li.classList.toggle('coc7qol-is-tied', isTiedRow)
 
-  const label = el(doc, 'label', 'group-luck-present')
+  const label = el(doc, 'label', 'coc7qol-group-luck-present')
   const present = input(doc, 'checkbox', 'present', candidate.id)
   present.checked = tickedIds.has(candidate.id)
-  label.append(present, el(doc, 'span', 'group-luck-name', candidate.name))
+  label.append(present, el(doc, 'span', 'coc7qol-group-luck-name', candidate.name))
   li.append(label)
 
   if (isTiedRow) {
@@ -88,12 +88,12 @@ function buildRow (doc, candidate, { tickedIds, resolution }, t) {
     li.append(radio)
   }
   const described = []
-  const offline = candidate.isOnline ? null : el(doc, 'span', 'group-luck-offline', t(`${KEY}Offline`))
-  const value = el(doc, 'span', 'group-luck-value', String(candidate.luck))
+  const offline = candidate.isOnline ? null : el(doc, 'span', 'coc7qol-group-luck-offline', t(`${KEY}Offline`))
+  const value = el(doc, 'span', 'coc7qol-group-luck-value', String(candidate.luck))
   const marker = buildMarker(doc, isRoller, isTiedRow, t)
   for (const [suffix, node] of [['luck', value], ['offline', offline], ['marker', marker]]) {
     if (!node) continue
-    node.setAttribute('id', `group-luck-${candidate.id}-${suffix}`)
+    node.setAttribute('id', `coc7qol-group-luck-${candidate.id}-${suffix}`)
     described.push(node.id)
   }
   present.setAttribute('aria-describedby', described.join(' '))
@@ -112,12 +112,12 @@ function buildRow (doc, candidate, { tickedIds, resolution }, t) {
  * @returns {HTMLElement}
  */
 function buildList (doc, candidates, state, t) {
-  const list = el(doc, 'ul', 'group-luck-list')
+  const list = el(doc, 'ul', 'coc7qol-group-luck-list')
   const hasDefaults = candidates.some(candidate => candidate.isDefault)
   let dividerDone = false
   for (const candidate of candidates) {
     if (hasDefaults && !candidate.isDefault && !dividerDone) {
-      list.append(el(doc, 'li', 'group-luck-divider', t(`${KEY}Others`)))
+      list.append(el(doc, 'li', 'coc7qol-group-luck-divider', t(`${KEY}Others`)))
     }
     if (!candidate.isDefault) dividerDone = true
     list.append(buildRow(doc, candidate, state, t))
@@ -133,7 +133,7 @@ function buildList (doc, candidates, state, t) {
  * @returns {HTMLElement}
  */
 function buildFooter (doc, { roller }, { t, tf }) {
-  const footer = el(doc, 'footer', 'group-luck-footer')
+  const footer = el(doc, 'footer', 'coc7qol-group-luck-footer')
   const confirm = el(doc, 'button', 'bright')
   confirm.type = 'button'
   confirm.dataset.action = 'confirm'
@@ -159,9 +159,9 @@ function buildFooter (doc, { roller }, { t, tf }) {
  * @returns {HTMLElement}
  */
 export function buildGroupLuckView (doc, { candidates, tickedIds, resolution }, { t, tf }) {
-  const root = el(doc, 'div', 'coc7-qol-group-luck')
+  const root = el(doc, 'div', 'coc7qol-group-luck')
   root.append(
-    el(doc, 'p', 'group-luck-hint', t(`${KEY}Hint`)),
+    el(doc, 'p', 'coc7qol-group-luck-hint', t(`${KEY}Hint`)),
     buildList(doc, candidates, { tickedIds, resolution }, t),
     buildFooter(doc, resolution, { t, tf })
   )

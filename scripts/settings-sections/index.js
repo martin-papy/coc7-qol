@@ -4,8 +4,7 @@ import { AI_SETTING_KEYS } from '../ai-generator/settings.js'
 import { SETTING_KEY as GM_HIGHLIGHT_SETTING } from '../gm-visibility/settings.js'
 import { RESIZABLE_SETTING, SKILL_COLUMNS_SETTING } from '../npc-sheets/settings.js'
 import { ENABLED_SETTING, THRESHOLD_SETTING } from '../skill-highlight/settings.js'
-
-const MODULE = 'coc7-qol'
+import { MODULE_ID } from '../constants.js'
 
 /**
  * The module's page of the settings window, section by section. A setting shown in the
@@ -23,6 +22,6 @@ Hooks.on('renderSettingsConfig', (_app, element) => {
   addSettingsSections(element, SECTIONS.map(({ id, titleKey, keys }) => ({
     id,
     title: t(titleKey),
-    settings: keys.map(key => `${MODULE}.${key}`)
+    settings: keys.map(key => `${MODULE_ID}.${key}`)
   })))
 })

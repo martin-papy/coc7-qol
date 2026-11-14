@@ -12,7 +12,11 @@ This is a no-build-step vanilla JS module. FoundryVTT loads `scripts/*.js` files
 
 Each feature is a self-contained ES module in `scripts/` that registers FoundryVTT hooks. The module.json `esmodules` array is the entry point list — add new feature files there.
 
-**Key pattern:** Features hook into FoundryVTT's lifecycle via `Hooks.on(...)`. Most use render hooks (e.g., `renderItemSheetV2` for item sheets, `renderActorSheetV2` for actor sheets) to modify sheet HTML after the system renders it. Some use non-render hooks (e.g., `getSceneControlButtons` to inject buttons into the scene controls toolbar, used by `scripts/close-all-cards.js` and `scripts/group-luck/`). This avoids modifying CoC7 source code.
+**Key pattern:** Features hook into FoundryVTT's lifecycle via `Hooks.on(...)`. Most use render hooks (e.g., `renderItemSheetV2` for item sheets, `renderActorSheetV2` for actor sheets) to modify sheet HTML after the system renders it. Some use non-render hooks (e.g., `getSceneControlButtons` to inject buttons into the scene controls toolbar, used by `scripts/close-all-cards/` and `scripts/group-luck/`). This avoids modifying CoC7 source code.
+
+**Shared constants:** import the module ID and console prefix from `scripts/constants.js` (`MODULE_ID`, `LOG_PREFIX`) rather than repeating the literal. `scripts/utils.js` holds `escapeHtml`, `t` / `tf` and `formatApiError`; both are imported by features, never listed in `esmodules`.
+
+**CSS classes and element IDs** the module adds carry the `coc7qol-` prefix (e.g. `coc7qol-npc-section`, `coc7qol-group-luck-row`, state classes like `coc7qol-is-roller`). Never use the bare `coc7-` prefix: it is the CoC7 system's own namespace.
 
 ### AI Generator
 
@@ -49,7 +53,9 @@ End state: you are on `develop`, fully synced with `main`. The GitHub Actions re
 
 See [docs/superpowers/specs/2026-05-19-release-script-design.md](docs/superpowers/specs/2026-05-19-release-script-design.md) for the full design and [docs/superpowers/plans/2026-05-19-release-script.md](docs/superpowers/plans/2026-05-19-release-script.md) for the implementation breakdown.
 
-Pre-release tags (`vX.Y.Z-beta.N`, `vX.Y.Z-rc.N`, etc.) create a GitHub pre-release and skip the FoundryVTT publish step.
+Pre-release tags (`vX.Y.Z-beta.N`, `vX.Y.Z-rc.N`, etc.) create a GitHub pre-release and skip the FoundryVTT publish step. `release.sh` handles stable versions only; a pre-release is cut by hand: set `module.json` `version` to `X.Y.Z-beta.N` and `download` to `https://github.com/martin-papy/coc7-qol/releases/download/vX.Y.Z-beta.N/coc7-qol.zip`, commit, then tag `vX.Y.Z-beta.N` and push the tag. The workflow checks both fields against the tag. It may be tagged from any branch (stable tags must be on `main`); without a matching CHANGELOG section its notes fall back to GitHub's generated ones.
+
+`release.sh` checks up front that commit signing works when `commit.gpgsign` is on, so a locked signing agent fails before anything is pushed. It creates a lightweight tag, so it does not support `tag.gpgsign` (git would ask for a tag message).
 
 ### Zip contents
 
@@ -57,19 +63,20 @@ The workflow builds `coc7-qol.zip` containing the runtime files referenced by `m
 
 ```
 module.json
+LICENSE
 scripts/
 styles/
 lang/
 ```
 
-`images/`, `docs/`, `temp/`, `CHANGELOG.md`, `README.md`, `LICENSE`, and `.github/` are repo-only and excluded.
+`LICENSE` ships because the MIT text asks for the notice in all copies. `images/`, `docs/`, `temp/`, `test/`, `CHANGELOG.md`, `README.md` and `.github/` are repo-only and excluded.
 
 ### Manual fallback
 
 If the workflow is broken or unavailable, the release can be produced by hand:
 
 ```bash
-zip -r /tmp/coc7-qol.zip module.json scripts/ styles/ lang/
+zip -r /tmp/coc7-qol.zip module.json LICENSE scripts/ styles/ lang/
 gh release create vX.Y.Z --title "vX.Y.Z" --generate-notes /tmp/coc7-qol.zip module.json
 ```
 
@@ -82,8 +89,11 @@ Two layers: unit tests for logic that does not need Foundry, and manual testing 
 ### Unit tests
 
     npm test
+    npm run lint
 
-runs `node --test "test/**/*.test.js"` (Node 22+, built-in test runner, `jsdom` for DOM work). `.github/workflows/test.yml` runs it on every pull request and on pushes to `develop` and `main`. `test/`, `package.json` and `node_modules/` are repo-only and never shipped in the release zip.
+`npm test` runs `node --test "test/**/*.test.js"` (Node 22+, built-in test runner, `jsdom` for DOM work). `.github/workflows/test.yml` runs it on every pull request and on pushes to `develop` and `main`. `test/`, `package.json` and `node_modules/` are repo-only and never shipped in the release zip.
+
+`npm run lint` runs ESLint with `neostandard` (standard style: no semicolons, space before function parentheses) over `scripts/` and `test/`; CI runs it before the tests, and `npm run lint:fix` applies the formatting. Foundry globals the code may use are declared in `eslint.config.js`.
 
 Only modules that do not touch Foundry globals at import time can be tested this way. Keep a feature's rules and DOM transforms in such a module and pass Foundry data in as arguments, leaving `game`, `Hooks`, `ui` and `CONFIG` access to the feature's `index.js` — see `scripts/spell-cast/cast-control.js` with `test/spell-cast.test.js`, or `scripts/rest-targets/restructure.js` with `test/rest-targets.test.js`. New logic of this kind gets a test file in `test/`.
 

@@ -1,6 +1,6 @@
 /* ─── Shared: AI generate sparkle button ─────────────────────────────────── */
 
-.coc7-ai-generate-btn {
+.coc7qol-ai-generate-btn {
   flex: 0 0 auto;
   min-width: 2rem;
   padding: 0.25rem 0.5rem;
@@ -8,24 +8,24 @@
 
 /* ─── Shared: prompt area (weapon + NPC) ─────────────────────────────────── */
 
-.coc7-ai-prompt-area {
+.coc7qol-ai-prompt-area {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
   padding: 0.5rem 0;
 }
 
-.coc7-ai-prompt-area label {
+.coc7qol-ai-prompt-area label {
   font-weight: bold;
 }
 
-.coc7-ai-prompt-area textarea {
+.coc7qol-ai-prompt-area textarea {
   width: 100%;
   resize: vertical;
   box-sizing: border-box;
 }
 
-.coc7-ai-random-chars-label {
+.coc7qol-ai-random-chars-label {
   font-weight: normal;
   font-size: 0.875em;
   display: flex;
@@ -35,23 +35,23 @@
   cursor: pointer;
 }
 
-.coc7-ai-hint {
+.coc7qol-ai-hint {
   color: var(--color-text-dark-secondary, #888);
   font-style: italic;
 }
 
-.coc7-ai-error {
+.coc7qol-ai-error {
   display: none;
-  color: var(--color-text-dark-error, red);
+  color: var(--color-level-error, red);
   margin-top: 0.25rem;
   font-size: 0.875em;
 }
 
-.coc7-btn-generate {
+.coc7qol-btn-generate {
   flex: 1;
 }
 
-.coc7-btn-back {
+.coc7qol-btn-back {
   flex: 0 0 auto;
 }
 
@@ -61,7 +61,7 @@
    .window-content `overflow: hidden`, so content taller than the viewport is
    clipped with no scrollbar (issue #8). Own the scroll here: fill the
    resolved window-content height and scroll internally. */
-.coc7-ai-generation-dialog {
+.coc7qol-ai-generation-dialog {
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -69,7 +69,7 @@
   overflow-y: auto;
 }
 
-.coc7-ai-generation-dialog .form-footer {
+.coc7qol-ai-generation-dialog .form-footer {
   display: flex;
   flex-direction: row;
   gap: 0.5rem;
@@ -80,12 +80,6 @@
   border-top: 1px solid var(--color-border-dark, #333);
 }
 
-/* ─── Image popout cursor ────────────────────────────────────────────────── */
-
-.item-image-popout-trigger {
-  cursor: pointer;
-}
-
 /* ─── NPC review dialog ──────────────────────────────────────────────────── */
 
 /* The NPC preview is content-heavy (characteristics, skills, equipment,
@@ -94,7 +88,7 @@
    the action buttons fall off-screen with no scrollbar (issue #8). Own the
    scroll here: fill the resolved window-content height and scroll internally;
    the footer is pinned so Accept / Regenerate / Cancel stay visible. */
-.coc7-ai-npc-dialog {
+.coc7qol-ai-npc-dialog {
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -102,68 +96,68 @@
   overflow-y: auto;
 }
 
-.coc7-npc-identity {
+.coc7qol-npc-identity {
   background: var(--color-cool-5, #1a1a2e);
   padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--color-border-dark, #333);
 }
 
-.coc7-npc-identity-name {
+.coc7qol-npc-identity-name {
   font-size: 1.2rem;
   font-weight: bold;
   color: var(--color-warm-2, #e8d5b7);
   margin-bottom: 0.2rem;
 }
 
-.coc7-npc-identity-meta {
+.coc7qol-npc-identity-meta {
   display: flex;
   gap: 1.5rem;
   font-size: 0.85rem;
   color: var(--color-text-light-6, #aaa);
 }
 
-.coc7-npc-identity-meta-label {
-  color: var(--color-text-light-8, #888);
+.coc7qol-npc-identity-meta-label {
+  color: var(--color-text-subtle, #888);
 }
 
-.coc7-npc-section {
+.coc7qol-npc-section {
   padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--color-border-dark, #333);
 }
 
-.coc7-npc-section-label {
+.coc7qol-npc-section-label {
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--color-text-light-8, #888);
+  color: var(--color-text-subtle, #888);
   margin-bottom: 0.5rem;
 }
 
-.coc7-npc-chars-grid {
+.coc7qol-npc-chars-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 0.4rem;
 }
 
-.coc7-npc-char-cell {
+.coc7qol-npc-char-cell {
   text-align: center;
   background: var(--color-cool-5-75, #111);
   border-radius: 4px;
   padding: 0.35rem 0;
 }
 
-.coc7-npc-char-label {
+.coc7qol-npc-char-label {
   font-size: 0.65rem;
-  color: var(--color-text-light-8, #888);
+  color: var(--color-text-subtle, #888);
 }
 
-.coc7-npc-char-value {
+.coc7qol-npc-char-value {
   font-size: 1rem;
   font-weight: bold;
   color: var(--color-warm-2, #c9a96e);
 }
 
-.coc7-npc-skills-grid {
+.coc7qol-npc-skills-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.25rem 1rem;
@@ -176,7 +170,7 @@
    claim more than its column before the name track sees any content: a long
    name (e.g. "Language (English)") must keep every character, so the name
    wraps to a second line instead of losing text to an ellipsis. */
-.coc7-npc-skill-row {
+.coc7qol-npc-skill-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: start;
@@ -185,12 +179,12 @@
   padding: 0.15rem 0;
 }
 
-.coc7-npc-skill-name {
+.coc7qol-npc-skill-name {
   color: var(--color-text-light-3, #ccc);
   overflow-wrap: break-word;
 }
 
-.coc7-npc-skill-tier {
+.coc7qol-npc-skill-tier {
   font-size: 0.62rem;
   letter-spacing: 0.02em;
   text-transform: uppercase;
@@ -198,23 +192,23 @@
   white-space: nowrap;
 }
 
-.coc7-npc-skill-above-tier {
+.coc7qol-npc-skill-above-tier {
   background: rgba(212, 160, 23, 0.1);
   border-bottom-color: var(--color-warm-2, #d4a017);
 }
 
-.coc7-npc-skill-above-tier .coc7-npc-skill-tier {
+.coc7qol-npc-skill-above-tier .coc7qol-npc-skill-tier {
   color: var(--color-warm-2, #d4a017);
 }
 
-.coc7-npc-skill-flag {
+.coc7qol-npc-skill-flag {
   color: var(--color-warm-2, #d4a017);
   font-weight: bold;
   margin-right: 0.25rem;
   cursor: help;
 }
 
-.coc7-npc-skill-value {
+.coc7qol-npc-skill-value {
   /* Grid auto-placement fills cells in DOM order: on a row with no tier
      label there are only two children (name, value), so the value would
      otherwise land in track 2 instead of track 3, landing a few pixels left
@@ -226,14 +220,14 @@
   font-weight: bold;
 }
 
-.coc7-npc-narrative {
+.coc7qol-npc-narrative {
   font-size: 0.82rem;
   color: var(--color-text-light-5, #bbb);
   margin: 0;
   overflow-wrap: break-word;
 }
 
-.coc7-ai-npc-dialog .form-footer {
+.coc7qol-ai-npc-dialog .form-footer {
   display: flex;
   flex-direction: row;
   gap: 0.5rem;
@@ -246,13 +240,13 @@
 
 /* ─── NPC dialog: equipment rows (weapons + possessions) ─────────────────── */
 
-.coc7-npc-equip-list {
+.coc7qol-npc-equip-list {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
 }
 
-.coc7-npc-equip-row {
+.coc7qol-npc-equip-row {
   display: grid;
   grid-template-columns: 1fr auto auto;
   align-items: center;
@@ -262,16 +256,16 @@
   border-bottom: 1px solid var(--color-cool-5-75, #1f1f1f);
 }
 
-.coc7-npc-equip-name {
+.coc7qol-npc-equip-name {
   color: var(--color-text-light-3, #ccc);
 }
 
-.coc7-npc-equip-detail {
+.coc7qol-npc-equip-detail {
   color: var(--color-text-light-6, #888);
   font-size: 0.78rem;
 }
 
-.coc7-npc-equip-remove {
+.coc7qol-npc-equip-remove {
   flex: 0 0 auto;
   width: 1.5rem;
   height: 1.5rem;
@@ -285,31 +279,31 @@
   cursor: pointer;
 }
 
-.coc7-npc-equip-remove:hover {
+.coc7qol-npc-equip-remove:hover {
   color: var(--color-warm-2, #c9a96e);
   border-color: var(--color-warm-2, #c9a96e);
 }
 
-.coc7-npc-equip-row.coc7-ai-removed .coc7-npc-equip-name,
-.coc7-npc-equip-row.coc7-ai-removed .coc7-npc-equip-detail {
+.coc7qol-npc-equip-row.coc7qol-ai-removed .coc7qol-npc-equip-name,
+.coc7qol-npc-equip-row.coc7qol-ai-removed .coc7qol-npc-equip-detail {
   text-decoration: line-through;
   opacity: 0.5;
 }
 
 /* ─── NPC dialog: warnings callout ───────────────────────────────────────── */
 
-.coc7-ai-warnings {
+.coc7qol-ai-warnings {
   border-left: 3px solid var(--color-warm-2, #d4a017);
   background: rgba(212, 160, 23, 0.08);
 }
 
-.coc7-ai-warnings-list {
+.coc7qol-ai-warnings-list {
   margin: 0;
   padding-left: 1.25rem;
   font-size: 0.8rem;
   color: var(--color-text-light-5, #bbb);
 }
 
-.coc7-ai-warnings-list li {
+.coc7qol-ai-warnings-list li {
   margin: 0.15rem 0;
 }

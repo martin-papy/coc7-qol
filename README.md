@@ -1,6 +1,6 @@
 # CoC7 QoL Improvements
 
-A module for the Call of Cthulhu 7th Edition (CoC7) system on FoundryVTT. Adds easy setting of dice roll visibility, keeper-only highlights, image popouts, AI-powered weapon and NPC generation, and bulk card management for GMs.
+A module for the Call of Cthulhu 7th Edition (CoC7) system on FoundryVTT. Adds a dice roll visibility selector, bulk closing of chat cards, Group Luck rolls, item image popouts, AI-powered weapon and NPC generation, keeper-only highlights, grouped Rest and Trade / Store targets, resizable NPC and Creature sheets, casting spells straight from the actor sheet, and a highlight for strong skills.
 
 ## Have an idea or a feedback ?
 
@@ -82,7 +82,7 @@ Plug in your own key for **Anthropic Claude**, **OpenAI GPT**, or **Google Gemin
 
 ## 👁️ Keeper-Only Highlights
 
-See at a glance which parts of item sheets and chat cards your players **can't see** — and which they **can see but can't change**. Content hidden from players gets a solid crimson outline and an 👁️ badge; read-only controls (visible to players but locked) get a dashed amber outline and a 🔒 badge. Keeper-only and on by default; toggle it under **Settings → Module Settings → CoC7 QoL Improvements**.
+See at a glance which parts of item sheets and chat cards your players **can't see** — and which they **can see but can't change**. Content hidden from players gets a crimson left border, a light tint and an 👁️ badge; read-only controls (visible to players but locked) get a dashed amber outline and a 🔒 badge. Keeper-only and on by default; toggle it under **Settings → Module Settings → CoC7 QoL Improvements**.
 
 | Keeper's view | The same card, player's view |
 |---|---|
@@ -122,6 +122,8 @@ Skills also read **down each column**, like on the investigator sheet, and a wid
 
 Both are on by default. The Keeper can switch either one off under **Settings → Module Settings → CoC7 QoL Improvements**.
 
+[**Read more →**](docs/features/resizable-npc-sheets.md)
+
 ---
 
 ## 🪄 Cast Spells from the Sheet
@@ -130,6 +132,8 @@ Every spell listed on an investigator, NPC or Creature sheet gets a **cast icon*
 
 The icon is there for anyone who owns the actor. The Keeper can also **right-click** it to cast hidden, so only the Keeper sees the card.
 
+[**Read more →**](docs/features/spell-cast.md)
+
 ---
 
 ## 💪 Strong Skills at a Glance
@@ -137,6 +141,8 @@ The icon is there for anyone who owns the actor. The Keeper can also **right-cli
 Keep your skills sorted by name and still see what a character is good at: every skill at **50% or more** gets a soft tint, a bar on its left edge and a bold name. It works on investigator, NPC and Creature sheets, in the light and the dark theme.
 
 It is on by default. The Keeper can change the threshold or switch it off for the whole table under **Settings → Module Settings → CoC7 QoL Improvements**.
+
+[**Read more →**](docs/features/strong-skills.md)
 
 ---
 
@@ -162,8 +168,8 @@ Dialogs, buttons, settings, and notifications follow your configured Foundry lan
 
 ### Manual
 
-1. Download the latest release from the [Releases](https://github.com/martin-papy/coc7-qol/releases) page
-2. Extract into your `Data/modules/` directory
+1. Download `coc7-qol.zip` from the latest release on the [Releases](https://github.com/martin-papy/coc7-qol/releases) page
+2. Create a new `Data/modules/coc7-qol/` folder and extract the zip into it (the zip has no top-level folder, so `module.json` should end up directly inside `coc7-qol/`)
 3. Restart FoundryVTT
 
 ## Compatibility
@@ -173,7 +179,7 @@ Dialogs, buttons, settings, and notifications follow your configured Foundry lan
 
 ## AI Usage Disclaimer
 
-This module has been developped with the help of an AI Coding assistant (Claude Code). The code has been thoroughly reviewed and tested by a human (me).
+This module has been developed with the help of an AI Coding assistant (Claude Code). The code has been thoroughly reviewed and tested by a human (me).
 
 ## License
 

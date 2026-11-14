@@ -1,6 +1,11 @@
-import { test } from 'node:test'
+import { test, before, after } from 'node:test'
 import assert from 'node:assert/strict'
 import { formatApiError } from '../scripts/utils.js'
+import { installEnglishI18n } from './helpers/i18n.js'
+
+let uninstallI18n
+before(() => { uninstallI18n = installEnglishI18n() })
+after(() => uninstallI18n())
 
 const MODEL_HINT = /check the Model setting under AI Generator/
 

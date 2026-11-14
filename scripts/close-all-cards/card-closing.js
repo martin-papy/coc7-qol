@@ -1,8 +1,59 @@
 /**
  * Pure helpers for the Close All Cards feature. No Foundry globals, so they can
  * be unit-tested (test/card-closing.test.js). The Foundry wiring lives in
- * close-all-cards.js.
+ * index.js and dialog.js.
  */
+
+// Maps CoC7 card template class names (flags.CoC7.load.as) to i18n keys.
+const CARD_TYPE_KEYS = {
+  CoC7Check: 'COC7QOL.CloseAllCards.CardType.SkillCheck',
+  CoC7SanCheckCard: 'COC7QOL.CloseAllCards.CardType.SanityCheck',
+  CoC7ConCheck: 'COC7QOL.CloseAllCards.CardType.ConstitutionCheck',
+  CoC7ChatCombatMelee: 'COC7QOL.CloseAllCards.CardType.MeleeCombat',
+  CoC7ChatCombatRanged: 'COC7QOL.CloseAllCards.CardType.RangedCombat',
+  CoC7ChatDamage: 'COC7QOL.CloseAllCards.CardType.Damage',
+  CoC7ChatOpposedMessage: 'COC7QOL.CloseAllCards.CardType.OpposedRoll',
+  CoC7ChatCombinedMessage: 'COC7QOL.CloseAllCards.CardType.CombinedRoll',
+  CoC7ChatChaseObstacle: 'COC7QOL.CloseAllCards.CardType.ChaseObstacle'
+}
+
+/**
+ * @typedef {object} OpenCard
+ * @property {string} messageId
+ * @property {string} type       Localised card type.
+ * @property {string} actor      Who the card is about, or the localised "unknown" label.
+ * @property {string} timestamp  Display time of the message.
+ */
+
+/**
+ * The chat cards CoC7 still holds open (flags.CoC7.load.cardOpen), as the dialog lists them.
+ * @param {Iterable<object>} messages  ChatMessage documents (or plain objects of the same shape).
+ * @param {object} deps
+ * @param {(uuid: string) => string | null | undefined} deps.resolveName  Display name of an actor uuid.
+ * @param {(key: string) => string} deps.localize
+ * @param {(timestamp: number) => string} deps.formatTime
+ * @returns {OpenCard[]}
+ */
+export function listOpenCards (messages, { resolveName, localize, formatTime }) {
+  const open = []
+  for (const message of messages) {
+    const load = message.flags?.CoC7?.load
+    if (load?.cardOpen !== true) continue
+    const actor = cardActorName({
+      speakerAlias: message.speaker?.alias,
+      // Multi-actor cards (opposed, combined, damage) store actorUuids; the others a single actorUuid.
+      actorUuids: Array.isArray(load.actorUuids) ? load.actorUuids : [load.actorUuid],
+      resolveName
+    })
+    open.push({
+      messageId: message.id,
+      type: localize(CARD_TYPE_KEYS[load.as] ?? 'COC7QOL.CloseAllCards.UnknownCardType'),
+      actor: actor ?? localize('COC7QOL.CloseAllCards.UnknownActor'),
+      timestamp: formatTime(message.timestamp)
+    })
+  }
+  return open
+}
 
 /** The system's own "Close card" button (roll-result.hbs, combined-roll.hbs, opposed-roll.hbs). */
 const CLOSE_BUTTON_SELECTOR = 'button[data-action="toggleValue"][data-set="cardOpen"]'

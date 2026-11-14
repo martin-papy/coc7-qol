@@ -47,9 +47,19 @@ From the `main` branch, run:
 
     ./release.sh
 
-The script handles version selection, `module.json` edits, the release commit, tag creation, push, and the merge-back to `develop`. It validates that `CHANGELOG.md` already has a `## [X.Y.Z] - YYYY-MM-DD` entry for the target version and aborts cleanly if not.
+The script handles version selection, `module.json` edits, the release commit, tag creation, push, and the merge-back to `develop`. Before touching anything it runs `npm run lint` and `npm test` (so `npm ci` must have been run), checks that the tag does not already exist on `origin`, and validates that `CHANGELOG.md` already has a `## [X.Y.Z] - YYYY-MM-DD` entry for the target version; it aborts cleanly if any of these fails.
 
 End state: you are on `develop`, fully synced with `main`. The GitHub Actions release workflow runs from the pushed tag and submits to FoundryVTT.
+
+The workflow has three jobs: `test` (lint and unit tests, reusing `test.yml`), `release` (preflight, zip, GitHub release) and `foundry` (publish to FoundryVTT, stable tags only). Each needs the one before, so a failing test, a manifest path that does not exist or a lang key missing from one file stops the release before anything is published.
+
+### Recovering from a failed run
+
+Every step can be repeated, so a failed run is finished by running it again, never by deleting the release or the tag:
+
+- **The `foundry` job failed** (expired token, 429, 5xx): fix the cause, then use **Re-run failed jobs** on the run. Only the Foundry publish runs again; the GitHub release is left as is.
+- **The run is too old to re-run**: start the workflow by hand from the Actions tab (**Run workflow**, with the tag selected under *Use workflow from*). The `release` job finds the existing release and replaces its two assets.
+- **The `test` or `release` job failed**: nothing was published. Fix on `main`, delete the tag locally and on `origin`, and run `./release.sh` again.
 
 See [docs/superpowers/specs/2026-05-19-release-script-design.md](docs/superpowers/specs/2026-05-19-release-script-design.md) for the full design and [docs/superpowers/plans/2026-05-19-release-script.md](docs/superpowers/plans/2026-05-19-release-script.md) for the implementation breakdown.
 

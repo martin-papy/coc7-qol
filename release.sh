@@ -62,7 +62,7 @@ semver_cmp() {
 
 preflight() {
   # Tools on PATH
-  for tool in git gh jq; do
+  for tool in git gh jq npm; do
     command -v "$tool" >/dev/null 2>&1 \
       || die 2 "required tool '$tool' not found on PATH"
   done
@@ -120,6 +120,18 @@ preflight() {
     git commit-tree -S "HEAD^{tree}" -m "release.sh signing check" </dev/null >/dev/null 2>&1 \
       || die 2 "commit signing is enabled but a test signature failed — unlock your signing agent and retry"
   fi
+
+  # Lint and unit tests pass on the commit about to be released. The release workflow runs
+  # them again as a gate, but by then the tag is already pushed.
+  [[ -d node_modules ]] \
+    || die 2 "node_modules not found — run 'npm ci' first (the pre-flight runs the linter and the tests)"
+  log "Running lint and tests…"
+  npm run --silent lint \
+    || die 2 "lint failed — fix the errors above (or run 'npm run lint:fix'), commit, and retry"
+  npm test --silent >/dev/null \
+    || die 2 "tests failed — run 'npm test' to see the failures, fix them, and retry"
+  [[ -z "$(git status --porcelain)" ]] \
+    || die 2 "lint or tests left changes in the working tree — inspect with 'git status'"
 
   log "✓ pre-flight checks passed"
 }
@@ -203,6 +215,22 @@ pick_target() {
   # Defense-in-depth: TARGET must be strictly greater than LATEST.
   [[ "$(semver_cmp "$TARGET" "$LATEST")" == "1" ]] \
     || die 2 "target v${TARGET} is not greater than the latest release v${LATEST} — aborting to avoid a duplicate tag"
+}
+
+# ----------------------------------------------------------------------------
+# Remote tag check
+# ----------------------------------------------------------------------------
+
+# The tag may exist on the remote without a published release (a workflow run that failed
+# before creating it). pick_target only compares against releases, and execute_release only
+# looks for the tag locally, so check the remote before anything is committed or pushed.
+remote_tag_check() {
+  local found
+  found=$(git ls-remote --tags origin "refs/tags/v${TARGET}") \
+    || die 2 "could not list tags on origin — check the 'origin' remote and your network"
+  if [[ -n "$found" ]]; then
+    die 2 "tag v${TARGET} already exists on origin. To finish a release whose workflow failed, re-run that workflow run (see CLAUDE.md, 'Recovering from a failed run') instead of releasing again."
+  fi
 }
 
 # ----------------------------------------------------------------------------
@@ -332,6 +360,7 @@ main() {
   preflight
   read_versions
   pick_target
+  remote_tag_check
   changelog_check
   plan_summary
   execute_release

@@ -1,6 +1,6 @@
 import { t } from '../utils.js'
 import { listOpenCards } from './card-closing.js'
-import CloseAllCardsDialog from './dialog.js'
+import CloseAllCardsDialog, { parseCardHtml } from './dialog.js'
 
 /**
  * Display name of the actor behind a CoC7 actor uuid. For an unlinked token
@@ -18,7 +18,8 @@ function getOpenCards () {
   return listOpenCards(game.messages, {
     resolveName: actorDisplayName,
     localize: t,
-    formatTime: timestamp => new Date(timestamp).toLocaleTimeString()
+    formatTime: timestamp => new Date(timestamp).toLocaleTimeString(),
+    parseHtml: parseCardHtml
   })
 }
 
@@ -32,12 +33,11 @@ Hooks.on('getSceneControlButtons', (controls) => {
     name: 'coc7-close-all-cards',
     title: t('COC7QOL.CloseAllCards.Title'),
     onChange: () => {
-      const openCards = getOpenCards()
-      if (openCards.length === 0) {
+      if (getOpenCards().length === 0) {
         ui.notifications.info('COC7QOL.CloseAllCards.Notification.NoCardsFound', { localize: true })
         return
       }
-      new CloseAllCardsDialog(openCards).render(true)
+      new CloseAllCardsDialog(getOpenCards).render(true)
     }
   }
 })

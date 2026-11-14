@@ -23,6 +23,12 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- **Close All Cards skipped what CoC7's own Close does** — A finished card is now closed by CoC7's own *Close card* button, so the winner of an opposed roll and the successful skills of a combined roll are flagged for development ([#47](https://github.com/martin-papy/coc7-qol/issues/47)).
+- **Close All Cards listed cards that cannot be closed** — Melee, ranged, damage, Constitution and chase obstacle cards are no longer listed: CoC7 never marks them as closed.
+- **Close All Cards closed unfinished rolls by default** — Each card shows its state (*Finished*, *In progress*, *Waiting for roll*) and only finished cards start selected.
+- **Close All Cards removed the difficulty buttons** of an unknown-difficulty roll.
+- **Close All Cards could stop half-way without a word** — A failure is reported with the number of cards still open, and *Close Selected* cannot be started twice.
+- **A blind roll picked in the roll dialog was not a real blind roll** — A success ticked the skill on the player's own sheet, giving the result away, and the Keeper's card had no *Reveal* / *Force pass* / *Force fail* buttons. The card is now the one CoC7 makes for a blind roll, and the tick is left to the Keeper. With the chat box on Blind, picking Public or Private now gives an ordinary card and the usual tick ([#48](https://github.com/martin-papy/coc7-qol/issues/48)).
 - **Roll visibility leaking onto the next message** — The visibility picked in the roll dialog now applies only to that roll's card.
 - **Empty module page in a player's settings** — The API key setting is now listed for GMs only.
 - **AI Generator: missing French strings** — Twelve strings of the NPC review dialog are now translated.

@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { JSDOM } from 'jsdom'
-import { stashChildren, runAccept } from '../scripts/ai-generator/dialog-flow.js'
+import { stashChildren, runAccept, openPromptView } from '../scripts/ai-generator/dialog-flow.js'
 
 /** The Create Actor dialog as Foundry v13/v14 renders it: fields, then the footer inside the form. */
 function createDialog () {
@@ -124,4 +124,39 @@ test('runAccept can run again after a failed attempt', async () => {
 
   await runAccept(root, async () => false)
   assert.equal(await runAccept(root, async () => true), true)
+})
+
+test('openPromptView empties the form and the footer until it is closed', () => {
+  const { form, footer } = createDialog()
+
+  const view = openPromptView(form, footer)
+
+  assert.equal(view.isOpen, true)
+  assert.deepEqual([...form.children], [footer])
+  assert.equal(footer.children.length, 0)
+})
+
+test('closing the prompt view restores the Create dialog and marks the view closed', () => {
+  const { form, footer } = createDialog()
+  form.querySelector('[name="type"]').value = 'npc'
+  const view = openPromptView(form, footer)
+
+  view.close()
+
+  assert.equal(view.isOpen, false)
+  assert.equal(form.querySelector('[name="type"]').value, 'npc')
+  assert.ok(footer.querySelector('.coc7qol-ai-generate-btn'))
+})
+
+test('closing a prompt view again does nothing, so it cannot undo a newer prompt view', () => {
+  const { dom, form, footer } = createDialog()
+  const first = openPromptView(form, footer)
+  first.close()
+  const second = openPromptView(form, footer)
+  form.insertBefore(dom.window.document.createElement('textarea'), footer)
+
+  first.close()
+
+  assert.equal(second.isOpen, true)
+  assert.ok(form.querySelector('textarea'), 'the newer prompt view is untouched')
 })

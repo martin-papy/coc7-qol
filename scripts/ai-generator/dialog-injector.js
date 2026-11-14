@@ -3,7 +3,7 @@ import * as mappers from './mappers/registry.js'
 import CoC7AIGenerationDialog from './generation-dialog.js'
 import CoC7NPCConfirmationDialog from './npc-confirmation-dialog.js'
 import { applyRandomCharacteristics } from './mappers/npc.js'
-import { stashChildren } from './dialog-flow.js'
+import { openPromptView } from './dialog-flow.js'
 import { t, tf } from '../utils.js'
 import { LOG_PREFIX, MODULE_ID } from '../constants.js'
 
@@ -192,12 +192,7 @@ function _transformToPromptView (dialog, html, nameInput, config) {
   const buttonRow = _findButtonRow(form, html)
   if (!form || !buttonRow) return
 
-  const restoreFields = stashChildren(form, buttonRow)
-  const restoreButtons = stashChildren(buttonRow)
-  const restore = () => {
-    restoreButtons()
-    restoreFields()
-  }
+  const view = openPromptView(form, buttonRow)
 
   const promptArea = document.createElement('div')
   promptArea.className = 'coc7qol-ai-prompt-area'
@@ -223,17 +218,17 @@ function _transformToPromptView (dialog, html, nameInput, config) {
     <button type="button" class="coc7qol-btn-back">${t('COC7QOL.AIGenerator.Button.Cancel')}</button>
   `
 
-  buttonRow.querySelector('.coc7qol-btn-back').addEventListener('click', restore)
+  buttonRow.querySelector('.coc7qol-btn-back').addEventListener('click', () => view.close())
   buttonRow.querySelector('.coc7qol-btn-generate').addEventListener('click', () => {
-    _run(dialog, form, buttonRow, config, restore)
+    _run(dialog, form, buttonRow, config, view)
   })
 }
 
 /**
  * Calls the configured LLM provider and opens the type-specific confirmation dialog.
- * @param {() => void} restore  Puts the Create dialog back to its Name + Type state.
+ * @param {{ readonly isOpen: boolean, close: () => void }} view  The prompt view (see openPromptView).
  */
-async function _run (dialog, form, buttonRow, config, restore) {
+async function _run (dialog, form, buttonRow, config, view) {
   const textarea = form.querySelector(`[name="${config.textareaName}"]`)
   const userPrompt = textarea?.value?.trim()
   const errorDiv = form.querySelector('.coc7qol-ai-error')
@@ -266,6 +261,9 @@ async function _run (dialog, form, buttonRow, config, restore) {
 
     const provider = new ProviderClass()
     const llmData = await provider.generate(systemPrompt, userPrompt)
+    // Cancel stays usable while the provider works. A reply for a prompt view the GM has
+    // cancelled, or whose Create dialog was closed, is dropped instead of opening a review.
+    if (!view.isOpen || !dialog.rendered) return
 
     mapper.validate(llmData)
     const foundryData = mapper.toFoundryData(llmData)
@@ -286,7 +284,7 @@ async function _run (dialog, form, buttonRow, config, restore) {
       },
 
       // Also called when the review dialog is closed from its header or with Escape.
-      onCancel: restore
+      onCancel: () => view.close()
     }).render({ force: true })
   } catch (err) {
     console.error(LOG_PREFIX, `${config.logPrefix} generation failed:`, err)

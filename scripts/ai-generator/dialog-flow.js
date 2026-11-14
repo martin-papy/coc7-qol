@@ -20,6 +20,29 @@ export function stashChildren (parent, keep = null) {
 }
 
 /**
+ * Detach the Create dialog's fields and buttons to make room for the prompt view.
+ * `close()` puts them back once: after that the view is closed for good, so a late caller
+ * (a cancelled generation, a review dialog closing) can neither reopen nor undo a newer view.
+ * @param {HTMLElement} form
+ * @param {HTMLElement} buttonRow  The footer, a child of `form` that is kept in place.
+ * @returns {{ readonly isOpen: boolean, close: () => void }}
+ */
+export function openPromptView (form, buttonRow) {
+  const restoreFields = stashChildren(form, buttonRow)
+  const restoreButtons = stashChildren(buttonRow)
+  let open = true
+  return {
+    get isOpen () { return open },
+    close () {
+      if (!open) return
+      open = false
+      restoreButtons()
+      restoreFields()
+    }
+  }
+}
+
+/**
  * Run a review dialog's accept callback with every button of the dialog disabled, so a
  * double-click cannot create two documents. A call made while one is pending is ignored.
  * On failure (the callback returns anything but true, or throws) the buttons come back so

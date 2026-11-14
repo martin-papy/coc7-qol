@@ -19,8 +19,26 @@ export function registerGmVisibilitySettings () {
     config: true,
     type: Boolean,
     default: true,
-    requiresReload: true
+    // No requiresReload: on a world setting it would reload every client, and the setting
+    // only affects GMs and is read on each render. Re-rendering what is open is enough.
+    onChange: refreshHighlightedViews
   })
+}
+
+/**
+ * Re-render, on a GM client, the chat messages already shown and the open item sheets, so
+ * they follow the new value at once. Players are unaffected, so their clients do nothing.
+ * Only messages present in the log are updated: ChatLog#updateMessage posts any it cannot find.
+ */
+function refreshHighlightedViews () {
+  if (!game.user?.isGM) return
+  for (const li of ui.chat?.element?.querySelectorAll('.message[data-message-id]') ?? []) {
+    const message = game.messages.get(li.dataset.messageId)
+    if (message) ui.chat.updateMessage(message)
+  }
+  for (const app of foundry.applications.instances.values()) {
+    if (app.rendered && app.document?.documentName === 'Item') app.render()
+  }
 }
 
 /**

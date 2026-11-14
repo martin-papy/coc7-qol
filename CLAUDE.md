@@ -58,7 +58,7 @@ The workflow has three jobs: `test` (lint and unit tests, reusing `test.yml`), `
 Every step can be repeated, so a failed run is finished by running it again, never by deleting the release or the tag:
 
 - **The `foundry` job failed** (expired token, 429, 5xx): fix the cause, then use **Re-run failed jobs** on the run. Only the Foundry publish runs again; the GitHub release is left as is.
-- **The run is too old to re-run**: start the workflow by hand from the Actions tab (**Run workflow**, with the tag selected under *Use workflow from*). The preflight refuses a branch. The `release` job finds the existing release and leaves its assets as they are (it only uploads one that is missing, and publishes a draft a failed run left behind). The `foundry` job treats a version Foundry already has as published.
+- **The run is too old to re-run**: start the workflow by hand from the Actions tab (**Run workflow**, with the tag selected under *Use workflow from*). The preflight refuses a branch. The `release` job finds the existing release and leaves its assets as they are (it only uploads one that is missing or was left incomplete by a failed upload, and publishes a draft a failed run left behind). The `foundry` job treats a version Foundry already has as published.
 - **The `test` or `release` job failed**: nothing was published. Fix on `main`, delete the tag locally and on `origin`, and run `./release.sh` again.
 
 See [docs/superpowers/specs/2026-05-19-release-script-design.md](docs/superpowers/specs/2026-05-19-release-script-design.md) for the full design and [docs/superpowers/plans/2026-05-19-release-script.md](docs/superpowers/plans/2026-05-19-release-script.md) for the implementation breakdown.

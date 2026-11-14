@@ -169,15 +169,22 @@ jobs:
           # replaced: `gh release upload --clobber` deletes it first, and a failed upload
           # would leave "latest/download/module.json" missing. Both assets are built from
           # the tag, so the ones already there are the right ones; only a missing one is
-          # uploaded. `gh release create` works through a draft, so a run that died while
-          # uploading left a draft behind: that one is completed and published.
+          # uploaded. An upload that failed half-way can leave an empty asset behind (GitHub
+          # reports it with a state other than "uploaded"): that one serves nothing, so it
+          # is removed and uploaded again. `gh release create` works through a draft, so a
+          # run that died while uploading left a draft behind: that one is completed and
+          # published.
           if gh release view "$TAG" --json assets,isDraft > existing-release.json 2>/dev/null; then
             for asset in coc7-qol.zip module.json; do
-              if jq -e --arg name "$asset" '.assets | any(.name == $name)' existing-release.json >/dev/null; then
+              if jq -e --arg name "$asset" '.assets | any(.name == $name and .state == "uploaded" and .size > 0)' existing-release.json >/dev/null; then
                 echo "Asset $asset is already on the release, left as is"
-              else
-                gh release upload "$TAG" "$asset"
+                continue
               fi
+              if jq -e --arg name "$asset" '.assets | any(.name == $name)' existing-release.json >/dev/null; then
+                echo "Asset $asset is on the release but incomplete, replacing it"
+                gh release delete-asset "$TAG" "$asset" --yes
+              fi
+              gh release upload "$TAG" "$asset"
             done
             if [[ "$(jq -r '.isDraft' existing-release.json)" == "true" ]]; then
               gh release edit "$TAG" --draft=false $PRERELEASE_FLAG

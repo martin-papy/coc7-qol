@@ -53,7 +53,9 @@ End state: you are on `develop`, fully synced with `main`. The GitHub Actions re
 
 See [docs/superpowers/specs/2026-05-19-release-script-design.md](docs/superpowers/specs/2026-05-19-release-script-design.md) for the full design and [docs/superpowers/plans/2026-05-19-release-script.md](docs/superpowers/plans/2026-05-19-release-script.md) for the implementation breakdown.
 
-Pre-release tags (`vX.Y.Z-beta.N`, `vX.Y.Z-rc.N`, etc.) create a GitHub pre-release and skip the FoundryVTT publish step.
+Pre-release tags (`vX.Y.Z-beta.N`, `vX.Y.Z-rc.N`, etc.) create a GitHub pre-release and skip the FoundryVTT publish step. `release.sh` handles stable versions only; a pre-release is cut by hand: set `module.json` `version` to `X.Y.Z-beta.N` and `download` to `https://github.com/martin-papy/coc7-qol/releases/download/vX.Y.Z-beta.N/coc7-qol.zip`, commit, then tag `vX.Y.Z-beta.N` and push the tag. The workflow checks both fields against the tag. It may be tagged from any branch (stable tags must be on `main`); without a matching CHANGELOG section its notes fall back to GitHub's generated ones.
+
+`release.sh` checks up front that commit signing works when `commit.gpgsign` is on, so a locked signing agent fails before anything is pushed. It creates a lightweight tag, so it does not support `tag.gpgsign` (git would ask for a tag message).
 
 ### Zip contents
 

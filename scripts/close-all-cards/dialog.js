@@ -1,56 +1,7 @@
-import { escapeHtml, t, tf } from './utils.js'
-import { stripCardControls, cardActorName } from './card-closing.js'
+import { escapeHtml, t, tf } from '../utils.js'
+import { stripCardControls } from './card-closing.js'
 
-// Maps CoC7 card template class names to i18n keys.
-// Values are keys — resolved via t() at use-time (game.i18n not available at load time).
-const CARD_TYPE_KEYS = {
-  CoC7Check: 'COC7QOL.CloseAllCards.CardType.SkillCheck',
-  CoC7SanCheckCard: 'COC7QOL.CloseAllCards.CardType.SanityCheck',
-  CoC7ConCheck: 'COC7QOL.CloseAllCards.CardType.ConstitutionCheck',
-  CoC7ChatCombatMelee: 'COC7QOL.CloseAllCards.CardType.MeleeCombat',
-  CoC7ChatCombatRanged: 'COC7QOL.CloseAllCards.CardType.RangedCombat',
-  CoC7ChatDamage: 'COC7QOL.CloseAllCards.CardType.Damage',
-  CoC7ChatOpposedMessage: 'COC7QOL.CloseAllCards.CardType.OpposedRoll',
-  CoC7ChatCombinedMessage: 'COC7QOL.CloseAllCards.CardType.CombinedRoll',
-  CoC7ChatChaseObstacle: 'COC7QOL.CloseAllCards.CardType.ChaseObstacle'
-}
-
-/**
- * Display name of the actor behind a CoC7 actor uuid. For an unlinked token
- * actor ("Scene.<id>.Token.<id>.Actor.<id>") the token's name is used, which is
- * what a speaker alias would have shown.
- * @param {string} uuid
- * @returns {string|undefined}
- */
-function actorDisplayName (uuid) {
-  const actor = fromUuidSync(uuid)
-  return actor?.token?.name ?? actor?.name
-}
-
-function getOpenCards () {
-  const open = [];
-  for (const message of game.messages) {
-    const load = message.flags?.CoC7?.load;
-    if (load?.cardOpen === true) {
-      const typeKey = CARD_TYPE_KEYS[load.as]
-      const actor = cardActorName({
-        speakerAlias: message.speaker?.alias,
-        // Multi-actor cards (opposed, combined, damage) store actorUuids; the others a single actorUuid.
-        actorUuids: Array.isArray(load.actorUuids) ? load.actorUuids : [load.actorUuid],
-        resolveName: actorDisplayName
-      })
-      open.push({
-        messageId: message.id,
-        type: typeKey ? t(typeKey) : t('COC7QOL.CloseAllCards.UnknownCardType'),
-        actor: actor ?? t('COC7QOL.CloseAllCards.UnknownActor'),
-        timestamp: new Date(message.timestamp).toLocaleTimeString()
-      });
-    }
-  }
-  return open;
-}
-
-class CloseAllCardsDialog extends foundry.applications.api.ApplicationV2 {
+export default class CloseAllCardsDialog extends foundry.applications.api.ApplicationV2 {
   static DEFAULT_OPTIONS = {
     id: 'coc7-close-all-cards',
     tag: 'div',
@@ -178,23 +129,3 @@ class CloseAllCardsDialog extends foundry.applications.api.ApplicationV2 {
     this.#updateCloseButton();
   }
 }
-
-Hooks.on('getSceneControlButtons', (controls) => {
-  const coc7menu = controls.coc7menu;
-  if (!coc7menu) return;
-
-  coc7menu.tools['coc7-close-all-cards'] = {
-    button: true,
-    icon: 'fa-solid fa-xmarks-lines',
-    name: 'coc7-close-all-cards',
-    title: t('COC7QOL.CloseAllCards.Title'),
-    onChange: () => {
-      const openCards = getOpenCards();
-      if (openCards.length === 0) {
-        ui.notifications.info('COC7QOL.CloseAllCards.Notification.NoCardsFound', { localize: true });
-        return;
-      }
-      new CloseAllCardsDialog(openCards).render(true);
-    }
-  };
-});

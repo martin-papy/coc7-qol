@@ -56,7 +56,7 @@
     "scripts/item-image-popout.js",
     "scripts/possession-item-image-popout.js",
     "scripts/ai-generator/index.js",
-    "scripts/close-all-cards.js",
+    "scripts/close-all-cards/index.js",
     "scripts/group-luck/index.js",
     "scripts/roll-visibility.js",
     "scripts/gm-visibility/index.js",

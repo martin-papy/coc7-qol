@@ -12,7 +12,7 @@ This is a no-build-step vanilla JS module. FoundryVTT loads `scripts/*.js` files
 
 Each feature is a self-contained ES module in `scripts/` that registers FoundryVTT hooks. The module.json `esmodules` array is the entry point list — add new feature files there.
 
-**Key pattern:** Features hook into FoundryVTT's lifecycle via `Hooks.on(...)`. Most use render hooks (e.g., `renderItemSheetV2` for item sheets, `renderActorSheetV2` for actor sheets) to modify sheet HTML after the system renders it. Some use non-render hooks (e.g., `getSceneControlButtons` to inject buttons into the scene controls toolbar, used by `scripts/close-all-cards.js` and `scripts/group-luck/`). This avoids modifying CoC7 source code.
+**Key pattern:** Features hook into FoundryVTT's lifecycle via `Hooks.on(...)`. Most use render hooks (e.g., `renderItemSheetV2` for item sheets, `renderActorSheetV2` for actor sheets) to modify sheet HTML after the system renders it. Some use non-render hooks (e.g., `getSceneControlButtons` to inject buttons into the scene controls toolbar, used by `scripts/close-all-cards/` and `scripts/group-luck/`). This avoids modifying CoC7 source code.
 
 **Shared constants:** import the module ID and console prefix from `scripts/constants.js` (`MODULE_ID`, `LOG_PREFIX`) rather than repeating the literal. `scripts/utils.js` holds `escapeHtml`, `t` / `tf` and `formatApiError`; both are imported by features, never listed in `esmodules`.
 

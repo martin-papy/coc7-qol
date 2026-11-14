@@ -158,7 +158,7 @@ class CloseAllCardsDialog extends foundry.applications.api.ApplicationV2 {
       closed++;
     }
 
-    ui.notifications.info(tf(closed === 1 ? 'COC7QOL.CloseAllCards.Notification.Closed' : 'COC7QOL.CloseAllCards.Notification.ClosedPlural', { count: closed }));
+    ui.notifications.info(closed === 1 ? 'COC7QOL.CloseAllCards.Notification.Closed' : 'COC7QOL.CloseAllCards.Notification.ClosedPlural', { format: { count: closed } });
     this.close();
   }
 
@@ -191,7 +191,7 @@ Hooks.on('getSceneControlButtons', (controls) => {
     onChange: () => {
       const openCards = getOpenCards();
       if (openCards.length === 0) {
-        ui.notifications.info(t('COC7QOL.CloseAllCards.Notification.NoCardsFound'));
+        ui.notifications.info('COC7QOL.CloseAllCards.Notification.NoCardsFound', { localize: true });
         return;
       }
       new CloseAllCardsDialog(openCards).render(true);

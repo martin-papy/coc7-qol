@@ -7,7 +7,6 @@ import { loadPrompt } from '../prompts/loader.js'
 import weaponMapper from './weapon.js'
 import { SKILL_TIER_KEYS } from '../skill-tiers.js'
 import { clampInt, invalidFields, isNonEmptyString, isPlainObject, text } from './coerce.js'
-import { LOG_PREFIX } from '../../constants.js'
 
 const REQUIRED_CHARACTERISTICS = ['str', 'con', 'siz', 'dex', 'app', 'int', 'pow', 'edu']
 
@@ -275,9 +274,10 @@ export default {
       const skillData = await this._resolveOneSkill(normalized, value, pack, compendiumIndex, own === true, characteristics, resolutionWarnings)
       if (skillData) resolved.push(skillData)
     }
-    resolutionWarnings.forEach(message => {
-      console.warn(LOG_PREFIX, `${message}`)
-      ui.notifications?.warn(message)
+    // Kept as key + data so the notification escapes the skill name (Foundry's format option).
+    // notify() also writes the message to the console, so there is no separate console.warn.
+    resolutionWarnings.forEach(({ key, data }) => {
+      ui.notifications?.warn(key, { format: data })
     })
     return resolved
   },
@@ -350,9 +350,9 @@ export default {
           delete data._id
           return data
         }
-        warnings.push(tf('COC7QOL.AIGenerator.Warning.NativeLanguageTemplateMissing', { name: skillName }))
+        warnings.push({ key: 'COC7QOL.AIGenerator.Warning.NativeLanguageTemplateMissing', data: { name: skillName } })
       } else {
-        warnings.push(tf('COC7QOL.AIGenerator.Warning.NativeLanguageNoCompendium', { name: skillName }))
+        warnings.push({ key: 'COC7QOL.AIGenerator.Warning.NativeLanguageNoCompendium', data: { name: skillName } })
       }
     }
 

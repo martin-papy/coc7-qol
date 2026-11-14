@@ -41,7 +41,7 @@ const WEAPON_PROMPT_CONFIG = {
     try {
       const item = await Item.create(data)
       if (!item) {
-        ui.notifications.error(t('COC7QOL.AIGenerator.Error.WeaponCreationCancelled'))
+        ui.notifications.error('COC7QOL.AIGenerator.Error.WeaponCreationCancelled', { localize: true })
         return false
       }
       item.sheet?.render(true)
@@ -49,7 +49,7 @@ const WEAPON_PROMPT_CONFIG = {
       return true
     } catch (err) {
       console.error(LOG_PREFIX, 'Weapon item creation failed:', err)
-      ui.notifications.error(tf('COC7QOL.AIGenerator.Error.WeaponCreationFailed', { error: err.message }))
+      ui.notifications.error('COC7QOL.AIGenerator.Error.WeaponCreationFailed', { format: { error: err.message } })
       return false
     }
   },
@@ -85,7 +85,7 @@ const NPC_PROMPT_CONFIG = {
       const resolvedSkills = await mapper.resolveSkills(data.skillsRaw, data.llmData?.characteristics)
       const actor = await Actor.create(data.actorData)
       if (!actor) {
-        ui.notifications.error(t('COC7QOL.AIGenerator.Error.NPCCreationCancelled'))
+        ui.notifications.error('COC7QOL.AIGenerator.Error.NPCCreationCancelled', { localize: true })
         return false
       }
       const items = [
@@ -98,7 +98,7 @@ const NPC_PROMPT_CONFIG = {
           await actor.createEmbeddedDocuments('Item', items)
         } catch (itemErr) {
           console.warn(LOG_PREFIX, 'Item attachment failed:', itemErr)
-          ui.notifications.warn(tf('COC7QOL.AIGenerator.Error.NPCItemsFailed', { error: itemErr.message }))
+          ui.notifications.warn('COC7QOL.AIGenerator.Error.NPCItemsFailed', { format: { error: itemErr.message } })
         }
       }
       actor.sheet?.render(true)
@@ -106,7 +106,7 @@ const NPC_PROMPT_CONFIG = {
       return true
     } catch (err) {
       console.error(LOG_PREFIX, 'NPC actor creation failed:', err)
-      ui.notifications.error(tf('COC7QOL.AIGenerator.Error.NPCCreationFailed', { error: err.message }))
+      ui.notifications.error('COC7QOL.AIGenerator.Error.NPCCreationFailed', { format: { error: err.message } })
       return false
     }
   },

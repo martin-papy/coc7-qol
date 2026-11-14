@@ -62,7 +62,7 @@ async function requestRoll ({ roller, presentCount }) {
 function openDialog () {
   const candidates = collectCandidates()
   if (candidates.length === 0) {
-    ui.notifications.info(t('COC7QOL.GroupLuck.Notification.NoInvestigators'))
+    ui.notifications.info('COC7QOL.GroupLuck.Notification.NoInvestigators', { localize: true })
     return
   }
   new GroupLuckDialog({ candidates, onConfirm: requestRoll }).render(true)

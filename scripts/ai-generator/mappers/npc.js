@@ -2,7 +2,7 @@
 // Skill resolution (compendium lookup) is handled by resolveSkills() called from the injector
 // after the mapper produces the base actor data.
 
-import { escapeHtml, tf } from '../../utils.js'
+import { escapeHtml, t, tf } from '../../utils.js'
 import { loadPrompt } from '../prompts/loader.js'
 import weaponMapper from './weapon.js'
 import { SKILL_TIER_KEYS } from '../skill-tiers.js'
@@ -145,10 +145,10 @@ export default {
     const data = this._sanitize(rawData, warnings)
 
     const personalityHtml = data.personalityTraits
-      ? `<p><strong>Personality:</strong> ${escapeHtml(data.personalityTraits)}</p>`
+      ? `<p><strong>${escapeHtml(t('COC7QOL.AIGenerator.NPCDialog.SectionPersonality'))}:</strong> ${escapeHtml(data.personalityTraits)}</p>`
       : ''
     const backgroundHtml = data.background
-      ? `<p><strong>Background:</strong> ${escapeHtml(data.background)}</p>`
+      ? `<p><strong>${escapeHtml(t('COC7QOL.AIGenerator.NPCDialog.SectionBackground'))}:</strong> ${escapeHtml(data.background)}</p>`
       : ''
 
     const weaponsData = this._validateAndMapWeapons(data.weapons, warnings)
@@ -409,7 +409,7 @@ export default {
       if (presentLowercase.has(key)) continue
       existing.push({ name: skillName, value: WEAPON_SKILL_FALLBACK_VALUE })
       presentLowercase.add(key)
-      warnings.push(`Auto-added skill "${skillName}" at ${WEAPON_SKILL_FALLBACK_VALUE}% (referenced by a weapon but missing from skills)`)
+      warnings.push(tf('COC7QOL.AIGenerator.Warning.WeaponSkillAdded', { name: skillName, value: WEAPON_SKILL_FALLBACK_VALUE }))
     }
     return existing
   },
@@ -428,7 +428,7 @@ export default {
     for (const skill of skills) {
       const name = (skill?.name ?? '').trim()
       if (ANY_SPEC_PATTERN.test(name)) {
-        warnings.push(`Dropped skill "${name}" — it is an unnamed specialization template, not a usable skill`)
+        warnings.push(tf('COC7QOL.AIGenerator.Warning.AnySpecDropped', { name }))
         continue
       }
       kept.push(skill)
@@ -454,7 +454,7 @@ export default {
       return { ...skill, own: true }
     })
     if (!tagged) {
-      warnings.push(`Native language "${language}" has no matching skill — expected an entry named "Language (${language})"`)
+      warnings.push(tf('COC7QOL.AIGenerator.Warning.NativeLanguageNoSkill', { language }))
     }
     return result
   },
@@ -467,7 +467,7 @@ export default {
       try {
         weaponMapper.validate(raw)
       } catch (err) {
-        warnings.push(`Weapon "${raw.name}": ${err.message}`)
+        warnings.push(tf('COC7QOL.AIGenerator.Warning.WeaponDropped', { name: text(raw.name) || String(raw.name), error: err.message }))
         continue
       }
       mapped.push(weaponMapper.toFoundryData(raw))

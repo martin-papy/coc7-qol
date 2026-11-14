@@ -257,7 +257,7 @@ test('npc toFoundryData drops a weapon whose skill is an object and keeps the re
   }))
 
   assert.deepEqual(result.weaponsData.map(w => w.name), ['Knife'])
-  assert.ok(result.warnings.some(w => w.includes('Colt .45')))
+  assert.ok(result.warnings.some(w => w.includes('WeaponDropped') && w.includes('Colt .45')))
 })
 
 test('npc toFoundryData adds a missing weapon skill at the fallback value, once', () => {
@@ -289,7 +289,7 @@ test('npc toFoundryData warns when no skill matches the native language', () => 
   const result = npcMapper.toFoundryData(llmNpc({ nativeLanguage: 'French' }))
 
   assert.equal(result.skillsRaw.some(s => s.own), false)
-  assert.ok(result.warnings.some(w => w.includes('French')))
+  assert.ok(result.warnings.some(w => w.includes('NativeLanguageNoSkill') && w.includes('French')))
 })
 
 test('npc toFoundryData drops unnamed "(any)" specialisations', () => {
@@ -298,5 +298,19 @@ test('npc toFoundryData drops unnamed "(any)" specialisations', () => {
   }))
 
   assert.equal(skillNames(result).some(n => /any/i.test(n)), false)
-  assert.equal(result.warnings.filter(w => w.includes('unnamed specialization')).length, 2)
+  assert.equal(result.warnings.filter(w => w.includes('AnySpecDropped')).length, 2)
+})
+
+test('npc toFoundryData reports an auto-added weapon skill through game.i18n', () => {
+  const result = npcMapper.toFoundryData(llmNpc({ weapons: [llmWeapon()] }))
+
+  assert.ok(result.warnings.some(w => w.includes('WeaponSkillAdded') && w.includes('Firearms (Handgun)')))
+})
+
+test('npc toFoundryData labels the Keeper notes through game.i18n', () => {
+  const keeper = npcMapper.toFoundryData(llmNpc({ personalityTraits: 'Gruff', background: 'Arkham' })).actorData.system.description.keeper
+
+  assert.ok(keeper.includes('COC7QOL.AIGenerator.NPCDialog.SectionPersonality'))
+  assert.ok(keeper.includes('COC7QOL.AIGenerator.NPCDialog.SectionBackground'))
+  assert.equal(keeper.includes('<strong>Personality:'), false)
 })

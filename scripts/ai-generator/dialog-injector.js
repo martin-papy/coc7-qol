@@ -260,7 +260,7 @@ async function _run (dialog, form, buttonRow, config, restore) {
   try {
     const providerId = game.settings.get(MODULE, 'ai-provider')
     const ProviderClass = providers.get(providerId)
-    if (!ProviderClass) throw new Error(`Unknown provider: ${providerId}`)
+    if (!ProviderClass) throw new Error(tf('COC7QOL.AIGenerator.Error.UnknownProvider', { provider: providerId }))
 
     const mapper = mappers.get(config.mapperKey)
     const systemPrompt = await mapper.buildSystemPrompt()

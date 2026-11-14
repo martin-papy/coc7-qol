@@ -36,6 +36,7 @@ All notable changes to this project will be documented in this file.
 - **AI Generator: out-of-range or malformed values** — Characteristics and skills are kept within 1–99 and 0–99, duplicate skills are dropped, overlong lists capped, and values of the wrong type corrected or reported clearly instead of raising a raw error ([#53](https://github.com/martin-papy/coc7-qol/issues/53)).
 - **AI Generator: weapon skill shown as `Rifle&#x2F;Shotgun`** in the NPC review ([#54](https://github.com/martin-papy/coc7-qol/issues/54)).
 - **Keeper-only highlights setting reloaded every client** — Toggling it no longer reloads anyone; the Keeper's open chat cards and item sheets update at once ([#56](https://github.com/martin-papy/coc7-qol/issues/56)).
+- **English text in a French game** — AI Generator errors, warnings and the generated NPC's Keeper notes now follow the Foundry language, and a generated occupation follows the prompt's language. The Keeper-only highlights hint and tooltips now describe the actual styling and CoC7's trusted-player settings ([#59](https://github.com/martin-papy/coc7-qol/issues/59)).
 - **Cast control missing on NPC and Creature sheets on CoC7 8.16** ([#44](https://github.com/martin-papy/coc7-qol/issues/44)).
 - **README: manual install** — The steps now extract into a `Data/modules/coc7-qol/` folder ([#45](https://github.com/martin-papy/coc7-qol/issues/45)).
 - **Module description** — The manifest and README intro now list every feature ([#46](https://github.com/martin-papy/coc7-qol/issues/46)).

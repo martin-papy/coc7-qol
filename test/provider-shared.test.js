@@ -1,6 +1,11 @@
-import { test } from 'node:test'
+import { test, before, after } from 'node:test'
 import assert from 'node:assert/strict'
 import { readReply, postJson } from '../scripts/ai-generator/providers/shared.js'
+import { installEnglishI18n } from './helpers/i18n.js'
+
+let uninstallI18n
+before(() => { uninstallI18n = installEnglishI18n() })
+after(() => uninstallI18n())
 
 const OBJECT = { name: 'Colt .45', damage: '1D10+2' }
 const JSON_TEXT = JSON.stringify(OBJECT)
@@ -106,5 +111,29 @@ test('postJson reports a timeout with the provider name', async () => {
   await assert.rejects(
     postJson('Gemini', 'https://example.test', {}, {}, { fetchImpl: hanging, timeoutMs: 10 }),
     /Gemini request timed out after 0\.01 s/
+  )
+})
+
+test('readReply and postJson messages go through game.i18n', async () => {
+  const saved = globalThis.game
+  globalThis.game = { i18n: { localize: key => key, format: (key, data) => `${key} ${JSON.stringify(data)}` } }
+  try {
+    assert.throws(() => readReply('Gemini', { text: '' }), /^Error: COC7QOL\.AIGenerator\.Error\.EmptyResponse/)
+    assert.throws(() => readReply('Gemini', { text: 'x', truncated: true }), /COC7QOL\.AIGenerator\.Error\.Truncated/)
+    assert.throws(() => readReply('Gemini', { text: '[]' }), /COC7QOL\.AIGenerator\.Error\.NotAnObject/)
+    assert.throws(() => readReply('Gemini', { text: '{oops' }), /COC7QOL\.AIGenerator\.Error\.InvalidJson/)
+    const { impl } = fakeFetch(429, '')
+    await assert.rejects(postJson('Gemini', 'https://example.test', {}, {}, { fetchImpl: impl }), /COC7QOL\.AIGenerator\.Error\.ApiRateLimit/)
+  } finally {
+    globalThis.game = saved
+  }
+})
+
+test('postJson reports a network failure as unreachable, keeping the browser reason', async () => {
+  const offline = async () => { throw new TypeError('Failed to fetch') }
+
+  await assert.rejects(
+    postJson('OpenAI', 'https://example.test', {}, {}, { fetchImpl: offline }),
+    /^Error: Could not reach OpenAI \(Failed to fetch\)/
   )
 })

@@ -1,7 +1,12 @@
-import { test } from 'node:test'
+import { test, before, after } from 'node:test'
 import assert from 'node:assert/strict'
 import { JSDOM } from 'jsdom'
 import { escapeHtml, formatApiError } from '../scripts/utils.js'
+import { installEnglishI18n } from './helpers/i18n.js'
+
+let uninstallI18n
+before(() => { uninstallI18n = installEnglishI18n() })
+after(() => uninstallI18n())
 
 // ---------------------------------------------------------------------------
 // escapeHtml
@@ -109,4 +114,17 @@ test('the stripped body is truncated to 300 characters after tags are removed', 
 
 test('an empty 400 body yields just the prefix', () => {
   assert.equal(formatApiError('OpenAI', 400, ''), 'OpenAI API error 400: ')
+})
+
+test('formatApiError messages go through game.i18n', () => {
+  const saved = globalThis.game
+  globalThis.game = { i18n: { localize: key => key, format: (key, data) => `${key} ${JSON.stringify(data)}` } }
+  try {
+    assert.match(formatApiError('OpenAI', 404, ''), /^COC7QOL\.AIGenerator\.Error\.ApiModelNotFound/)
+    assert.match(formatApiError('OpenAI', 401, ''), /^COC7QOL\.AIGenerator\.Error\.ApiInvalidKey/)
+    assert.match(formatApiError('OpenAI', 503, ''), /^COC7QOL\.AIGenerator\.Error\.ApiServer/)
+    assert.match(formatApiError('OpenAI', 400, 'bad'), /^COC7QOL\.AIGenerator\.Error\.ApiOther/)
+  } finally {
+    globalThis.game = saved
+  }
 })

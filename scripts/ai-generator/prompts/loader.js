@@ -1,5 +1,7 @@
 // Loads AI system-prompt Markdown files at runtime and caches them per session.
 
+import { tf } from '../../utils.js'
+
 const cache = new Map()
 const MODULE_ID = 'coc7-qol'
 
@@ -15,7 +17,7 @@ export async function loadPrompt (name) {
   const path = foundry.utils.getRoute(`modules/${MODULE_ID}/scripts/ai-generator/prompts/${name}.md`)
   const response = await fetch(path)
   if (!response.ok) {
-    throw new Error(`Failed to load AI prompt "${name}": ${response.status} ${response.statusText}`)
+    throw new Error(tf('COC7QOL.AIGenerator.Error.PromptLoadFailed', { name, status: response.status, statusText: response.statusText }))
   }
   const text = await response.text()
   cache.set(name, text)

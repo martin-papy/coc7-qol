@@ -28,6 +28,7 @@ All notable changes to this project will be documented in this file.
 - **AI Generator: missing French strings** — Twelve strings of the NPC review dialog are now translated.
 - **AI Generator: retired default models** — The Gemini default `gemini-2.0-flash` was shut down by Google. Defaults are now `gemini-3.8-flash`, `gpt-6.1-terra` (was `gpt-4o`) and `claude-sonnet-5-5` (was `claude-sonnet-4-6`). Worlds that already stored a model keep it.
 - **AI Generator: unknown model error** — A retired or mistyped model now points to the *Model* setting instead of showing the raw provider error.
+- **Cast control missing on NPC and Creature sheets on CoC7 8.16** ([#44](https://github.com/martin-papy/coc7-qol/issues/44)).
 
 ## [0.8.0] - 2026-11-11
 

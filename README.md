@@ -122,6 +122,8 @@ Skills also read **down each column**, like on the investigator sheet, and a wid
 
 Both are on by default. The Keeper can switch either one off under **Settings → Module Settings → CoC7 QoL Improvements**.
 
+[**Read more →**](docs/features/resizable-npc-sheets.md)
+
 ---
 
 ## 🪄 Cast Spells from the Sheet
@@ -130,6 +132,8 @@ Every spell listed on an investigator, NPC or Creature sheet gets a **cast icon*
 
 The icon is there for anyone who owns the actor. The Keeper can also **right-click** it to cast hidden, so only the Keeper sees the card.
 
+[**Read more →**](docs/features/spell-cast.md)
+
 ---
 
 ## 💪 Strong Skills at a Glance
@@ -137,6 +141,8 @@ The icon is there for anyone who owns the actor. The Keeper can also **right-cli
 Keep your skills sorted by name and still see what a character is good at: every skill at **50% or more** gets a soft tint, a bar on its left edge and a bold name. It works on investigator, NPC and Creature sheets, in the light and the dark theme.
 
 It is on by default. The Keeper can change the threshold or switch it off for the whole table under **Settings → Module Settings → CoC7 QoL Improvements**.
+
+[**Read more →**](docs/features/strong-skills.md)
 
 ---
 
@@ -173,7 +179,7 @@ Dialogs, buttons, settings, and notifications follow your configured Foundry lan
 
 ## AI Usage Disclaimer
 
-This module has been developped with the help of an AI Coding assistant (Claude Code). The code has been thoroughly reviewed and tested by a human (me).
+This module has been developed with the help of an AI Coding assistant (Claude Code). The code has been thoroughly reviewed and tested by a human (me).
 
 ## License
 

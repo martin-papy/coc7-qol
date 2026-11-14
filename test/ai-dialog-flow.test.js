@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { JSDOM } from 'jsdom'
-import { stashChildren } from '../scripts/ai-generator/dialog-flow.js'
+import { stashChildren, runAccept } from '../scripts/ai-generator/dialog-flow.js'
 
 /** The Create Actor dialog as Foundry v13/v14 renders it: fields, then the footer inside the form. */
 function createDialog () {
@@ -60,4 +60,70 @@ test('listeners on stashed nodes still fire after restore', () => {
   footer.querySelector('.coc7-ai-generate-btn').click()
   assert.equal(changes, 1)
   assert.equal(clicks, 1)
+})
+
+function reviewDialog () {
+  const dom = new JSDOM('<div class="window-content"><button data-action="accept"></button><button data-action="regenerate"></button><button data-action="cancel"></button></div>')
+  const root = dom.window.document.querySelector('.window-content')
+  return { root, buttons: [...root.querySelectorAll('button')] }
+}
+
+/** A promise with its resolve/reject exposed, to hold an accept callback open. */
+function deferred () {
+  let resolve, reject
+  const promise = new Promise((res, rej) => { resolve = res; reject = rej })
+  return { promise, resolve, reject }
+}
+
+test('runAccept disables every button while the accept callback runs', async () => {
+  const { root, buttons } = reviewDialog()
+  const gate = deferred()
+
+  const pending = runAccept(root, () => gate.promise)
+  assert.ok(buttons.every(b => b.disabled))
+  gate.resolve(true)
+  await pending
+})
+
+test('runAccept returns true and leaves the buttons disabled when the callback succeeds', async () => {
+  const { root, buttons } = reviewDialog()
+
+  assert.equal(await runAccept(root, async () => true), true)
+  assert.ok(buttons.every(b => b.disabled))
+})
+
+test('runAccept returns false and re-enables the buttons when the callback reports failure', async () => {
+  const { root, buttons } = reviewDialog()
+
+  assert.equal(await runAccept(root, async () => false), false)
+  assert.ok(buttons.every(b => !b.disabled))
+})
+
+test('runAccept re-enables the buttons and rethrows when the callback throws', async () => {
+  const { root, buttons } = reviewDialog()
+
+  await assert.rejects(runAccept(root, async () => { throw new Error('boom') }), /boom/)
+  assert.ok(buttons.every(b => !b.disabled))
+})
+
+test('a second runAccept while the first is pending does not call the callback again', async () => {
+  const { root } = reviewDialog()
+  const gate = deferred()
+  let calls = 0
+  const accept = () => { calls++; return gate.promise }
+
+  const first = runAccept(root, accept)
+  const second = await runAccept(root, accept)
+  gate.resolve(true)
+
+  assert.equal(second, false)
+  assert.equal(await first, true)
+  assert.equal(calls, 1)
+})
+
+test('runAccept can run again after a failed attempt', async () => {
+  const { root } = reviewDialog()
+
+  await runAccept(root, async () => false)
+  assert.equal(await runAccept(root, async () => true), true)
 })

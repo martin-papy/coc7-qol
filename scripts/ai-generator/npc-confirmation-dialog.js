@@ -1,6 +1,7 @@
 // Rich read-only preview dialog for AI-generated NPC actors.
 
 import { escapeHtml, t, tf } from '../utils.js'
+import { runAccept } from './dialog-flow.js'
 import { CHARACTERISTIC_FORMULAS } from './mappers/npc.js'
 import { tierForValue, isAboveTier, isAtOrAboveTier, tierLabel } from './skill-tiers.js'
 import { weaponRowHtml, possessionRowHtml } from './npc-preview.js'
@@ -23,6 +24,10 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
   #acceptCallback
   #regenerateCallback
   #cancelCallback
+  // Set once Accept succeeds or Regenerate is chosen; any other close counts as Cancel.
+  #settled = false
+  // True while the accept callback runs; close() is refused meanwhile.
+  #accepting = false
   #removedWeaponIndexes = new Set()
   #removedPossessionIndexes = new Set()
 
@@ -270,21 +275,46 @@ export default class CoC7NPCConfirmationDialog extends foundry.applications.api.
       .filter((_, i) => !this.#removedWeaponIndexes.has(i))
     const filteredPossessions = (data.possessionsData ?? [])
       .filter((_, i) => !this.#removedPossessionIndexes.has(i))
-    await this.#acceptCallback({
-      ...data,
-      weaponsData: filteredWeapons,
-      possessionsData: filteredPossessions
-    })
+    this.#accepting = true
+    let created
+    try {
+      created = await runAccept(this.element, () => this.#acceptCallback({
+        ...data,
+        weaponsData: filteredWeapons,
+        possessionsData: filteredPossessions
+      }))
+    } finally {
+      this.#accepting = false
+    }
+    if (!created) return
+    this.#settled = true
     this.close()
   }
 
   static async #handleRegenerate (_event, _target) {
+    this.#settled = true
     this.#regenerateCallback()
     this.close()
   }
 
   static async #handleCancel (_event, _target) {
-    this.#cancelCallback()
     this.close()
+  }
+
+  /**
+   * Escape or the header close button while Accept is creating the document would cancel a
+   * creation already under way, so a close is ignored until Accept settles.
+   */
+  close (options) {
+    if (this.#accepting) return Promise.resolve(this)
+    return super.close(options)
+  }
+
+  /** Closing from the header or with Escape cancels, like the Cancel button. */
+  _onClose (options) {
+    super._onClose(options)
+    if (this.#settled) return
+    this.#settled = true
+    this.#cancelCallback()
   }
 }

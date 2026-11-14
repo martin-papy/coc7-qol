@@ -37,14 +37,21 @@ const WEAPON_PROMPT_CONFIG = {
   mapperKey: 'weapon',
   ConfirmationDialog: CoC7AIGenerationDialog,
   buildDialogData: (foundryData, _ctx) => ({ itemData: foundryData }),
+  /** @returns {Promise<boolean>} whether the item was created */
   onAccept: async (data, { dialog }) => {
     try {
       const item = await Item.create(data)
-      item?.sheet?.render(true)
+      if (!item) {
+        ui.notifications.error(t('COC7QOL.AIGenerator.Error.WeaponCreationCancelled'))
+        return false
+      }
+      item.sheet?.render(true)
       dialog.close()
+      return true
     } catch (err) {
       console.error('[coc7-qol] Weapon item creation failed:', err)
       ui.notifications.error(tf('COC7QOL.AIGenerator.Error.WeaponCreationFailed', { error: err.message }))
+      return false
     }
   },
   logPrefix: 'Weapon'
@@ -70,13 +77,17 @@ const NPC_PROMPT_CONFIG = {
     if (useRandom) npcData = applyRandomCharacteristics(npcData)
     return { npcData }
   },
+  /**
+   * @returns {Promise<boolean>} whether the actor was created. A failure to attach its items
+   * still counts as created: the actor exists, and accepting again would duplicate it.
+   */
   onAccept: async (data, { mapper, dialog }) => {
     try {
       const resolvedSkills = await mapper.resolveSkills(data.skillsRaw, data.llmData?.characteristics)
       const actor = await Actor.create(data.actorData)
       if (!actor) {
         ui.notifications.error(t('COC7QOL.AIGenerator.Error.NPCCreationCancelled'))
-        return
+        return false
       }
       const items = [
         ...resolvedSkills,
@@ -91,11 +102,13 @@ const NPC_PROMPT_CONFIG = {
           ui.notifications.warn(tf('COC7QOL.AIGenerator.Error.NPCItemsFailed', { error: itemErr.message }))
         }
       }
-      actor?.sheet?.render(true)
+      actor.sheet?.render(true)
       dialog.close()
+      return true
     } catch (err) {
       console.error('[coc7-qol] NPC actor creation failed:', err)
       ui.notifications.error(tf('COC7QOL.AIGenerator.Error.NPCCreationFailed', { error: err.message }))
+      return false
     }
   },
   logPrefix: 'NPC'
@@ -260,12 +273,12 @@ async function _run (dialog, form, buttonRow, config, restore) {
 
     const dialogData = config.buildDialogData(foundryData, { form })
 
-    new config.ConfirmationDialog({
+    // Awaited so a render failure reaches the catch below and re-enables Generate.
+    await new config.ConfirmationDialog({
       ...dialogData,
 
-      onAccept: async (data) => {
-        await config.onAccept(data, { mapper, dialog })
-      },
+      // Resolves true only when the document was created; the review dialog stays open otherwise.
+      onAccept: (data) => config.onAccept(data, { mapper, dialog }),
 
       onRegenerate: () => {
         generateBtn.disabled = false
@@ -273,6 +286,7 @@ async function _run (dialog, form, buttonRow, config, restore) {
         textarea.focus()
       },
 
+      // Also called when the review dialog is closed from its header or with Escape.
       onCancel: restore
     }).render({ force: true })
 

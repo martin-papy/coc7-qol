@@ -30,6 +30,7 @@ All notable changes to this project will be documented in this file.
 - **AI Generator: unknown model error** — A retired or mistyped model now points to the *Model* setting instead of showing the raw provider error.
 - **Cast control missing on NPC and Creature sheets on CoC7 8.16** ([#44](https://github.com/martin-papy/coc7-qol/issues/44)).
 - **README: manual install** — The steps now extract into a `Data/modules/coc7-qol/` folder ([#45](https://github.com/martin-papy/coc7-qol/issues/45)).
+- **Module description** — The manifest and README intro now list every feature ([#46](https://github.com/martin-papy/coc7-qol/issues/46)).
 
 ## [0.8.0] - 2026-11-11
 

@@ -1,6 +1,6 @@
 # CoC7 QoL Improvements
 
-A module for the Call of Cthulhu 7th Edition (CoC7) system on FoundryVTT. Adds easy setting of dice roll visibility, keeper-only highlights, image popouts, AI-powered weapon and NPC generation, and bulk card management for GMs.
+A module for the Call of Cthulhu 7th Edition (CoC7) system on FoundryVTT. Adds a dice roll visibility selector, bulk closing of chat cards, Group Luck rolls, item image popouts, AI-powered weapon and NPC generation, keeper-only highlights, grouped Rest and Trade / Store targets, resizable NPC and Creature sheets, casting spells straight from the actor sheet, and a highlight for strong skills.
 
 ## Have an idea or a feedback ?
 

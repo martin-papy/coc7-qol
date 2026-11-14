@@ -51,13 +51,10 @@ export function registerSettings () {
       openai: 'COC7QOL.Settings.AIProvider.OpenAI',
       gemini: 'COC7QOL.Settings.AIProvider.Gemini'
     },
-    default: 'anthropic',
-    onChange: (value) => {
-      const defaults = PROVIDER_DEFAULTS[value]
-      if (!defaults) return
-      game.settings.set(MODULE, 'ai-endpoint', defaults.endpoint)
-      game.settings.set(MODULE, 'ai-model', defaults.model)
-    }
+    // No onChange: Foundry runs it on every client, where writing world settings fails for
+    // players and can clobber a custom endpoint. The renderSettingsConfig listener above fills
+    // the endpoint and model fields instead, and the settings form saves them.
+    default: 'anthropic'
   })
 
   game.settings.register(MODULE, 'ai-endpoint', {

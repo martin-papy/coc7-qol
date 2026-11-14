@@ -88,7 +88,7 @@
   "COC7QOL.AIGenerator.Tier.master": "Maître",
 
   "COC7QOL.Settings.AIProvider.Name": "Fournisseur",
-  "COC7QOL.Settings.AIProvider.Hint": "Fournisseur LLM utilisé pour la génération. Changer ceci met à jour automatiquement l'endpoint et le modèle.",
+  "COC7QOL.Settings.AIProvider.Hint": "Fournisseur LLM utilisé pour la génération. Le changer remplit les champs endpoint et modèle avec les valeurs par défaut du fournisseur ; modifiez-les avant d'enregistrer pour utiliser les vôtres.",
   "COC7QOL.Settings.AIProvider.Anthropic": "Anthropic (Claude)",
   "COC7QOL.Settings.AIProvider.OpenAI": "OpenAI (GPT)",
   "COC7QOL.Settings.AIProvider.Gemini": "Google (Gemini)",

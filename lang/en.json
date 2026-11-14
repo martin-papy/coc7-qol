@@ -88,7 +88,7 @@
   "COC7QOL.AIGenerator.Tier.master": "Master",
 
   "COC7QOL.Settings.AIProvider.Name": "Provider",
-  "COC7QOL.Settings.AIProvider.Hint": "LLM provider used for item generation. Changing this auto-updates the endpoint and model to provider defaults.",
+  "COC7QOL.Settings.AIProvider.Hint": "LLM provider used for item generation. Changing it fills the endpoint and model fields with that provider's defaults; edit them before saving to use your own.",
   "COC7QOL.Settings.AIProvider.Anthropic": "Anthropic (Claude)",
   "COC7QOL.Settings.AIProvider.OpenAI": "OpenAI (GPT)",
   "COC7QOL.Settings.AIProvider.Gemini": "Google (Gemini)",

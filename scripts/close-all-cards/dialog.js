@@ -119,8 +119,15 @@ export default class CloseAllCardsDialog extends foundry.applications.api.Applic
     this.#selectedIds = new Set(Array.from(checkboxes).map(cb => cb.dataset.messageId))
   }
 
+  /**
+   * The selected cards as they are now. The list was read when the dialog
+   * opened, and a card can change under it: an unfinished combined roll gets
+   * finished, a card gets closed from the chat log. The state decides how a
+   * card is closed, so it is read again here; a card that is no longer open
+   * drops out.
+   */
   #getSelectedCards () {
-    return this.#cards.filter(card => this.#selectedIds.has(card.messageId))
+    return this.#listCards().filter(card => this.#selectedIds.has(card.messageId))
   }
 
   /** Lock the form while the cards are being closed, so a second click cannot start a second run. */
@@ -147,7 +154,14 @@ export default class CloseAllCardsDialog extends foundry.applications.api.Applic
   static async #handleCloseSelected (event, target) {
     if (this.#isClosing) return
     const cards = this.#getSelectedCards()
-    if (cards.length === 0) return
+    if (cards.length === 0) {
+      // Everything selected was closed in the meantime: nothing to do, and nothing left to show for it.
+      if (this.#selectedIds.size > 0) {
+        ui.notifications.info('COC7QOL.CloseAllCards.Notification.NoCardsFound', { localize: true })
+        this.close()
+      }
+      return
+    }
 
     this.#setBusy(true)
     const { closed, failed, error } = await closeCards(cards, {

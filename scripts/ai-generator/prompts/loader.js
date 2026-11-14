@@ -1,9 +1,9 @@
 // Loads AI system-prompt Markdown files at runtime and caches them per session.
 
 import { tf } from '../../utils.js'
+import { MODULE_ID } from '../../constants.js'
 
 const cache = new Map()
-const MODULE_ID = 'coc7-qol'
 
 /**
  * Fetch a system-prompt Markdown file by base name (no extension).

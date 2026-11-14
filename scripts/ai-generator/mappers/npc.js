@@ -7,6 +7,7 @@ import { loadPrompt } from '../prompts/loader.js'
 import weaponMapper from './weapon.js'
 import { SKILL_TIER_KEYS } from '../skill-tiers.js'
 import { clampInt, invalidFields, isNonEmptyString, isPlainObject, text } from './coerce.js'
+import { LOG_PREFIX } from '../../constants.js'
 
 const REQUIRED_CHARACTERISTICS = ['str', 'con', 'siz', 'dex', 'app', 'int', 'pow', 'edu']
 
@@ -275,7 +276,7 @@ export default {
       if (skillData) resolved.push(skillData)
     }
     resolutionWarnings.forEach(message => {
-      console.warn(`[coc7-qol] ${message}`)
+      console.warn(LOG_PREFIX, `${message}`)
       ui.notifications?.warn(message)
     })
     return resolved

@@ -1,6 +1,7 @@
 import { isHighlightEnabled, ROOT_CLASS, MARKER_CLASS, READONLY_CLASS } from './settings.js'
 import { addBadgeOnce } from './badge.js'
 import { gmOnlyChatRegions } from './chat-rules.js'
+import { LOG_PREFIX } from '../constants.js'
 
 // How long a card stays watched for GM-only content the system adds after the render
 // hook has already returned. Generous enough to cover an uncached template fetch on a
@@ -95,7 +96,7 @@ function watchForLateContent (html) {
       applyChatHighlights(html)
     } catch (err) {
       observer.disconnect()
-      console.warn('[coc7-qol] GM-visibility late chat highlight failed:', err)
+      console.warn(LOG_PREFIX, 'GM-visibility late chat highlight failed:', err)
     }
   })
   observer.observe(html, { childList: true, subtree: true })
@@ -118,6 +119,6 @@ export function highlightChatCard (message, html) {
     // those keeps a full chat-log render from spawning an observer per message.
     if (typeof message?.flags?.CoC7?.load?.as !== 'undefined') watchForLateContent(html)
   } catch (err) {
-    console.warn('[coc7-qol] GM-visibility chat highlight failed:', err)
+    console.warn(LOG_PREFIX, 'GM-visibility chat highlight failed:', err)
   }
 }

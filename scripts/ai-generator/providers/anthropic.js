@@ -1,16 +1,16 @@
 import { postJson, readReply } from './shared.js'
+import { MODULE_ID } from '../../constants.js'
 
-const MODULE = 'coc7-qol'
 const NAME = 'Anthropic'
 
 export default class AnthropicProvider {
   async generate (systemPrompt, userPrompt) {
-    const data = await postJson(NAME, game.settings.get(MODULE, 'ai-endpoint'), {
-      'x-api-key': game.settings.get(MODULE, 'ai-api-key'),
+    const data = await postJson(NAME, game.settings.get(MODULE_ID, 'ai-endpoint'), {
+      'x-api-key': game.settings.get(MODULE_ID, 'ai-api-key'),
       'anthropic-version': '2023-06-01',
       'anthropic-dangerous-direct-browser-access': 'true'
     }, {
-      model: game.settings.get(MODULE, 'ai-model'),
+      model: game.settings.get(MODULE_ID, 'ai-model'),
       max_tokens: 4096,
       system: systemPrompt,
       messages: [{ role: 'user', content: userPrompt }]

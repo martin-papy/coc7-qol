@@ -1,5 +1,6 @@
 import { isHighlightEnabled, ROOT_CLASS, MARKER_CLASS } from './settings.js'
 import { gmOnlyTabKeys } from './tab-rules.js'
+import { LOG_PREFIX } from '../constants.js'
 
 /**
  * Mark GM-only tabs (nav button + panel) on a rendered item sheet (renderItemSheetV2).
@@ -33,6 +34,6 @@ export function highlightSheetTabs (application, element) {
     // re-rendered tabs and panels it has no visible effect.
     if (marked) element.classList.add(ROOT_CLASS)
   } catch (err) {
-    console.warn('[coc7-qol] GM-visibility sheet-tab highlight failed:', err)
+    console.warn(LOG_PREFIX, 'GM-visibility sheet-tab highlight failed:', err)
   }
 }

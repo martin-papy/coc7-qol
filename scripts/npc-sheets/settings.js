@@ -1,4 +1,4 @@
-const MODULE = 'coc7-qol'
+import { MODULE_ID } from '../constants.js'
 
 export const RESIZABLE_SETTING = 'npc-sheets-resizable'
 export const SKILL_COLUMNS_SETTING = 'npc-skill-columns'
@@ -14,7 +14,7 @@ export const SKILL_COLUMNS_CLASS = 'coc7qol-skill-columns'
 export function registerNpcSheetSettings (onSkillColumnsChange) {
   // The sheet classes are made resizable once, at ready, and Foundry builds the handle with
   // the window frame, so switching this takes a reload rather than a live update.
-  game.settings.register(MODULE, RESIZABLE_SETTING, {
+  game.settings.register(MODULE_ID, RESIZABLE_SETTING, {
     name: 'COC7QOL.NpcSheets.ResizableName',
     hint: 'COC7QOL.NpcSheets.ResizableHint',
     scope: 'world',
@@ -24,7 +24,7 @@ export function registerNpcSheetSettings (onSkillColumnsChange) {
     requiresReload: true
   })
 
-  game.settings.register(MODULE, SKILL_COLUMNS_SETTING, {
+  game.settings.register(MODULE_ID, SKILL_COLUMNS_SETTING, {
     name: 'COC7QOL.NpcSheets.SkillColumnsName',
     hint: 'COC7QOL.NpcSheets.SkillColumnsHint',
     scope: 'world',
@@ -42,7 +42,7 @@ export function registerNpcSheetSettings (onSkillColumnsChange) {
  */
 function isEnabled (key) {
   try {
-    return game.settings.get(MODULE, key) === true
+    return game.settings.get(MODULE_ID, key) === true
   } catch (_) {
     return false
   }

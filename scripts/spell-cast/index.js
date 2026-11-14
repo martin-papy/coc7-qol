@@ -1,5 +1,6 @@
 import { t, tf } from '../utils.js'
 import { addCastControls, castLabelKeys } from './cast-control.js'
+import { LOG_PREFIX } from '../constants.js'
 
 /** Actor types whose sheet lists spells the actor can cast (a container only stores them). */
 const CASTER_TYPES = new Set(['character', 'npc', 'creature'])
@@ -26,7 +27,7 @@ async function castSpell (spell, hidden) {
   try {
     await spell.system.cast(hidden)
   } catch (err) {
-    console.error('[coc7-qol] Casting the spell from the actor sheet failed:', err)
+    console.error(LOG_PREFIX, 'Casting the spell from the actor sheet failed:', err)
     // Passing `format` makes Foundry escape the values: a spell name is user-written text.
     ui.notifications.error('COC7QOL.SpellCast.Failed', { format: { name: spell.name, error: err.message } })
   }

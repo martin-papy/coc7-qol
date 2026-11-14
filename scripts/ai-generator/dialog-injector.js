@@ -5,8 +5,7 @@ import CoC7NPCConfirmationDialog from './npc-confirmation-dialog.js'
 import { applyRandomCharacteristics } from './mappers/npc.js'
 import { stashChildren } from './dialog-flow.js'
 import { t, tf } from '../utils.js'
-
-const MODULE = 'coc7-qol'
+import { LOG_PREFIX, MODULE_ID } from '../constants.js'
 
 // Inline sparkle SVG icon — represents AI generation
 const SPARKLE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
@@ -49,7 +48,7 @@ const WEAPON_PROMPT_CONFIG = {
       dialog.close()
       return true
     } catch (err) {
-      console.error('[coc7-qol] Weapon item creation failed:', err)
+      console.error(LOG_PREFIX, 'Weapon item creation failed:', err)
       ui.notifications.error(tf('COC7QOL.AIGenerator.Error.WeaponCreationFailed', { error: err.message }))
       return false
     }
@@ -98,7 +97,7 @@ const NPC_PROMPT_CONFIG = {
         try {
           await actor.createEmbeddedDocuments('Item', items)
         } catch (itemErr) {
-          console.warn('[coc7-qol] Item attachment failed:', itemErr)
+          console.warn(LOG_PREFIX, 'Item attachment failed:', itemErr)
           ui.notifications.warn(tf('COC7QOL.AIGenerator.Error.NPCItemsFailed', { error: itemErr.message }))
         }
       }
@@ -106,7 +105,7 @@ const NPC_PROMPT_CONFIG = {
       dialog.close()
       return true
     } catch (err) {
-      console.error('[coc7-qol] NPC actor creation failed:', err)
+      console.error(LOG_PREFIX, 'NPC actor creation failed:', err)
       ui.notifications.error(tf('COC7QOL.AIGenerator.Error.NPCCreationFailed', { error: err.message }))
       return false
     }
@@ -246,7 +245,7 @@ async function _run (dialog, form, buttonRow, config, restore) {
     return
   }
 
-  const apiKey = game.settings.get(MODULE, 'ai-api-key')
+  const apiKey = game.settings.get(MODULE_ID, 'ai-api-key')
   if (!apiKey) {
     errorDiv.textContent = t('COC7QOL.AIGenerator.Error.NoAPIKey')
     errorDiv.style.display = 'block'
@@ -258,7 +257,7 @@ async function _run (dialog, form, buttonRow, config, restore) {
   errorDiv.style.display = 'none'
 
   try {
-    const providerId = game.settings.get(MODULE, 'ai-provider')
+    const providerId = game.settings.get(MODULE_ID, 'ai-provider')
     const ProviderClass = providers.get(providerId)
     if (!ProviderClass) throw new Error(tf('COC7QOL.AIGenerator.Error.UnknownProvider', { provider: providerId }))
 
@@ -291,7 +290,7 @@ async function _run (dialog, form, buttonRow, config, restore) {
     }).render({ force: true })
 
   } catch (err) {
-    console.error(`[coc7-qol] ${config.logPrefix} generation failed:`, err)
+    console.error(LOG_PREFIX, `${config.logPrefix} generation failed:`, err)
     errorDiv.textContent = err.message
     errorDiv.style.display = 'block'
     generateBtn.disabled = false

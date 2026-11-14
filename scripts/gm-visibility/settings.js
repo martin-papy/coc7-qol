@@ -1,4 +1,4 @@
-const MODULE = 'coc7-qol'
+import { MODULE_ID } from '../constants.js'
 
 export const SETTING_KEY = 'highlight-gm-only'
 export const ROOT_CLASS = 'coc7qol-gm-highlight'
@@ -12,7 +12,7 @@ export const READONLY_CLASS = 'coc7qol-gm-readonly'
  * Call once during the 'init' hook.
  */
 export function registerGmVisibilitySettings () {
-  game.settings.register(MODULE, SETTING_KEY, {
+  game.settings.register(MODULE_ID, SETTING_KEY, {
     name: 'COC7QOL.GmVisibility.SettingName',
     hint: 'COC7QOL.GmVisibility.SettingHint',
     scope: 'world',
@@ -49,7 +49,7 @@ function refreshHighlightedViews () {
 export function isHighlightEnabled () {
   if (!game.user?.isGM) return false
   try {
-    return game.settings.get(MODULE, SETTING_KEY) === true
+    return game.settings.get(MODULE_ID, SETTING_KEY) === true
   } catch (_) {
     return false
   }

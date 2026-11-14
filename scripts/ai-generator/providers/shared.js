@@ -2,6 +2,7 @@
 // unit-tested in Node (test/provider-shared.test.js).
 
 import { formatApiError, tf } from '../../utils.js'
+import { LOG_PREFIX } from '../../constants.js'
 
 const DEFAULT_TIMEOUT_MS = 60_000
 const PREVIEW_LENGTH = 200
@@ -84,7 +85,7 @@ function parseJson (provider, text) {
   try {
     return JSON.parse(text)
   } catch (e) {
-    console.error(`[coc7-qol] ${provider} returned invalid JSON.\nParse error:`, e, '\nFull response text:\n', text)
+    console.error(LOG_PREFIX, `${provider} returned invalid JSON.\nParse error:`, e, '\nFull response text:\n', text)
     throw new Error(tf('COC7QOL.AIGenerator.Error.InvalidJson', { provider, preview: text.slice(0, PREVIEW_LENGTH) }), { cause: e })
   }
 }

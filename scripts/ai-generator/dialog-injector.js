@@ -3,6 +3,7 @@ import * as mappers from './mappers/registry.js'
 import CoC7AIGenerationDialog from './generation-dialog.js'
 import CoC7NPCConfirmationDialog from './npc-confirmation-dialog.js'
 import { applyRandomCharacteristics } from './mappers/npc.js'
+import { stashChildren } from './dialog-flow.js'
 import { t, tf } from '../utils.js'
 
 const MODULE = 'coc7-qol'
@@ -153,7 +154,7 @@ function _injectButton (dialog, html, { knownTypes, supportedTypes, buttonTitle,
   })
 
   aiBtn.addEventListener('click', () => {
-    _transformToPromptView(dialog, html, nameInput, aiBtn, config)
+    _transformToPromptView(dialog, html, nameInput, config)
   })
 }
 
@@ -169,21 +170,21 @@ function _findButtonRow (form, html) {
 /**
  * Replaces Name + Type form fields with a prompt textarea.
  * Works for both weapon and NPC flows via the config object.
+ * The original fields and buttons are detached, not cloned, so Cancel puts back the same
+ * nodes: selections, typed values and every listener (Foundry's and this module's) survive.
  */
-function _transformToPromptView (dialog, html, nameInput, aiBtn, config) {
+function _transformToPromptView (dialog, html, nameInput, config) {
   const capturedName = nameInput.value.trim()
 
   const form = html.querySelector('form') ?? html.querySelector('.dialog-content') ?? nameInput.closest('div')
   const buttonRow = _findButtonRow(form, html)
   if (!form || !buttonRow) return
 
-  const originalButtonHTML = buttonRow.innerHTML
-  const originalFieldNodes = [...form.children]
-    .filter(child => child !== buttonRow)
-    .map(child => child.cloneNode(true))
-
-  for (const child of [...form.children]) {
-    if (child !== buttonRow) child.remove()
+  const restoreFields = stashChildren(form, buttonRow)
+  const restoreButtons = stashChildren(buttonRow)
+  const restore = () => {
+    restoreButtons()
+    restoreFields()
   }
 
   const promptArea = document.createElement('div')
@@ -205,47 +206,22 @@ function _transformToPromptView (dialog, html, nameInput, aiBtn, config) {
   const promptTextarea = form.querySelector(`[name="${config.textareaName}"]`)
   if (capturedName) promptTextarea.value = `${config.prefillPrefix} "${capturedName}". `
 
-  aiBtn.style.display = 'none'
-
   buttonRow.innerHTML = `
     <button type="button" class="coc7-btn-generate">${t('COC7QOL.AIGenerator.Button.Generate')}</button>
     <button type="button" class="coc7-btn-back">${t('COC7QOL.AIGenerator.Button.Cancel')}</button>
   `
 
-  buttonRow.querySelector('.coc7-btn-back').addEventListener('click', () => {
-    _restoreOriginalForm(form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn, dialog, html, config)
-  })
-
+  buttonRow.querySelector('.coc7-btn-back').addEventListener('click', restore)
   buttonRow.querySelector('.coc7-btn-generate').addEventListener('click', () => {
-    _run(dialog, html, form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn, config)
+    _run(dialog, form, buttonRow, config, restore)
   })
-}
-
-/**
- * Restores the form to its original Name + Type state.
- * @param {object} config - Type-specific configuration (passed through to re-attach the correct click listener).
- */
-function _restoreOriginalForm (form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn, dialog, html, config) {
-  promptArea.remove()
-  for (const node of originalFieldNodes) {
-    form.insertBefore(node, buttonRow)
-  }
-  buttonRow.innerHTML = originalButtonHTML
-  aiBtn.style.display = ''
-
-  const restoredBtn = buttonRow.querySelector('.coc7-ai-generate-btn')
-  if (restoredBtn) {
-    const newNameInput = form.querySelector('[name="name"]')
-    restoredBtn.addEventListener('click', () => {
-      _transformToPromptView(dialog, html, newNameInput, restoredBtn, config)
-    })
-  }
 }
 
 /**
  * Calls the configured LLM provider and opens the type-specific confirmation dialog.
+ * @param {() => void} restore  Puts the Create dialog back to its Name + Type state.
  */
-async function _run (dialog, html, form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn, config) {
+async function _run (dialog, form, buttonRow, config, restore) {
   const textarea = form.querySelector(`[name="${config.textareaName}"]`)
   const userPrompt = textarea?.value?.trim()
   const errorDiv = form.querySelector('.coc7-ai-error')
@@ -297,9 +273,7 @@ async function _run (dialog, html, form, buttonRow, promptArea, originalFieldNod
         textarea.focus()
       },
 
-      onCancel: () => {
-        _restoreOriginalForm(form, buttonRow, promptArea, originalFieldNodes, originalButtonHTML, aiBtn, dialog, html, config)
-      }
+      onCancel: restore
     }).render({ force: true })
 
   } catch (err) {

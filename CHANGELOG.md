@@ -30,6 +30,7 @@ All notable changes to this project will be documented in this file.
 - **AI Generator: unknown model error** — A retired or mistyped model now points to the *Model* setting instead of showing the raw provider error.
 - **AI Generator: weapon description shown as HTML** — Markup in a generated weapon's description now shows as text ([#61](https://github.com/martin-papy/coc7-qol/issues/61)).
 - **AI Generator: provider change wrote settings from every client** — Changing the provider no longer fails on players' clients or overwrites a custom endpoint entered at the same time ([#43](https://github.com/martin-papy/coc7-qol/issues/43)).
+- **AI Generator: Cancel reset the Create dialog** — The Type and Folder choices are kept after Cancel, and the AI button still follows the type ([#51](https://github.com/martin-papy/coc7-qol/issues/51)).
 - **AI Generator: replies in a code fence or with extra text** — These now parse. A reply cut off at the output limit or refused by the provider says so, instead of "not valid JSON" ([#52](https://github.com/martin-papy/coc7-qol/issues/52)).
 - **AI Generator: out-of-range or malformed values** — Characteristics and skills are kept within 1–99 and 0–99, duplicate skills are dropped, overlong lists capped, and values of the wrong type corrected or reported clearly instead of raising a raw error ([#53](https://github.com/martin-papy/coc7-qol/issues/53)).
 - **AI Generator: weapon skill shown as `Rifle&#x2F;Shotgun`** in the NPC review ([#54](https://github.com/martin-papy/coc7-qol/issues/54)).

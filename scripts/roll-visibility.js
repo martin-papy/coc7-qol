@@ -1,7 +1,7 @@
 import { t } from './utils.js'
 import { VISIBILITY_CHOICES, choiceForCoreMode, coreModeKey, visibilityUpdate } from './roll-mode-keys.js'
 import { createPendingRollMode } from './pending-roll-mode.js'
-import { DECISION_TTL_MS, createDevelopmentGuard, findRefreshEntry, resyncFor } from './roll-mode-resync.js'
+import { CREATION_TTL_MS, createDevelopmentGuard, findRefreshEntry, resyncFor } from './roll-mode-resync.js'
 import { LOG_PREFIX, MODULE_ID } from './constants.js'
 
 const LAST_MODE_SETTING = 'last-roll-mode'
@@ -13,12 +13,15 @@ const DEFAULT_CHOICE = 'publicroll'
 const pendingRollMode = createPendingRollMode()
 
 // A check whose blindness the dropdown changed is brought in line once its card
-// exists (see roll-mode-resync.js): `awaitingResync` describes the card this
+// exists (see roll-mode-resync.js): `awaitingResync` identifies the card this
 // client is about to create, `developmentGuard` refuses the tick of a roll
 // turned blind.
 const developmentGuard = createDevelopmentGuard()
-/** @type {{mode: string, since: number}|null} */
+/** @type {{token: string, since: number}|null} */
 let awaitingResync = null
+
+/** Flag that ties a created card to the roll that asked for a resync. */
+const RESYNC_TOKEN_FLAG = 'resyncToken'
 
 let unsupportedModeReported = false
 let refreshMissingReported = false
@@ -180,8 +183,6 @@ Hooks.on('preCreateChatMessage', (document, data) => {
     return
   }
 
-  document.updateSource(update)
-
   // A new roll supersedes whatever the previous one left pending.
   developmentGuard.clear()
   const resync = resyncFor({
@@ -189,7 +190,12 @@ Hooks.on('preCreateChatMessage', (document, data) => {
     mode: update['flags.CoC7.load.rollMode'],
     blindMode: coreModeKey('blindroll', registeredModes())
   })
-  awaitingResync = resync ? { mode: update['flags.CoC7.load.rollMode'], since: Date.now() } : null
+  // The card carries a token, so that createChatMessage recognises it and no other
+  // check created by this client can be taken for it.
+  awaitingResync = resync ? { token: foundry.utils.randomID(), since: Date.now() } : null
+  document.updateSource(awaitingResync
+    ? { ...update, [`flags.${MODULE_ID}.${RESYNC_TOKEN_FLAG}`]: awaitingResync.token }
+    : update)
   if (resync?.skillUuid) developmentGuard.arm(resync.skillUuid)
 })
 
@@ -219,14 +225,14 @@ async function refreshCard (message) {
 
 Hooks.on('createChatMessage', (message, options, userId) => {
   if (!awaitingResync || userId !== game.user.id) return
-  const load = message.flags?.CoC7?.load
-  if (load?.as !== 'CoC7Check') return
-  // The card must be the one announced in preCreateChatMessage. If that one was
-  // never created (cancelled by another module, refused by the server), a later
-  // check must not be taken for it.
-  const { mode, since } = awaitingResync
+  // Forget a card that never came (cancelled by another module, refused by the server).
+  if (Date.now() - awaitingResync.since > CREATION_TTL_MS) {
+    awaitingResync = null
+    return
+  }
+  // Only the card announced in preCreateChatMessage: any other message leaves the wait in place.
+  if (message.flags?.[MODULE_ID]?.[RESYNC_TOKEN_FLAG] !== awaitingResync.token) return
   awaitingResync = null
-  if (load.rollMode !== mode || Date.now() - since > DECISION_TTL_MS) return
   developmentGuard.attach(message.id)
   refreshCard(message)
 })

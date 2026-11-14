@@ -21,12 +21,21 @@
  */
 
 /**
- * How long a guard waits for the message to be created, and then for CoC7's
- * decision to tick. CoC7 decides in the same task that receives the created
- * message, so the second wait is over almost at once.
+ * How long a guard waits for the message to be created: a round trip to the
+ * server.
  * @type {number}
  */
-export const DECISION_TTL_MS = 5_000
+export const CREATION_TTL_MS = 5_000
+
+/**
+ * How long a guard then waits for CoC7's decision to tick. CoC7 decides in the
+ * same task that receives the created message, so its first write (the skill,
+ * or the card with Dice So Nice) comes within milliseconds. The window is kept
+ * this short because a roll that earns no tick leaves the guard armed until it
+ * closes, and a tick made on purpose in that time would be refused.
+ * @type {number}
+ */
+export const DECISION_TTL_MS = 1_000
 
 /**
  * How long a guard waits for the tick itself once CoC7 has decided on it. With
@@ -109,10 +118,13 @@ export function isAppliedDevelopmentFlag (changes) {
  * are refused, once each. The card's flag has to stay false as well: it is what
  * lets a later Reveal tick the skill, as it does for a native blind roll.
  *
- * The guard is deliberately narrow so that it cannot swallow a tick made on
+ * The guard is deliberately narrow so that it does not swallow a tick made on
  * purpose (the box on the sheet, the Keeper's Flag for development button): it
- * matches one skill, refuses one write of each kind, and gives up after
- * DECISION_TTL_MS unless CoC7 has shown by then that a tick is on its way.
+ * matches one skill, refuses one write of each kind, and gives up
+ * DECISION_TTL_MS after the card exists unless CoC7 has shown by then that a
+ * tick is on its way. Whether a tick is coming is not worked out beforehand:
+ * that would mean copying CoC7's dice rules (difficulty, fumbles, forced
+ * results, bonus dice), and a wrong answer would let the result through.
  *
  * @param {object} [options]
  * @param {() => number} [options.now]  Clock in milliseconds, Date.now by default
@@ -127,7 +139,8 @@ export function createDevelopmentGuard ({ now = Date.now } = {}) {
    */
   function live () {
     if (!slot) return null
-    const isExpired = now() - slot.since > (slot.hasRefusedCard ? DEFERRED_TICK_TTL_MS : DECISION_TTL_MS)
+    const ttl = slot.hasRefusedCard ? DEFERRED_TICK_TTL_MS : (slot.messageId === null ? CREATION_TTL_MS : DECISION_TTL_MS)
+    const isExpired = now() - slot.since > ttl
     if (isExpired || (slot.hasRefusedSkill && slot.hasRefusedCard)) slot = null
     return slot
   }

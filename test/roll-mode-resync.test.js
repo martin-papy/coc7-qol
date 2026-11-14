@@ -1,6 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  CREATION_TTL_MS,
   DECISION_TTL_MS,
   DEFERRED_TICK_TTL_MS,
   createDevelopmentGuard,
@@ -152,7 +153,7 @@ test('the guard gives up when CoC7 decided not to tick', () => {
 test('the guard does not count the wait for the server against CoC7\'s decision', () => {
   const { guard, clock } = guardAt()
   guard.arm(SKILL)
-  clock.now += DECISION_TTL_MS - 1 // a slow round trip
+  clock.now += CREATION_TTL_MS - 1 // a slow round trip
   guard.attach('m1')
   clock.now += DECISION_TTL_MS - 1
 
@@ -162,7 +163,7 @@ test('the guard does not count the wait for the server against CoC7\'s decision'
 test('the guard gives up on a message that is never created', () => {
   const { guard, clock } = guardAt()
   guard.arm(SKILL)
-  clock.now += DECISION_TTL_MS + 1
+  clock.now += CREATION_TTL_MS + 1
   guard.attach('m1')
 
   assert.equal(guard.refusesItemUpdate(SKILL, TICK), false)
@@ -178,6 +179,21 @@ test('the guard waits for the delayed tick from the moment the card flag was ref
   clock.now += DEFERRED_TICK_TTL_MS - 1
 
   assert.equal(guard.refusesItemUpdate(SKILL, TICK), true)
+})
+
+test('the guard waits longer for the card than for CoC7\'s decision', () => {
+  // Before the card exists the wait covers a server round trip...
+  const waiting = guardAt()
+  waiting.guard.arm(SKILL)
+  waiting.clock.now += DECISION_TTL_MS + 1
+  assert.equal(waiting.guard.refusesItemUpdate(SKILL, TICK), true)
+
+  // ...once it exists, CoC7 decides at once: a second later a tick is somebody's own.
+  const decided = guardAt()
+  decided.guard.arm(SKILL)
+  decided.guard.attach('m1')
+  decided.clock.now += DECISION_TTL_MS + 1
+  assert.equal(decided.guard.refusesItemUpdate(SKILL, TICK), false)
 })
 
 test('the guard stops waiting for a delayed tick that never comes', () => {

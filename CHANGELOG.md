@@ -4,13 +4,6 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-### Fixed
-
-- **AI Generator: retired default models** — The Gemini default `gemini-2.0-flash` was shut down by Google. Defaults are now `gemini-3.8-flash`, `gpt-6.1-terra` (was `gpt-4o`) and `claude-sonnet-5-5` (was `claude-sonnet-4-6`). Worlds that already stored a model keep it.
-- **AI Generator: unknown model error** — A retired or mistyped model now points to the *Model* setting instead of showing the raw provider error.
-
-## [1.0.0] - 2026-11-13
-
 ### Added
 
 - **Group Luck roll request** — A **Group Luck** button in the Keeper's tools lists the investigators present, highlights the lowest Luck, and whispers that player a Luck check link, or rolls it for the Keeper if they are offline (CoC7 issue [#1984](https://github.com/Miskatonic-Investigative-Society/CoC7-FoundryVTT/issues/1984)).
@@ -33,6 +26,8 @@ All notable changes to this project will be documented in this file.
 - **Roll visibility leaking onto the next message** — The visibility picked in the roll dialog now applies only to that roll's card.
 - **Empty module page in a player's settings** — The API key setting is now listed for GMs only.
 - **AI Generator: missing French strings** — Twelve strings of the NPC review dialog are now translated.
+- **AI Generator: retired default models** — The Gemini default `gemini-2.0-flash` was shut down by Google. Defaults are now `gemini-3.8-flash`, `gpt-6.1-terra` (was `gpt-4o`) and `claude-sonnet-5-5` (was `claude-sonnet-4-6`). Worlds that already stored a model keep it.
+- **AI Generator: unknown model error** — A retired or mistyped model now points to the *Model* setting instead of showing the raw provider error.
 
 ## [0.8.0] - 2026-11-11
 

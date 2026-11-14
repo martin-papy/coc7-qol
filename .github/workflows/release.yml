@@ -81,7 +81,7 @@ jobs:
       - name: Build release zip
         run: |
           set -euo pipefail
-          zip -r coc7-qol.zip module.json scripts/ styles/ lang/
+          zip -r coc7-qol.zip module.json LICENSE scripts/ styles/ lang/
           echo "Zip contents:"
           unzip -l coc7-qol.zip
 

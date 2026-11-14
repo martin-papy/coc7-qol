@@ -61,19 +61,20 @@ The workflow builds `coc7-qol.zip` containing the runtime files referenced by `m
 
 ```
 module.json
+LICENSE
 scripts/
 styles/
 lang/
 ```
 
-`images/`, `docs/`, `temp/`, `CHANGELOG.md`, `README.md`, `LICENSE`, and `.github/` are repo-only and excluded.
+`LICENSE` ships because the MIT text asks for the notice in all copies. `images/`, `docs/`, `temp/`, `test/`, `CHANGELOG.md`, `README.md` and `.github/` are repo-only and excluded.
 
 ### Manual fallback
 
 If the workflow is broken or unavailable, the release can be produced by hand:
 
 ```bash
-zip -r /tmp/coc7-qol.zip module.json scripts/ styles/ lang/
+zip -r /tmp/coc7-qol.zip module.json LICENSE scripts/ styles/ lang/
 gh release create vX.Y.Z --title "vX.Y.Z" --generate-notes /tmp/coc7-qol.zip module.json
 ```
 

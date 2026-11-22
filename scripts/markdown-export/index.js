@@ -2,9 +2,7 @@ import { t } from '../utils.js'
 import { LOG_PREFIX } from '../constants.js'
 import { LABEL_KEYS } from './labels.js'
 import { fileNameFor } from './format.js'
-import { richTextToMarkdown } from './rich-text.js'
-import { collectSheetData } from './collect.js'
-import { renderNote } from './render.js'
+import { buildNote } from './build-note.js'
 
 const EXPORT_ACTION = 'coc7qol-export-markdown'
 const SYSTEM_ID = 'CoC7'
@@ -31,23 +29,20 @@ function resolveName (uuid) {
  */
 function exportActor (actor) {
   try {
-    // Read once: the Keeper rule must be the same for the sheet data and the rich text.
-    const isGM = game.user.isGM
-    const data = collectSheetData(actor, {
-      isGM,
-      oneBlockBackstory: game.settings.get(SYSTEM_ID, 'oneBlockBackstory'),
-      displayPlayerName: game.settings.get(SYSTEM_ID, 'displayPlayerNameOnSheet'),
-      locale: game.i18n.lang
-    })
     // HTML is only ever parsed in this inert document, never in the live one.
     const doc = document.implementation.createHTMLDocument('')
     const converter = new window.showdown.Converter()
-    const htmlToMarkdown = html => converter.makeMarkdown(html, doc)
-    const labels = Object.fromEntries(Object.entries(LABEL_KEYS).map(([key, i18nKey]) => [key, t(i18nKey)]))
-    const note = renderNote(data, {
-      labels,
-      today: localDate(),
-      richText: html => richTextToMarkdown(html, { isGM, doc, htmlToMarkdown, resolveName })
+    const note = buildNote(actor, {
+      // Read once: the Keeper rule must be the same for the sheet data and the rich text.
+      isGM: game.user.isGM,
+      oneBlockBackstory: game.settings.get(SYSTEM_ID, 'oneBlockBackstory'),
+      displayPlayerName: game.settings.get(SYSTEM_ID, 'displayPlayerNameOnSheet'),
+      locale: game.i18n.lang,
+      doc,
+      htmlToMarkdown: html => converter.makeMarkdown(html, doc),
+      resolveName,
+      labels: Object.fromEntries(Object.entries(LABEL_KEYS).map(([key, i18nKey]) => [key, t(i18nKey)])),
+      today: localDate()
     })
     foundry.utils.saveDataToFile(note, 'text/markdown', fileNameFor(actor.name))
   } catch (err) {

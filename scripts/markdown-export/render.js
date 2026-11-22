@@ -2,7 +2,7 @@
  * Turns a `SheetData` object (see collect.js) into the Markdown note for an Obsidian vault.
  * Pure: no Foundry globals, no DOM. Never mutates `data`.
  */
-import { yamlString, tableCell, inlineText } from './format.js'
+import { yamlString, tableCell, inlineText, plainLine } from './format.js'
 
 /**
  * @typedef {object} RenderDeps
@@ -34,7 +34,7 @@ const table = (headers, rows) => [row(headers), row(headers.map(() => '---')), .
 /** Plain text kept as paragraphs, one per non-blank line. */
 const plainParagraphs = value => String(value ?? '')
   .split(/\r?\n/)
-  .map(inlineText)
+  .map(plainLine)
   .filter(line => line !== '')
   .join('\n\n')
 
@@ -110,7 +110,7 @@ function renderWeapons (data, labels) {
 }
 
 function possessionGroup (names, labelKey, labels) {
-  const lines = (names ?? []).map(inlineText).filter(name => name !== '')
+  const lines = (names ?? []).map(plainLine).filter(name => name !== '')
   return section(`### ${inlineText(labels[labelKey])}`, bullets(lines))
 }
 
@@ -140,7 +140,7 @@ function renderBackground (data, labels, richText) {
 function encounterLine (event, labels) {
   if (isBlank(event.type)) return null
   const loss = event.immunity ? labels.immune : event.totalLoss
-  return isBlank(loss) ? inlineText(event.type) : `${inlineText(event.type)} (${inlineText(loss)})`
+  return isBlank(loss) ? plainLine(event.type) : `${plainLine(event.type)} (${inlineText(loss)})`
 }
 
 function renderEncounters (data, labels) {

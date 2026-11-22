@@ -263,3 +263,34 @@ test('rendering does not mutate the data', () => {
   render(harvey)
   assert.deepEqual(harvey, copy)
 })
+
+test('plain-text lines cannot become headings, quotes or lists', () => {
+  const note = render({
+    ...noExtras,
+    wealth: { ...noExtras.wealth, assetsDetails: '# big\n> quote\n- item\n1. item\n---' },
+    notes: '## notes heading'
+  })
+  assert.doesNotMatch(note, /^(#+ (big|notes)|> quote|- item|1\. item)$/m)
+  assert.match(note, /^\\# big\n\n\\> quote\n\n\\- item\n\n1\\\. item\n\n\\---\n\n\\## notes heading$/m)
+})
+
+test('names cannot inject raw HTML', () => {
+  const note = render({
+    ...noExtras,
+    skills: [{ name: '<b>Spot</b>', value: 10 }],
+    possessions: { ...noExtras.possessions, item: ['<img src=x onerror=alert(1)>'] },
+    background: [{ title: '<i>T</i>', html: '<p>Story</p>' }]
+  })
+  assert.doesNotMatch(note, /<[a-z/!]/i)
+  assert.match(note, /^- &lt;img src=x onerror=alert\(1\)>$/m)
+})
+
+test('a name at the start of a bullet cannot nest a heading, quote or list in it', () => {
+  const note = render({
+    ...noExtras,
+    possessions: { ...noExtras.possessions, item: ['# Heading item', '> quote item', '- [ ] task', '2. second'] },
+    encounters: [{ type: '# Ghoul', totalLoss: 3, immunity: false }]
+  })
+  assert.match(note, /^- \\# Heading item\n- \\> quote item\n- \\- \[ \] task\n- 2\\\. second$/m)
+  assert.match(note, /^- \\# Ghoul \(3\)$/m)
+})

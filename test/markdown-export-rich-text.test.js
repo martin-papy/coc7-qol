@@ -4,7 +4,8 @@ import showdown from 'showdown'
 import { JSDOM } from 'jsdom'
 import { richTextToMarkdown } from '../scripts/markdown-export/rich-text.js'
 
-const doc = new JSDOM('').window.document
+// A no-quirks document, like the one production parses in (class selectors are case-sensitive there).
+const doc = new JSDOM('<!DOCTYPE html>').window.document
 const converter = new showdown.Converter()
 const deps = (overrides = {}) => ({
   isGM: false,

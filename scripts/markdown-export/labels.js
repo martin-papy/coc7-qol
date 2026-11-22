@@ -45,6 +45,7 @@ export const LABEL_KEYS = {
   wealth: 'CoC7.MonetaryTitle',
   spendingLevel: OWN + 'SpendingLevel',
   cash: OWN + 'Cash',
+  spent: OWN + 'Spent',
   assets: OWN + 'Assets',
   background: 'CoC7.Background',
   encounters: 'CoC7.BackgroundEncounters',

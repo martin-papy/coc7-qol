@@ -42,6 +42,7 @@ const labels = {
   wealth: 'Cash and Assets',
   spendingLevel: 'Spending level',
   cash: 'Cash',
+  spent: 'Spent',
   assets: 'Assets',
   background: 'Background',
   encounters: 'Losses from Strange Entities',
@@ -75,7 +76,7 @@ const harvey = {
     { name: '.38 Revolver', skill: 'Handgun 40%', damage: '1D10', range: '15', attacks: '1 (3)', ammo: '6', malfunction: '100' }
   ],
   possessions: { item: ['Camera', 'Notebook'], book: [], spell: [], talent: [], armor: [], status: [] },
-  wealth: { spendingLevel: '$10', cash: '$150', assets: '$3750', assetsDetails: 'A town house.' },
+  wealth: { spendingLevel: '$10', cash: '$150', spent: '', assets: '$3750', assetsDetails: 'A town house.' },
   notes: 'Carries a lucky coin.',
   background: [{ title: 'Personal Description', html: '<p>Tall and tired.</p>' }],
   encounters: [{ type: 'Ghoul', totalLoss: 3, immunity: false }, { type: 'Deep One', totalLoss: 0, immunity: true }],
@@ -161,7 +162,7 @@ const noExtras = {
   skills: [],
   weapons: [],
   possessions: { item: [], book: [], spell: [], talent: [], armor: [], status: [] },
-  wealth: { spendingLevel: '', cash: '', assets: '', assetsDetails: '' },
+  wealth: { spendingLevel: '', cash: '', spent: '', assets: '', assetsDetails: '' },
   notes: '',
   background: [],
   encounters: [],
@@ -293,4 +294,15 @@ test('a name at the start of a bullet cannot nest a heading, quote or list in it
   })
   assert.match(note, /^- \\# Heading item\n- \\> quote item\n- \\- \[ \] task\n- 2\\\. second$/m)
   assert.match(note, /^- \\# Ghoul \(3\)$/m)
+})
+
+test('the Spent value is listed between Cash and Assets, and left out when blank', () => {
+  const note = render({ ...harvey, wealth: { ...harvey.wealth, spent: '$45 [[train]]' } })
+  assert.match(note, /^- \*\*Spending level:\*\* \$10\n- \*\*Cash:\*\* \$150\n- \*\*Spent:\*\* \$45 \\\[\\\[train\]\]\n- \*\*Assets:\*\* \$3750$/m)
+  assert.doesNotMatch(render({ ...harvey, wealth: { ...harvey.wealth, spent: '  ' } }), /Spent/)
+})
+
+test('a wealth group with only the Spent value still renders', () => {
+  const note = render({ ...noExtras, wealth: { ...noExtras.wealth, spent: '$2' } })
+  assert.match(note, /^## Possessions\n\n### Cash and Assets\n\n- \*\*Spent:\*\* \$2$/m)
 })

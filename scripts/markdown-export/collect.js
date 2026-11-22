@@ -110,27 +110,40 @@ function collectWeapons (actor) {
     })
 }
 
+/** As the sheet prints it: `3 x Flare`. A quantity of 1, or none that is a number, leaves the bare name. */
+function possessionName (item) {
+  const quantity = item.system?.quantity
+  if (item.type !== 'item' || num(quantity) === null || quantity === 1) return text(item.name)
+  return `${quantity} x ${text(item.name)}`
+}
+
 function collectPossessions (actor) {
   const items = itemsOf(actor)
   return Object.fromEntries(POSSESSION_TYPES.map(type => [
     type,
-    items.filter(item => item.type === type).map(item => text(item.name))
+    items.filter(item => item.type === type).map(possessionName)
   ]))
 }
 
+/**
+ * The values the sheet shows. Spent is typed by hand on the sheet, so it is read as it is either way.
+ * @returns {{spendingLevel: string, cash: string, spent: string, assets: string, assetsDetails: string}}
+ */
 function collectWealth (system) {
   const monetary = system?.monetary ?? {}
   const assetsDetails = text(monetary.assetsDetails)
+  const spent = text(monetary.spent)
   if (system?.flags?.manualCredit) {
     return {
       spendingLevel: text(monetary.spendingLevel),
       cash: text(monetary.cash),
+      spent,
       assets: text(monetary.assets),
       assetsDetails
     }
   }
   const format = type => (typeof system?.formattedMonetaryValue === 'function' ? text(system.formattedMonetaryValue(type)) : '')
-  return { spendingLevel: format('spending'), cash: format('cash'), assets: format('assets'), assetsDetails }
+  return { spendingLevel: format('spending'), cash: format('cash'), spent, assets: format('assets'), assetsDetails }
 }
 
 function collectBackground (system, oneBlockBackstory) {

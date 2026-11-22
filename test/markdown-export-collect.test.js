@@ -207,8 +207,38 @@ test('possessions are grouped by item type', () => {
 test('wealth uses the computed values unless manual credit is on', () => {
   const computed = collectSheetData(fakeActor(), OPTIONS)
   const manual = collectSheetData(fakeActor({ system: { flags: { manualCredit: true } } }), OPTIONS)
-  assert.deepEqual(computed.wealth, { spendingLevel: '$10', cash: '$150', assets: '$3750', assetsDetails: 'A house' })
-  assert.deepEqual(manual.wealth, { spendingLevel: 'modest', cash: '12', assets: 'none', assetsDetails: 'A house' })
+  assert.deepEqual(computed.wealth, { spendingLevel: '$10', cash: '$150', spent: '', assets: '$3750', assetsDetails: 'A house' })
+  assert.deepEqual(manual.wealth, { spendingLevel: 'modest', cash: '12', spent: '', assets: 'none', assetsDetails: 'A house' })
+})
+
+test('wealth reads the Spent value as typed, blank when missing', () => {
+  const monetary = { spendingLevel: 'modest', cash: '12', assets: 'none', assetsDetails: '' }
+  const withSpent = system => collectSheetData(fakeActor({ system: { monetary: { ...monetary, ...system } } }), OPTIONS).wealth.spent
+  assert.equal(withSpent({ spent: '$45 on a train ticket' }), '$45 on a train ticket')
+  assert.equal(withSpent({ spent: '' }), '')
+  assert.equal(withSpent({ spent: null }), '')
+  assert.equal(withSpent({}), '')
+  const manual = collectSheetData(fakeActor({ system: { flags: { manualCredit: true }, monetary: { ...monetary, spent: '$3' } } }), OPTIONS)
+  assert.equal(manual.wealth.spent, '$3')
+})
+
+const itemWithQuantity = (name, quantity) => ({ type: 'item', name, system: { quantity } })
+
+test('an item carries its quantity when it is a number other than 1', () => {
+  const actor = fakeActor({
+    items: [
+      itemWithQuantity('Flare', 3),
+      itemWithQuantity('Lantern', 1),
+      itemWithQuantity('Match', 0),
+      plainItem('item', 'Rope'),
+      itemWithQuantity('Chalk', 'many'),
+      itemWithQuantity('Coin', Number.NaN),
+      { type: 'book', name: 'Diary', system: { quantity: 2 } }
+    ]
+  })
+  const { possessions } = collectSheetData(actor, OPTIONS)
+  assert.deepEqual(possessions.item, ['3 x Flare', 'Lantern', '0 x Match', 'Rope', 'Chalk', 'Coin'])
+  assert.deepEqual(possessions.book, ['Diary'])
 })
 
 test('background follows the one-block setting', () => {
@@ -243,7 +273,7 @@ test('incomplete actor data does not throw', () => {
   assert.deepEqual(data.skills, [])
   assert.deepEqual(data.background, [])
   assert.deepEqual(data.encounters, [])
-  assert.deepEqual(data.wealth, { spendingLevel: '', cash: '', assets: '', assetsDetails: '' })
+  assert.deepEqual(data.wealth, { spendingLevel: '', cash: '', spent: '', assets: '', assetsDetails: '' })
   assert.equal(data.keeperNotesHtml, null)
 })
 

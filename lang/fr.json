@@ -176,6 +176,7 @@
   "COC7QOL.MarkdownExport.Ammo": "Munitions",
   "COC7QOL.MarkdownExport.SpendingLevel": "Dépenses courantes",
   "COC7QOL.MarkdownExport.Cash": "Espèces",
+  "COC7QOL.MarkdownExport.Spent": "Dépensé",
   "COC7QOL.MarkdownExport.Assets": "Capital",
   "COC7QOL.MarkdownExport.Immune": "immunisé"
 }

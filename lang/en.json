@@ -176,6 +176,7 @@
   "COC7QOL.MarkdownExport.Ammo": "Ammo",
   "COC7QOL.MarkdownExport.SpendingLevel": "Spending level",
   "COC7QOL.MarkdownExport.Cash": "Cash",
+  "COC7QOL.MarkdownExport.Spent": "Spent",
   "COC7QOL.MarkdownExport.Assets": "Assets",
   "COC7QOL.MarkdownExport.Immune": "immune"
 }

@@ -19,7 +19,8 @@ const POSSESSION_GROUPS = [
   ['talent', 'talents'], ['armor', 'armors'], ['status', 'statuses']
 ]
 const WEAPON_COLUMNS = ['weapon', 'skill', 'damage', 'range', 'attacks', 'ammo', 'malfunction']
-const WEALTH_FIELDS = ['spendingLevel', 'cash', 'assets']
+/** In the sheet's order. */
+const WEALTH_FIELDS = ['spendingLevel', 'cash', 'spent', 'assets']
 const SKILL_HARD_DIVISOR = 2
 const SKILL_EXTREME_DIVISOR = 5
 const SEPARATOR = ' · '

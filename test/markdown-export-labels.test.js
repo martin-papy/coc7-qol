@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { LABEL_KEYS } from '../scripts/markdown-export/labels.js'
 
-const LABELS_USED = ['characteristics', 'str', 'con', 'siz', 'dex', 'app', 'int', 'pow', 'edu', 'hp', 'mp', 'san', 'luck', 'mov', 'db', 'build', 'armor', 'skills', 'skill', 'regular', 'hard', 'extreme', 'weapons', 'weapon', 'damage', 'range', 'attacks', 'ammo', 'malfunction', 'possessions', 'items', 'books', 'spells', 'talents', 'armors', 'statuses', 'wealth', 'spendingLevel', 'cash', 'assets', 'background', 'encounters', 'immune', 'keeperNotes']
+const LABELS_USED = ['characteristics', 'str', 'con', 'siz', 'dex', 'app', 'int', 'pow', 'edu', 'hp', 'mp', 'san', 'luck', 'mov', 'db', 'build', 'armor', 'skills', 'skill', 'regular', 'hard', 'extreme', 'weapons', 'weapon', 'damage', 'range', 'attacks', 'ammo', 'malfunction', 'possessions', 'items', 'books', 'spells', 'talents', 'armors', 'statuses', 'wealth', 'spendingLevel', 'cash', 'spent', 'assets', 'background', 'encounters', 'immune', 'keeperNotes']
 
 test('LABEL_KEYS covers exactly the labels the renderer reads', () => {
   assert.deepEqual(Object.keys(LABEL_KEYS).sort(), [...LABELS_USED].sort())

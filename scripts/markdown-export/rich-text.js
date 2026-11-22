@@ -3,8 +3,9 @@
  * that is safe in Obsidian. Pure: the only DOM it touches is `deps.doc`, an inert document.
  *
  * Pipeline: parse, sanitize (sanitize.js: secrets first, then everything the converter would copy
- * as raw HTML), rewrite Foundry syntax in text, set inline code aside, convert, then finish the
- * Markdown (hard breaks, `[[` escaping outside code, inline code put back).
+ * as raw HTML; code loses its formatting and becomes ordinary text), rewrite Foundry syntax and
+ * escape every text node, convert, then finish the Markdown (hard breaks, `[[` escaping, converter
+ * comment lines dropped).
  */
 import { sanitize, BREAK, MARKERS } from './sanitize.js'
 import { defuseLineStart } from './format.js'
@@ -16,14 +17,11 @@ const TEXT_NODE = 3
 const DOCUMENT_LINK = /@([\w.-]+)\[([^\]]*)\](?:\{([^}]*)\})?/g
 const INLINE_ROLL = /\[\[(.*?)\]\](?:\{([^}]*)\})?/g
 const HAS_TAG = /<[a-z!/]/i
-// Code waits as a token while converting: inline code as `\uE001<n>\uE002`, a code block as a
-// paragraph `\uE003<n>\uE004`. sanitize strips the private-use area from user text, so none is forged.
-const CODE_TOKEN = /\uE001(\d+)\uE002/g
-const BLOCK_TOKEN = /\uE003(\d+)\uE004/
 const LINE_PREFIX = /^((?:\s*>)*\s*(?:(?:[-*+]|\d+\.)\s+)?)(.*)$/
-/** Nothing but blockquote marks, list markers (each followed by a space) and whitespace. */
-const CONTAINER_PREFIX = /^(?:\s|>|(?:[-*+]|\d+\.)(?=\s))*$/
 const BREAK_RUN = new RegExp(`\\s*${BREAK}[\\s${BREAK}]*`)
+// A converter comment (`<!-- -->`, written after every list), alone on its line or behind quote marks.
+const COMMENT_LINE = /^[\s>]*<!--.*-->\s*$/
+const QUOTE_ONLY_LINE = /^\s*>[\s>]*$/
 
 const escapeHtml = text => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
@@ -48,77 +46,27 @@ function rewriteFoundrySyntax (text, resolveName) {
 }
 
 /**
- * The converter decodes `&lt;`, `&gt;` and `&amp;` in text once and writes the result as it is, so
- * a literal `<` or entity has to be escaped one level deeper to arrive in the note still escaped.
+ * Text as the converter needs it to come out as text. Whitespace runs become one space, as HTML
+ * shows them, so no line starts inside a text node. A typed backslash is doubled, so it cannot
+ * cancel the converter's own escapes (``\` `` would leave a live backtick). The converter decodes
+ * `&lt;`, `&gt;` and `&amp;` once and writes the result as it is, so a literal `<` or entity is
+ * escaped one level deeper. Last, the line starts the converter misses: `#` behind a space (it
+ * escapes `#` only at the very start) and `1)` (it escapes only `1.`).
  */
 const escapeMarkup = text => text
+  .replace(/[ \t\n\r\f]+/g, ' ')
+  .replace(/\\/g, '\\\\')
   .replace(/&(?=(#?\w+);)/g, (match, name) => (/^(lt|gt|amp)$/.test(name) ? '&amp;amp;' : '&amp;'))
   .replace(/</g, '&amp;lt;')
+  .replace(/^( ?)#(?=#{0,5}(?: |$))/, '$1\\#')
+  .replace(/^( ?\d{1,9})\)/, '$1\\)')
 
-/** Rewrites Foundry syntax in text nodes only, so attribute values, markup and code stay untouched. */
+/** Rewrites Foundry syntax and escapes in text nodes only, so attribute values and markup stay untouched. */
 function rewriteTextNodes (node, resolveName) {
   for (const child of [...node.childNodes]) {
     if (child.nodeType === TEXT_NODE) child.nodeValue = escapeMarkup(rewriteFoundrySyntax(child.nodeValue, resolveName))
-    else if (child.nodeType === ELEMENT_NODE && !['code', 'pre'].includes(child.localName)) rewriteTextNodes(child, resolveName)
+    else if (child.nodeType === ELEMENT_NODE) rewriteTextNodes(child, resolveName)
   }
-}
-
-/**
- * The converter writes inline code from its HTML source (`&lt;` for `<`), which a code span shows
- * as typed, and always fences a code block with three backticks, which a backtick line inside
- * closes. So all code is set aside as tokens and written back afterwards from its exact text.
- */
-function setCodeAside (container) {
-  const codes = { inline: [], blocks: [] }
-  for (const pre of container.querySelectorAll('pre')) {
-    if (pre.textContent.trim() === '') {
-      pre.remove()
-      continue
-    }
-    const index = codes.blocks.push(pre.textContent.replace(/\n$/, '')) - 1
-    const holder = container.ownerDocument.createElement('p')
-    holder.textContent = `\uE003${index}\uE004`
-    pre.replaceWith(holder)
-  }
-  for (const code of container.querySelectorAll('code')) {
-    const text = code.textContent.replace(/\s+/g, ' ')
-    if (text.trim() === '') {
-      code.replaceWith(text)
-      continue
-    }
-    const index = codes.inline.push({ text, inCell: code.closest('td, th') !== null }) - 1
-    code.replaceWith(`\uE001${index}\uE002`)
-  }
-  return codes
-}
-
-/** A delimiter longer than the longest run of `mark` in the text, and at least `min` long. */
-function delimiter (text, mark, min) {
-  const longest = Math.max(0, ...(text.match(new RegExp(`${mark}+`, 'g')) ?? []).map(run => run.length))
-  return mark.repeat(Math.max(min, longest + 1))
-}
-
-function codeSpan ({ text, inCell }) {
-  const content = inCell ? text.replace(/\|/g, '\\|') : text
-  const fence = delimiter(content, '`', 1)
-  const pad = /^`|`$/.test(content) ? ' ' : ''
-  return `${fence}${pad}${content}${pad}${fence}`
-}
-
-/**
- * A fenced block, every line carrying the prefix (quote marks, list indent) of the line it replaces.
- * A fence only opens a block at the start of its line, past nothing but container prefix: behind
- * anything else (heading marks, `[`, `*`) the code goes back as one code span instead.
- */
-function codeBlock (line, text) {
-  const prefix = line.slice(0, line.search(BLOCK_TOKEN))
-  if (!CONTAINER_PREFIX.test(prefix)) {
-    const span = codeSpan({ text: text.replace(/\s+/g, ' ').trim(), inCell: prefix.includes('|') })
-    return line.replace(BLOCK_TOKEN, () => span)
-  }
-  const continuation = prefix.replace(/(?:[-*+]|\d+\.)(?=\s)/, marker => ' '.repeat(marker.length))
-  const fence = delimiter(text, '`', 3)
-  return [`${prefix}${fence}`, ...[...text.split('\n'), fence].map(part => `${continuation}${part}`)].join('\n')
 }
 
 /** A `<br>` becomes a hard break (a backslash at the end of the line), keeping the line's quote or list indent. */
@@ -130,28 +78,26 @@ function hardBreaks (line) {
   return prefix + parts.map((part, i) => (i === 0 ? part : defuseLineStart(part))).join(`\\\n${continuation}`)
 }
 
-/** Hard breaks, then `[[` escaped, then inline code put back as it was typed. */
-function finishLine (line, inline) {
-  return hardBreaks(line)
-    .replace(/\[\[/g, '\\[\\[')
-    .replace(CODE_TOKEN, (match, index) => (inline[index] ? codeSpan(inline[index]) : ''))
+/**
+ * A line with nothing but quote marks separates two paragraphs of a quote. Once comment lines are
+ * gone, one not followed by quoted text would leave an empty quote line (at the end of a quote,
+ * or twice in a row): dropped.
+ */
+function dropDanglingQuoteLines (lines) {
+  return lines.filter((line, i) => {
+    const next = lines[i + 1]
+    return !QUOTE_ONLY_LINE.test(line) || (next !== undefined && /^\s*>/.test(next) && !QUOTE_ONLY_LINE.test(next))
+  })
 }
 
-/** Code blocks go back in last, after blank-line runs are collapsed, so their own lines stay exact. */
-function finish (markdown, codes) {
-  return markdown
-    .split('\n')
-    .filter(line => !/^\s*<!--.*-->\s*$/.test(line))
-    .map(line => finishLine(line, codes.inline))
+/** Converter comments dropped, hard breaks written, `[[` escaped, blank-line runs collapsed. */
+function finish (markdown) {
+  const lines = markdown.split('\n').filter(line => !COMMENT_LINE.test(line))
+  return dropDanglingQuoteLines(lines)
+    .map(line => hardBreaks(line).replace(/\[\[/g, '\\[\\[').replace(MARKERS, ''))
     .join('\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim()
-    .split('\n')
-    .map(line => {
-      const block = line.match(BLOCK_TOKEN)
-      return block ? codeBlock(line, codes.blocks[block[1]] ?? '') : line.replace(MARKERS, '')
-    })
-    .join('\n')
 }
 
 const hasVisibleContent = container =>
@@ -170,6 +116,5 @@ export function richTextToMarkdown (html, deps) {
   sanitize(container, deps.isGM)
   rewriteTextNodes(container, deps.resolveName)
   if (!hasVisibleContent(container)) return ''
-  const codes = setCodeAside(container)
-  return finish(deps.htmlToMarkdown(container.innerHTML), codes)
+  return finish(deps.htmlToMarkdown(container.innerHTML))
 }

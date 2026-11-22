@@ -221,37 +221,6 @@ const renderBack = md => {
   return holder
 }
 
-test('text in a code block is written once, without rewriting', () => {
-  const md = richTextToMarkdown('<pre><code>x = 1 &lt; 2 &amp;&amp; [[2]] @UUID[Actor.a]{A}</code></pre>', deps())
-  assert.match(md, /^```\nx = 1 < 2 && \[\[2\]\] @UUID\[Actor\.a\]\{A\}\n```$/m)
-  assert.equal(renderBack(md).querySelector('code').textContent.trimEnd(), 'x = 1 < 2 && [[2]] @UUID[Actor.a]{A}')
-})
-
-test('a pre without code still becomes a fence', () => {
-  const md = richTextToMarkdown('<pre>line 1<br>line &lt;2&gt;</pre>', deps())
-  assert.equal(md, '```\nline 1\nline <2>\n```')
-})
-
-test('inline code reads as typed when rendered and opens no tag', () => {
-  const md = richTextToMarkdown('<p>Type <code>a &lt; b &amp; c</code> then <code>[[2]]</code> and <code>x`y</code></p>', deps())
-  assert.equal(md, 'Type `a < b & c` then `[[2]]` and ``x`y``')
-  const html = renderBack(md)
-  assert.deepEqual([...html.querySelectorAll('code')].map(code => code.textContent), ['a < b & c', '[[2]]', 'x`y'])
-  assert.equal(html.querySelectorAll('*').length, 4)
-  assert.equal(richTextToMarkdown('<p>a<code> </code>b</p>', deps()), 'a b')
-})
-
-test('a placeholder-looking text outside code is left alone', () => {
-  const md = richTextToMarkdown('<p>\uE001 0 \uE002 and <code>k</code></p>', deps())
-  assert.equal(md, '0 and `k`')
-})
-
-test('[[ outside code is still escaped next to code', () => {
-  const md = richTextToMarkdown('<p>[[Link]] and <code>[[x]]</code></p><pre><code>[[y]]</code></pre>', deps())
-  assert.match(md, /^Link and `\[\[x\]\]`$/m)
-  assert.match(md, /^\[\[y\]\]$/m)
-})
-
 test('a line break becomes a Markdown hard break', () => {
   assert.equal(richTextToMarkdown('<p>12 Main St<br>Arkham<br>MA</p>', deps()), '12 Main St\\\nArkham\\\nMA')
   assert.equal(richTextToMarkdown('<p>a<br><br>b<br></p>', deps()), 'a\\\nb')
@@ -284,94 +253,132 @@ test('a hyphenated CoC7 enricher becomes its label, or is left alone', () => {
   assert.match(richTextToMarkdown('<p>Ask @coc-actor[Actor.abc] now.</p>', deps()), /@coc-actor\[Actor\.abc\]/)
 })
 
-test('a backtick line inside a code block cannot close the fence', () => {
-  const html = '<pre><code>```\n&lt;img src=x onerror=alert(1)&gt;\n[[x]]\n</code></pre><p>after [[y]] a<br>b</p>'
-  const md = richTextToMarkdown(html, deps())
-  // The `<img …>` text is inert inside the fence; outside it, nothing may open a tag.
-  assertNoRawHtml(md.replace(/^````\n[\s\S]*?\n````$/m, ''))
-  assert.doesNotMatch(md, PRIVATE_USE)
-  // A four-backtick fence: in CommonMark (Obsidian) only a fence at least as long closes it.
-  // showdown's own makeHtml does not follow that rule, so the exact text is asserted instead.
-  assert.equal(md, '````\n```\n<img src=x onerror=alert(1)>\n[[x]]\n````\n\nafter y a\\\nb')
-})
+/** The note with every backslash escape (`\x`) taken out: what is left is live Markdown. */
+const unescaped = md => md.replace(/\\[\s\S]/g, '')
 
-test('a code block holding a longer backtick run or a tilde fence stays one block', () => {
-  const four = richTextToMarkdown('<pre><code>````\ncode\n````</code></pre><p>after</p>', deps())
-  assert.equal(four, '`````\n````\ncode\n````\n`````\n\nafter')
-  const tildes = richTextToMarkdown('<pre><code>~~~\n&lt;b&gt;\n~~~</code></pre><p>after</p>', deps())
-  assert.equal(tildes, '```\n~~~\n<b>\n~~~\n```\n\nafter')
-})
-
-test('blank lines inside a code block are kept exactly', () => {
-  assert.equal(richTextToMarkdown('<pre><code>a\n\n\n\nb</code></pre>', deps()), '```\na\n\n\n\nb\n```')
-  assert.equal(richTextToMarkdown('<pre></pre><p>z</p>', deps()), 'z')
-})
-
-test('a code block in a quote or a list keeps the prefix on every line', () => {
-  assert.equal(richTextToMarkdown('<blockquote><pre><code>x\n\ny</code></pre></blockquote>', deps()), '> ```\n> x\n> \n> y\n> ```')
-  assert.match(richTextToMarkdown('<ul><li><p>item</p><pre><code>x\ny</code></pre></li></ul>', deps()), /^- item\n\n {4}```\n {4}x\n {4}y\n {4}```$/m)
-})
-
-test('inline code with backticks gets a longer delimiter, padded when needed', () => {
-  const md = richTextToMarkdown('<p><code>`lead</code> and <code>a``b</code></p>', deps())
-  assert.equal(md, '`` `lead `` and ```a``b```')
-  assert.deepEqual([...renderBack(md).querySelectorAll('code')].map(code => code.textContent), ['`lead', 'a``b'])
-})
-
-test('a code block inside a heading becomes inline code', () => {
-  const md = richTextToMarkdown('<h2>Title <pre>x &lt; y</pre></h2>', deps())
-  assertNoRawHtml(md.replace(/`[^`]*`/g, ''))
-  assert.equal(md, '##### Title `x < y`')
-})
-
-test('marker characters in attributes or resolved names cannot forge a placeholder', () => {
-  const forged = '\uE0010\uE002'
-  const href = richTextToMarkdown(`<p><code>&lt;img src=x&gt;</code> <a href="https://x/${forged}">l</a></p>`, deps())
-  assert.equal(href, '`<img src=x>` [l](<https://x/0>)')
-  const alt = richTextToMarkdown(`<p><code>k</code> <img src="https://x/a.png" alt="${forged}"> <img src="rel.png" alt="${forged}"></p>`, deps())
-  assert.equal(alt, '`k` ![0](<https://x/a.png>) 0')
-  const named = richTextToMarkdown('<p><code>k</code> @UUID[Actor.a] end</p>', deps({ resolveName: () => `${forged} x\uE000y` }))
-  assert.equal(named, '`k` 0 xy end')
-  // Code spans and link destinations (`(<url>)`) may hold `<`; nothing else may.
-  for (const md of [href, alt, named]) assertNoRawHtml(md.replace(/`[^`]*`/g, '').replace(/\(<[^>]*>\)/g, ''))
-})
-
-/** No tag outside code, no live `[[`, no marker: what a code block behind inline text used to break. */
-function assertCodeStaysCode (md, context) {
-  const outsideSpans = md.replace(/(`+)(?!`)[\s\S]*?[^`]\1(?!`)/g, '')
-  assert.doesNotMatch(outsideSpans, /<i|<img/, `${context}: ${md}`)
-  assert.doesNotMatch(outsideSpans.replace(/\\\[\\\[/g, ''), /\[\[/, `${context}: ${md}`)
-  assert.doesNotMatch(md, PRIVATE_USE, `${context}: ${JSON.stringify(md)}`)
+/** Code in rich text is plain text now: no fence, no code span, no tag, no live `[[`, no marker. */
+function assertPlainText (md, context = '') {
+  const message = `${context}: ${JSON.stringify(md)}`
+  assert.doesNotMatch(md, /^(?:\s*>)*\s*(?:(?:[-*+]|\d+[.)])\s+)*(?:```|~~~)/m, message)
+  assert.doesNotMatch(unescaped(md), /`/, message)
+  assert.doesNotMatch(md, /<[a-zA-Z/!]/, message)
+  assert.doesNotMatch(unescaped(md), /\[\[/, message)
+  assert.doesNotMatch(md, PRIVATE_USE, message)
 }
 
-const CODE_UNDER_INLINE = [
-  ['a quote in a heading', '<h2><blockquote><pre>[[x]]\n&lt;img src=x onerror=alert(1)&gt;</pre></blockquote></h2>',
-    '##### > `[[x]] <img src=x onerror=alert(1)>`'],
-  ['a list in bold text', '<strong><ul><li><pre>[[x]]\n&lt;i&gt;</pre></li></ul></strong>', '- **`[[x]] <i>`**'],
-  ['a list in a link', '<a href="https://x">l<ul><li><pre>```\n&lt;i&gt;\nmore</pre></li></ul></a>',
-    '[l](<https://x>)\n\n- [```` ``` <i> more ````](<https://x>)'],
-  ['a list item with text, in emphasis', '<em>e<ul><li>i<pre>```\n&lt;i&gt;</pre></li></ul></em>', '*e*\n\n- *i```` ``` <i> ````*'],
-  ['a list in a heading', '<h3><ul><li><pre>&lt;i&gt;\n```</pre></li></ul></h3>', '###### - ```` <i> ``` ````']
+test('inline code is plain text: it reads as typed when rendered and opens no tag', () => {
+  const md = richTextToMarkdown('<p>use <code>a &lt; b &amp; c</code> here</p>', deps())
+  assert.equal(md, 'use a &lt; b & c here')
+  const html = renderBack(md)
+  assert.equal(html.textContent, 'use a < b & c here')
+  assert.equal(html.querySelectorAll('*').length, 1)
+  assertPlainText(md)
+})
+
+test('a code block becomes one paragraph, its lines joined by hard breaks', () => {
+  assert.equal(richTextToMarkdown('<pre><code>line one\nline two</code></pre>', deps()), 'line one\\\nline two')
+  assert.equal(richTextToMarkdown('<pre>  indented\n\n\n\nnext<br>last</pre><p>z</p>', deps()), 'indented\\\nnext\\\nlast\n\nz')
+  assert.equal(richTextToMarkdown('<pre>  </pre><p>z</p>', deps()), 'z')
+})
+
+test('a code block where no paragraph can go is inline text on one line', () => {
+  assert.equal(richTextToMarkdown('<h2>Title <pre>x &lt; y\nz</pre></h2>', deps()), '##### Title x &lt; y z')
+  const md = richTextToMarkdown('<table><tbody><tr><td>H</td></tr><tr><td><pre>a\nb</pre></td></tr></tbody></table>', deps())
+  assert.match(md, tableRow(['a b']))
+})
+
+test('Foundry syntax inside former code is rewritten like any text', () => {
+  assert.equal(richTextToMarkdown('<p><code>[[/roll 1d6]]</code></p>', deps()), '1d6')
+  assert.equal(richTextToMarkdown('<pre><code>@UUID[Actor.a]{Armitage}\n[[2]]</code></pre>', deps()), 'Armitage\\\n2')
+})
+
+test('a secret holding code leaves nothing for a player', () => {
+  const html = '<section class="secret"><p><code>key</code></p><pre><code>[[/r 1d6]]\nhidden</code></pre></section><p>Public</p>'
+  assert.equal(richTextToMarkdown(html, deps()), 'Public')
+})
+
+const CODE_PROBES = [
+  ['a backtick line in a code block',
+    '<pre><code>```\n&lt;img src=x onerror=alert(1)&gt;\n[[x]]\n</code></pre><p>after [[y]] a<br>b</p>',
+    '\\`\\`\\`\\\n&lt;img src=x onerror=alert(1)>\\\nx\n\nafter y a\\\nb'],
+  ['a code block first in a nested list item',
+    '<ul><li><ul><li><pre>[[x]]\n&lt;img src=x onerror=alert(1)&gt;</pre></li></ul></li></ul>', '- - x\\\n  &lt;img src=x onerror=alert(1)>'],
+  ['two adjacent code spans with backticks',
+    '<p><code>&lt;img src=x onerror=alert(1)&gt;`</code><code>```c</code></p>', '&lt;img src=x onerror=alert(1)>\\`\\`\\`\\`c'],
+  ['a code block in a quote in a heading',
+    '<h2><blockquote><pre>[[x]]\n&lt;img src=x onerror=alert(1)&gt;</pre></blockquote></h2>', '##### > x &lt;img src=x onerror=alert(1)>'],
+  ['a code block in a list in bold text', '<strong><ul><li><pre>[[x]]\n&lt;i&gt;</pre></li></ul></strong>', '- **x &lt;i>**'],
+  ['a code block in nested lists in a quote',
+    '<blockquote><ul><li><ol><li><pre>&lt;i&gt;\n# h\n- l</pre></li></ol></li></ul></blockquote>',
+    '> - 1. &lt;i>\\\n>   \\# h\\\n>   \\- l']
 ]
 
-for (const [name, html, expected] of CODE_UNDER_INLINE) {
-  test(`a code block in ${name} becomes inline code`, () => {
+for (const [name, html, expected] of CODE_PROBES) {
+  test(`${name} is plain text`, () => {
     const md = richTextToMarkdown(html, deps())
     assert.equal(md, expected)
-    assertCodeStaysCode(md, name)
+    assertPlainText(md, name)
   })
 }
 
-test('a code block token behind inline text is written as a code span, whatever the sanitizer did', () => {
-  // The converter is made to put an emphasis opener before the token, as a heading or a link would.
-  const md = richTextToMarkdown('<pre>[[x]]\n&lt;i&gt;\n``</pre>', deps({ htmlToMarkdown: html => `**${converter.makeMarkdown(html, doc)}` }))
-  assert.equal(md, '**``` [[x]] <i> `` ```')
-  assertCodeStaysCode(md, 'guard')
+/** Text that would be structure at the start of a Markdown line, and its escaped form. */
+const LINE_STARTS = [
+  ['```', '\\`\\`\\`'], ['~~~', '\\~\\~\\~'], ['# h', '\\# h'], ['## h', '\\## h'], ['&gt; q', '\\> q'],
+  ['- l', '\\- l'], ['* l', '\\* l'], ['+ l', '\\+ l'], ['1. l', '1\\. l'], ['1) l', '1\\) l'],
+  ['---', '\\---'], ['===', '\\===']
+]
+
+test('ordinary text cannot start Markdown structure, first in a paragraph or after a hard break', () => {
+  for (const [text, escaped] of LINE_STARTS) {
+    assert.equal(richTextToMarkdown(`<p>${text}</p>`, deps()), escaped, text)
+    assert.equal(richTextToMarkdown(`<p>a<br>${text}</p>`, deps()), `a\\\n${escaped}`, text)
+    assert.equal(richTextToMarkdown(`<pre>a\n${text}</pre>`, deps()), `a\\\n${escaped}`, text)
+    assert.equal(richTextToMarkdown(`<p>a <em>b</em> ${text}</p>`, deps()).startsWith('a *b*'), true, text)
+  }
 })
 
-test('a code block in a list in a quote, or in a nested list, stays a fenced block', () => {
-  const quoted = richTextToMarkdown('<blockquote><ul><li><pre>x\ny</pre></li></ul></blockquote>', deps())
-  assert.match(quoted, /^> - ```\n> {3}x\n> {3}y\n> {3}```$/m)
-  const nested = richTextToMarkdown('<ul><li>a<ul><li><pre>x\ny</pre></li></ul></li></ul>', deps())
-  assert.match(nested, /^ {4}- ```\n {6}x\n {6}y\n {6}```$/m)
+test('leading whitespace cannot make a heading, a list or indented code', () => {
+  assert.equal(richTextToMarkdown('<p> # x</p>', deps()), '\\# x')
+  assert.equal(richTextToMarkdown('<p>\t- x</p>', deps()), '\\- x')
+  assert.equal(richTextToMarkdown('<p>    code</p>', deps()), 'code')
+  assert.equal(richTextToMarkdown('<p>\tcode</p>', deps()), 'code')
+  assert.equal(richTextToMarkdown('<p>a<br>    code<br>\tmore</p>', deps()), 'a\\\ncode\\\nmore')
+  assert.equal(richTextToMarkdown('<ul><li> 1) x</li><li> # y</li></ul>', deps()), '-  1\\) x\n-  \\# y')
+  assert.equal(richTextToMarkdown('<p>a\n&gt; b\n- c</p>', deps()), 'a > b - c')
+})
+
+test('a #tag inside text stays a tag', () => {
+  assert.equal(richTextToMarkdown('<p><strong>Note</strong> #cult</p>', deps()), '**Note** #cult')
+})
+
+test('backticks in text never pair into a code span, a typed backslash included', () => {
+  for (const html of ['<p>`a` &lt;i&gt; `b`</p>', '<p>a\\`&lt;b\\`</p>', '<p>x\\\\`&lt;i&gt;`</p>']) {
+    const md = richTextToMarkdown(html, deps())
+    assertPlainText(md, html)
+    assert.equal(renderBack(md).querySelectorAll('code').length, 0, html)
+  }
+  assert.equal(richTextToMarkdown('<p>a\\`&lt;b\\`</p>', deps()), 'a\\\\\\`&lt;b\\\\\\`')
+  assert.equal(richTextToMarkdown('<p><img src="https://e.com/a.png" alt="x`y"></p>', deps()), '![x\\`y](<https://e.com/a.png>)')
+})
+
+test('a list in a quote leaves no comment line and no empty quote line', () => {
+  assert.equal(richTextToMarkdown('<blockquote><ul><li>a</li></ul></blockquote>', deps()), '> - a')
+  assert.equal(richTextToMarkdown('<blockquote><ul><li>a</li></ul><p>b</p></blockquote>', deps()), '> - a\n> \n> b')
+  assert.equal(richTextToMarkdown('<blockquote><p>a</p><p>b</p></blockquote>', deps()), '> a\n> \n> b')
+})
+
+test('marker characters in attributes or resolved names are dropped', () => {
+  const forged = '0'
+  const href = richTextToMarkdown(`<p><code>&lt;img src=x&gt;</code> <a href="https://x/${forged}">l</a></p>`, deps())
+  assert.equal(href, '&lt;img src=x> [l](<https://x/0>)')
+  const alt = richTextToMarkdown(`<p><code>k</code> <img src="https://x/a.png" alt="${forged}"> <img src="rel.png" alt="${forged}"></p>`, deps())
+  assert.equal(alt, 'k ![0](<https://x/a.png>) 0')
+  const named = richTextToMarkdown('<p><code>k</code> @UUID[Actor.a] end</p>', deps({ resolveName: () => `${forged} xy` }))
+  assert.equal(named, 'k 0 xy end')
+  // Link destinations (`(<url>)`) may hold `<`; nothing else may.
+  for (const md of [href, alt, named]) assertNoRawHtml(md.replace(/\(<[^>]*>\)/g, ''))
+})
+
+test('marker characters in user text are dropped', () => {
+  assert.equal(richTextToMarkdown('<p> 0  and <code>k</code></p>', deps()), '0 and k')
 })

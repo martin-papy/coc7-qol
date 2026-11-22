@@ -23,11 +23,14 @@ const DROPPED = 'script, style, iframe, object, embed, template, noscript, video
 
 /** Elements the converter writes as Markdown. Every other element is unwrapped. */
 const FLOW_KEPT = new Set(['blockquote', 'li', 'ul', 'ol'])
-const BLOCK_KEPT = new Set([...FLOW_KEPT, 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'pre', 'hr', 'table', 'thead', 'tbody', 'tr', 'th', 'td'])
-const INLINE_KEPT = new Set(['a', 'img', 'strong', 'b', 'em', 'i', 'del', 'code', 'br'])
-/** Unwrapped in place, with nothing around their text. Any other unwrapped element is a block. */
+const BLOCK_KEPT = new Set([...FLOW_KEPT, 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'table', 'thead', 'tbody', 'tr', 'th', 'td'])
+const INLINE_KEPT = new Set(['a', 'img', 'strong', 'b', 'em', 'i', 'del', 'br'])
+/**
+ * Unwrapped in place, with nothing around their text. Any other unwrapped element is a block.
+ * Code formatting is not kept: `code` is one of them, so its text is exported like any other.
+ */
 const INLINE_UNWRAPPED = new Set([
-  'span', 'u', 's', 'strike', 'sup', 'sub', 'font', 'mark', 'small', 'big', 'tt', 'abbr', 'acronym', 'cite', 'kbd', 'ins',
+  'code', 'span', 'u', 's', 'strike', 'sup', 'sub', 'font', 'mark', 'small', 'big', 'tt', 'abbr', 'acronym', 'cite', 'kbd', 'ins',
   'q', 'time', 'var', 'samp', 'dfn', 'label', 'bdi', 'bdo', 'data', 'ruby', 'rb', 'rt', 'rp', 'wbr', 'nobr', 'picture',
   'input', 'button', 'select', 'option', 'optgroup', 'output', 'meter', 'progress', 'slot'
 ])
@@ -79,7 +82,7 @@ function schemeOf (url) {
 }
 
 /** A URL that fits between the `<` and `>` of a Markdown link destination. */
-const destination = url => url.trim().replace(/[\s<>]/g, encodeURIComponent)
+const destination = url => url.trim().replace(/[\s<>`]/g, encodeURIComponent)
 
 function sanitizeLinks (container) {
   for (const a of reversed(container, 'a')) {
@@ -95,7 +98,7 @@ function sanitizeImages (container) {
     const alt = (img.getAttribute('alt') ?? '').replace(/\s+/g, ' ').trim()
     if (src !== null && IMAGE_SCHEMES.has(schemeOf(src))) {
       img.setAttribute('src', destination(src))
-      img.setAttribute('alt', alt.replace(/[\\[\]]/g, '\\$&').replace(/</g, '&lt;'))
+      img.setAttribute('alt', alt.replace(/[\\[\]`]/g, '\\$&').replace(/</g, '&lt;'))
     } else {
       img.replaceWith(img.ownerDocument.createTextNode(alt))
     }
@@ -110,15 +113,25 @@ function demoteHeadings (container) {
   }
 }
 
-/** A code block holds plain text only, in one `<code>`, as the converter expects. */
-function normalizeCodeBlocks (container) {
+/**
+ * Code formatting is not kept: a code block becomes a paragraph of its non-blank lines, joined by
+ * line breaks. Where no paragraph can go (a heading, a cell, bold text, even through a quote or a
+ * list) it becomes inline text on one line.
+ */
+function flattenCodeBlocks (container) {
   for (const pre of reversed(container, 'pre')) {
     pre.querySelectorAll('br').forEach(br => br.replaceWith('\n'))
-    const code = pre.ownerDocument.createElement('code')
-    code.textContent = pre.textContent.replace(/\u00a0/g, ' ')
-    // A block cannot sit in a heading, a cell or bold text, even through a quote or a list: there it is inline code.
-    if (onlyFlowAbove(pre, container)) pre.replaceChildren(code)
-    else pre.replaceWith(code)
+    const lines = pre.textContent.split('\n').map(line => line.trim()).filter(Boolean)
+    if (lines.length === 0) {
+      pre.remove()
+    } else if (onlyFlowAbove(pre, container)) {
+      const doc = pre.ownerDocument
+      const paragraph = doc.createElement('p')
+      paragraph.append(...lines.flatMap((line, i) => (i === 0 ? [line] : [doc.createElement('br'), line])))
+      pre.replaceWith(paragraph)
+    } else {
+      pre.replaceWith(lines.join(' '))
+    }
   }
 }
 
@@ -265,7 +278,7 @@ export function sanitize (container, isGM) {
   sanitizeLinks(container)
   sanitizeImages(container)
   demoteHeadings(container)
-  normalizeCodeBlocks(container)
+  flattenCodeBlocks(container)
   flattenCells(container)
   container.querySelectorAll('table').forEach(restructureTable)
   replaceBreaks(container)

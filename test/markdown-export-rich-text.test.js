@@ -81,3 +81,50 @@ test('scripts, styles and event handlers do not reach the note', () => {
   assert.match(md, /Safe/)
   assert.doesNotMatch(md, /alert|onerror|color:red/)
 })
+
+test('a secret block leaves no wrapper element, for a GM or a revealed one', () => {
+  const gm = richTextToMarkdown('<p>Public</p><section class="secret" id="s"><p>Hidden [[/r 1d6]]</p></section>', deps({ isGM: true }))
+  assert.match(gm, /Hidden 1d6/)
+  assert.doesNotMatch(gm, /<section|<\/section|id="s"/)
+  const revealed = richTextToMarkdown('<section class="secret revealed"><p>Shown</p></section>', deps())
+  assert.equal(revealed, 'Shown')
+})
+
+test('wrapper and inline elements are unwrapped without losing text', () => {
+  const md = richTextToMarkdown('<div><p>In a div</p></div><p><span style="color:red">span</span> <u>u</u> x<sup>2</sup> <mark>m</mark> <small>s</small></p>', deps())
+  assert.doesNotMatch(md, /<\/?(div|span|u|sup|mark|small)/)
+  assert.match(md, /In a div/)
+  assert.match(md, /^span u x2 m s$/m)
+})
+
+test('embedding elements are removed', () => {
+  const md = richTextToMarkdown('<p>Keep</p><iframe src="https://evil"></iframe><object data="x"></object><embed src="x"><template><p>t</p></template><noscript>n</noscript><video src="v"></video>', deps())
+  assert.equal(md, 'Keep')
+})
+
+test('ordinary rich text leaves no raw HTML tag', () => {
+  const html = '<h1>T</h1><blockquote><p>Q</p></blockquote><pre><code>x = 1</code></pre><hr><p>a<br>b <s>gone</s> <del>d</del> <em>e</em></p>' +
+    '<table><thead><tr><th>H</th></tr></thead><tbody><tr><td>C</td></tr></tbody></table><p><img src="a.png" alt="x"> <a href="http://a.b">L</a></p>'
+  const md = richTextToMarkdown(html, deps())
+  assert.doesNotMatch(md.replace(/\(<[^>]*>\)/g, ''), /<[a-z/]/i)
+  assert.match(md, /^# T$/m)
+  assert.match(md, /^> Q$/m)
+  assert.match(md, /~~gone~~/)
+  assert.match(md, /a b/)
+})
+
+test('literal angle brackets and entities stay text', () => {
+  const md = richTextToMarkdown('<p>&lt;script&gt;alert(1)&lt;/script&gt; and a &lt;b&gt;bold?&lt;/b&gt;, Smith &amp; Wesson, &amp;amp; 2 &lt; 3</p>', deps())
+  assert.doesNotMatch(md, /<script|<b>/)
+  assert.match(md, /&lt;script>alert\(1\)&lt;\/script>/)
+  assert.match(md, /Smith & Wesson/)
+  assert.match(md, /&amp;amp;/)
+})
+
+test('a CoC7 enricher becomes its label, or is left alone without one', () => {
+  const labelled = richTextToMarkdown('<p>Roll @coc7.check[type:skill,name:Spot Hidden]{Spot Hidden} now.</p>', deps())
+  assert.match(labelled, /Roll Spot Hidden now\./)
+  assert.doesNotMatch(labelled, /@coc7/)
+  const bare = richTextToMarkdown('<p>Roll @coc7.check[type:skill,name:Spot Hidden] now.</p>', deps())
+  assert.match(bare, /@coc7\.check\[type:skill,name:Spot Hidden\]/)
+})

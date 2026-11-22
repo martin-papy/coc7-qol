@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- **Export an investigator to Markdown** — An **Export to Markdown** entry in the investigator sheet's header menu downloads the sheet as an Obsidian note, with properties and tables. Keeper notes and unrevealed secret blocks are only in the Keeper's export.
+
 ## [1.0.0] - 2026-11-15
 
 ### Added

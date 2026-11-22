@@ -168,5 +168,14 @@
   "COC7QOL.AIGenerator.Warning.AnySpecDropped": "Dropped skill \"{name}\" — it is an unnamed specialization template, not a usable skill",
   "COC7QOL.AIGenerator.Warning.NativeLanguageNoSkill": "Native language \"{language}\" has no matching skill — expected an entry named \"Language ({language})\"",
   "COC7QOL.AIGenerator.Warning.WeaponDropped": "Weapon \"{name}\": {error}",
-  "COC7QOL.AIGenerator.Error.NetworkError": "Could not reach {provider} ({error}). Check your connection and the Endpoint URL."
+  "COC7QOL.AIGenerator.Error.NetworkError": "Could not reach {provider} ({error}). Check your connection and the Endpoint URL.",
+  "COC7QOL.MarkdownExport.Button": "Export to Markdown",
+  "COC7QOL.MarkdownExport.Failed": "Could not export {name} to Markdown: {error}",
+  "COC7QOL.MarkdownExport.Weapon": "Weapon",
+  "COC7QOL.MarkdownExport.Attacks": "Attacks",
+  "COC7QOL.MarkdownExport.Ammo": "Ammo",
+  "COC7QOL.MarkdownExport.SpendingLevel": "Spending level",
+  "COC7QOL.MarkdownExport.Cash": "Cash",
+  "COC7QOL.MarkdownExport.Assets": "Assets",
+  "COC7QOL.MarkdownExport.Immune": "immune"
 }

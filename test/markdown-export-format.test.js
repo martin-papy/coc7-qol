@@ -53,7 +53,7 @@ test('inlineText and tableCell cannot open a tag, and leave a plain ampersand al
   }
 })
 
-test('plainLine defuses a leading block marker, and nothing else in the line', () => {
+test('plainLine defuses a leading block marker', () => {
   assert.equal(plainLine('# big'), '\\# big')
   assert.equal(plainLine('> quote'), '\\> quote')
   assert.equal(plainLine('- item'), '\\- item')
@@ -61,11 +61,11 @@ test('plainLine defuses a leading block marker, and nothing else in the line', (
   assert.equal(plainLine('+ item'), '\\+ item')
   assert.equal(plainLine('1. item'), '1\\. item')
   assert.equal(plainLine('12) item'), '12\\) item')
-  assert.equal(plainLine('```js'), '\\```js')
-  assert.equal(plainLine('~~~'), '\\~~~')
+  assert.equal(plainLine('```js'), '\\`\\`\\`js')
+  assert.equal(plainLine('~~~'), '\\~\\~\\~')
   assert.equal(plainLine('---'), '\\---')
   assert.equal(plainLine('==='), '\\===')
-  assert.equal(plainLine('___'), '\\___')
+  assert.equal(plainLine('___'), '\\_\\_\\_')
   assert.equal(plainLine('  # indented'), '\\# indented')
   assert.equal(plainLine('A town house # 2 - by the river > 1. ok'), 'A town house # 2 - by the river > 1. ok')
   assert.equal(plainLine('<b>x</b>'), '&lt;b>x&lt;/b>')
@@ -75,4 +75,19 @@ test('plainLine defuses a leading block marker, and nothing else in the line', (
 test('defuseLineStart only touches the start of the line', () => {
   assert.equal(defuseLineStart('# a # b'), '\\# a # b')
   assert.equal(defuseLineStart('plain'), 'plain')
+})
+
+test('plain text cannot become emphasis, code, a link or an image', () => {
+  for (const escape of [inlineText, tableCell, plainLine]) {
+    assert.equal(escape('*Lucky* Charm'), '\\*Lucky\\* Charm')
+    assert.equal(escape('snake_case _x_'), 'snake\\_case \\_x\\_')
+    assert.equal(escape('a `b` c'), 'a \\`b\\` c')
+    assert.equal(escape('![Map](https://example.org/map.png)'), '!\\[Map](https://example.org/map.png)')
+    assert.equal(escape('[site](https://example.org)'), '\\[site](https://example.org)')
+    assert.equal(escape('a ~~gone~~ b'), 'a \\~\\~gone\\~\\~ b')
+    assert.equal(escape('C:\\Users\\Harvey'), 'C:\\\\Users\\\\Harvey')
+    assert.equal(escape('.38 Revolver (Smith & Wesson)'), '.38 Revolver (Smith & Wesson)')
+    assert.equal(escape('Art/Craft (Photography)'), 'Art/Craft (Photography)')
+  }
+  assert.equal(tableCell('Dodge\\'), 'Dodge\\\\')
 })

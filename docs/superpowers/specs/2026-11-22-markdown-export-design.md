@@ -159,6 +159,7 @@ Text of the biography section.
 - Background: CoC7 has a world setting `oneBlockBackstory`. When it is on, the sheet shows the single `system.backstory`; when off, the titled `system.biography` sections. Both are rich text (the default v3 sheet edits biography sections with a rich-text editor), so both go through the rich text clean-up and the converter below. A biography value written on the older v2 sheet is plain text with raw line breaks; its line breaks must survive as paragraphs. The export follows the setting, so it never prints text the sheet hides.
 - Encounters: `system.sanityLossEvents`, each as its type and total loss, as the Background tab lists them. An entry flagged `immunity` prints a localized "immune" in place of the loss.
 - Table cells have `|` escaped and line breaks turned into spaces.
+- Plain-text values (names, section titles, notes, assets details) read as typed: Markdown inline syntax in them is escaped, so `*Lucky* Charm` is not emphasised and `![Map](url)` does not load an image.
 
 **Keeper content**
 

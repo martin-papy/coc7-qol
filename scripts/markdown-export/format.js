@@ -20,8 +20,12 @@ const flatten = (value) => toText(value).replace(CONTROL_CHARACTERS, '').replace
 /** Keep `<` from opening a tag and an entity from being decoded; a plain `&` stays as it is. */
 const escapeMarkup = (text) => text.replace(/&(?=#?\w+;)/g, '&amp;').replaceAll('<', '&lt;')
 
-/** Break `[[` so the text never becomes an Obsidian wikilink. */
-const defuseWikilinks = (text) => text.replaceAll('[[', '\\[\\[')
+/**
+ * Backslash-escape what starts Markdown inline syntax, so plain text reads as typed: emphasis, code,
+ * strikethrough, and `[`, which opens a link, an image and an Obsidian `[[wikilink]]`. A typed
+ * backslash is doubled so it cannot escape the character after it.
+ */
+const escapeInline = (text) => text.replace(/[\\*_`[~]/g, '\\$&')
 
 /** A double-quoted YAML scalar on a single line. */
 export function yamlString (value) {
@@ -31,12 +35,12 @@ export function yamlString (value) {
 
 /** Text safe inside a Markdown table cell. */
 export function tableCell (value) {
-  return escapeMarkup(defuseWikilinks(flatten(value))).replaceAll('|', '\\|')
+  return escapeMarkup(escapeInline(flatten(value))).replaceAll('|', '\\|')
 }
 
 /** Text safe in a heading or list item. */
 export function inlineText (value) {
-  return escapeMarkup(defuseWikilinks(flatten(value)))
+  return escapeMarkup(escapeInline(flatten(value)))
 }
 
 /**

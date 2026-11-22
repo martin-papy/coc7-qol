@@ -292,7 +292,7 @@ test('a name at the start of a bullet cannot nest a heading, quote or list in it
     possessions: { ...noExtras.possessions, item: ['# Heading item', '> quote item', '- [ ] task', '2. second'] },
     encounters: [{ type: '# Ghoul', totalLoss: 3, immunity: false }]
   })
-  assert.match(note, /^- \\# Heading item\n- \\> quote item\n- \\- \[ \] task\n- 2\\\. second$/m)
+  assert.match(note, /^- \\# Heading item\n- \\> quote item\n- \\- \\\[ \] task\n- 2\\\. second$/m)
   assert.match(note, /^- \\# Ghoul \(3\)$/m)
 })
 

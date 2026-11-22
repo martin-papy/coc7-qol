@@ -116,8 +116,8 @@ function normalizeCodeBlocks (container) {
     pre.querySelectorAll('br').forEach(br => br.replaceWith('\n'))
     const code = pre.ownerDocument.createElement('code')
     code.textContent = pre.textContent.replace(/\u00a0/g, ' ')
-    // A block cannot sit in a heading, a cell or bold text: there it is inline code.
-    if (inFlow(pre, container)) pre.replaceChildren(code)
+    // A block cannot sit in a heading, a cell or bold text, even through a quote or a list: there it is inline code.
+    if (onlyFlowAbove(pre, container)) pre.replaceChildren(code)
     else pre.replaceWith(code)
   }
 }
@@ -196,6 +196,17 @@ const wrapInlineRuns = parent => wrapRuns(parent, isInlineNode, 'p')
 function inFlow (el, container) {
   for (let node = el.parentElement; node && node !== container; node = node.parentElement) {
     if (isKept(node)) return FLOW_KEPT.has(tagOf(node))
+  }
+  return true
+}
+
+/**
+ * True when every kept ancestor holds blocks (quotes, lists). Unlike inFlow it looks past the
+ * nearest one: a quote inside a heading still writes the heading's marks on the quote's lines.
+ */
+function onlyFlowAbove (el, container) {
+  for (let node = el.parentElement; node && node !== container; node = node.parentElement) {
+    if (isKept(node) && !FLOW_KEPT.has(tagOf(node))) return false
   }
   return true
 }

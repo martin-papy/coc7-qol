@@ -335,3 +335,43 @@ test('marker characters in attributes or resolved names cannot forge a placehold
   // Code spans and link destinations (`(<url>)`) may hold `<`; nothing else may.
   for (const md of [href, alt, named]) assertNoRawHtml(md.replace(/`[^`]*`/g, '').replace(/\(<[^>]*>\)/g, ''))
 })
+
+/** No tag outside code, no live `[[`, no marker: what a code block behind inline text used to break. */
+function assertCodeStaysCode (md, context) {
+  const outsideSpans = md.replace(/(`+)(?!`)[\s\S]*?[^`]\1(?!`)/g, '')
+  assert.doesNotMatch(outsideSpans, /<i|<img/, `${context}: ${md}`)
+  assert.doesNotMatch(outsideSpans.replace(/\\\[\\\[/g, ''), /\[\[/, `${context}: ${md}`)
+  assert.doesNotMatch(md, PRIVATE_USE, `${context}: ${JSON.stringify(md)}`)
+}
+
+const CODE_UNDER_INLINE = [
+  ['a quote in a heading', '<h2><blockquote><pre>[[x]]\n&lt;img src=x onerror=alert(1)&gt;</pre></blockquote></h2>',
+    '##### > `[[x]] <img src=x onerror=alert(1)>`'],
+  ['a list in bold text', '<strong><ul><li><pre>[[x]]\n&lt;i&gt;</pre></li></ul></strong>', '- **`[[x]] <i>`**'],
+  ['a list in a link', '<a href="https://x">l<ul><li><pre>```\n&lt;i&gt;\nmore</pre></li></ul></a>',
+    '[l](<https://x>)\n\n- [```` ``` <i> more ````](<https://x>)'],
+  ['a list item with text, in emphasis', '<em>e<ul><li>i<pre>```\n&lt;i&gt;</pre></li></ul></em>', '*e*\n\n- *i```` ``` <i> ````*'],
+  ['a list in a heading', '<h3><ul><li><pre>&lt;i&gt;\n```</pre></li></ul></h3>', '###### - ```` <i> ``` ````']
+]
+
+for (const [name, html, expected] of CODE_UNDER_INLINE) {
+  test(`a code block in ${name} becomes inline code`, () => {
+    const md = richTextToMarkdown(html, deps())
+    assert.equal(md, expected)
+    assertCodeStaysCode(md, name)
+  })
+}
+
+test('a code block token behind inline text is written as a code span, whatever the sanitizer did', () => {
+  // The converter is made to put an emphasis opener before the token, as a heading or a link would.
+  const md = richTextToMarkdown('<pre>[[x]]\n&lt;i&gt;\n``</pre>', deps({ htmlToMarkdown: html => `**${converter.makeMarkdown(html, doc)}` }))
+  assert.equal(md, '**``` [[x]] <i> `` ```')
+  assertCodeStaysCode(md, 'guard')
+})
+
+test('a code block in a list in a quote, or in a nested list, stays a fenced block', () => {
+  const quoted = richTextToMarkdown('<blockquote><ul><li><pre>x\ny</pre></li></ul></blockquote>', deps())
+  assert.match(quoted, /^> - ```\n> {3}x\n> {3}y\n> {3}```$/m)
+  const nested = richTextToMarkdown('<ul><li>a<ul><li><pre>x\ny</pre></li></ul></li></ul>', deps())
+  assert.match(nested, /^ {4}- ```\n {6}x\n {6}y\n {6}```$/m)
+})

@@ -21,6 +21,8 @@ const HAS_TAG = /<[a-z!/]/i
 const CODE_TOKEN = /\uE001(\d+)\uE002/g
 const BLOCK_TOKEN = /\uE003(\d+)\uE004/
 const LINE_PREFIX = /^((?:\s*>)*\s*(?:(?:[-*+]|\d+\.)\s+)?)(.*)$/
+/** Nothing but blockquote marks, list markers (each followed by a space) and whitespace. */
+const CONTAINER_PREFIX = /^(?:\s|>|(?:[-*+]|\d+\.)(?=\s))*$/
 const BREAK_RUN = new RegExp(`\\s*${BREAK}[\\s${BREAK}]*`)
 
 const escapeHtml = text => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -103,9 +105,17 @@ function codeSpan ({ text, inCell }) {
   return `${fence}${pad}${content}${pad}${fence}`
 }
 
-/** A fenced block, every line carrying the prefix (quote marks, list indent) of the line it replaces. */
+/**
+ * A fenced block, every line carrying the prefix (quote marks, list indent) of the line it replaces.
+ * A fence only opens a block at the start of its line, past nothing but container prefix: behind
+ * anything else (heading marks, `[`, `*`) the code goes back as one code span instead.
+ */
 function codeBlock (line, text) {
   const prefix = line.slice(0, line.search(BLOCK_TOKEN))
+  if (!CONTAINER_PREFIX.test(prefix)) {
+    const span = codeSpan({ text: text.replace(/\s+/g, ' ').trim(), inCell: prefix.includes('|') })
+    return line.replace(BLOCK_TOKEN, () => span)
+  }
   const continuation = prefix.replace(/(?:[-*+]|\d+\.)(?=\s)/, marker => ' '.repeat(marker.length))
   const fence = delimiter(text, '`', 3)
   return [`${prefix}${fence}`, ...[...text.split('\n'), fence].map(part => `${continuation}${part}`)].join('\n')

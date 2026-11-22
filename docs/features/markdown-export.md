@@ -6,7 +6,7 @@ An investigator's sheet has an **Export to Markdown** entry in its header menu (
 
 ## What is in the note
 
-- **Properties** at the top: occupation, age, sex, residence, birthplace, archetype, organization and player, then HP, MP, Sanity and Luck with their maximums, a `coc7/investigator` tag and the export date. The keys are in English whatever language Foundry uses, so a Bases or Dataview query works in every language.
+- **Properties** at the top: occupation, age, sex, residence, birthplace, archetype, organization and player, then HP, MP and Sanity with their maximums, Luck, a `coc7/investigator` tag and the export date. The keys are in English whatever language Foundry uses, so a Bases or Dataview query works in every language.
 - **Characteristics** in a table, with HP, MP, SAN, Luck, MOV, damage bonus, build and armor on the line below.
 - **Skills** in a table, sorted by name, with the regular, hard and extreme values.
 - **Weapons** in a table: skill and its value, damage, range, attacks, ammo and malfunction.
@@ -16,7 +16,7 @@ An investigator's sheet has an **Export to Markdown** entry in its header menu (
 
 Values are the ones the sheet shows: skill values after active effects, the occupation and archetype items' names, and the formatted wealth. A section with nothing in it is left out. Headings follow Foundry's language.
 
-Rich text is converted to Markdown. A document link becomes its label, and an inline roll its label or formula, so nothing turns into an unresolved Obsidian link.
+Rich text is converted to Markdown. A document link becomes its label. Without a label, a `@UUID` link becomes the linked document's name, and another document link (`@Actor[…]`, `@Compendium[…]`) is left out. An inline roll becomes its label or formula. So nothing turns into an unresolved Obsidian link. Tables and line breaks are kept, headings are moved down below the note's own, and links stay links only for web and email addresses. An image stays only when it comes from a web address; one stored in Foundry is replaced by its description. Formatting Markdown has no equivalent for is reduced to its text.
 
 ## Who sees it
 

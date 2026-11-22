@@ -167,7 +167,7 @@ Text of the biography section.
 
 - A document link `@UUID[...]{Label}` becomes `Label`. Without a label, the document's name when it can be resolved synchronously, otherwise nothing.
 - An inline roll (`[[/roll 1d6]]`, `[[1d6]]`, with or without a `{label}`) becomes its label, or its formula when it has none.
-- Any `[[` left in the result is escaped so Obsidian does not read it as a link.
+- Any `[[` left in the result is escaped so Obsidian does not read it as a link. Text inside a code span or a code block is left as typed: Obsidian does not link there.
 
 ## Constraints
 

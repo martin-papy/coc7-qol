@@ -40,6 +40,7 @@ const IMAGE_SCHEMES = new Set(['http', 'https'])
 const HEADING_SHIFT = 3
 const MAX_HEADING = 6
 const MAX_COLSPAN = 20
+const LIST_START = /^\d{1,9}$/
 
 const tagOf = node => node.localName
 const isElement = node => node.nodeType === ELEMENT_NODE
@@ -81,8 +82,8 @@ function schemeOf (url) {
   return cleaned.match(/^([a-z][a-z\d+.-]*):/i)?.[1].toLowerCase() ?? ''
 }
 
-/** A URL that fits between the `<` and `>` of a Markdown link destination. */
-const destination = url => url.trim().replace(/[\s<>`]/g, encodeURIComponent)
+/** A URL that fits between the `<` and `>` of a Markdown link destination, also inside a table cell. */
+const destination = url => url.trim().replace(/[\s<>`|]/g, encodeURIComponent)
 
 function sanitizeLinks (container) {
   for (const a of reversed(container, 'a')) {
@@ -98,7 +99,7 @@ function sanitizeImages (container) {
     const alt = (img.getAttribute('alt') ?? '').replace(/\s+/g, ' ').trim()
     if (src !== null && IMAGE_SCHEMES.has(schemeOf(src))) {
       img.setAttribute('src', destination(src))
-      img.setAttribute('alt', alt.replace(/[\\[\]`]/g, '\\$&').replace(/</g, '&lt;'))
+      img.setAttribute('alt', alt.replace(/[\\[\]`|]/g, '\\$&').replace(/</g, '&lt;'))
     } else {
       img.replaceWith(img.ownerDocument.createTextNode(alt))
     }
@@ -256,6 +257,17 @@ function stripAttributes (container) {
       if (!kept.includes(name)) el.removeAttribute(name)
     }
   }
+  container.querySelectorAll('ol[start]').forEach(normalizeListStart)
+}
+
+/**
+ * The converter copies `start` into the first list marker as it is, so only a number may stay.
+ * CommonMark reads at most nine digits there.
+ */
+function normalizeListStart (list) {
+  const start = list.getAttribute('start').trim()
+  if (LIST_START.test(start)) list.setAttribute('start', String(Number(start)))
+  else list.removeAttribute('start')
 }
 
 function removeNoise (container) {

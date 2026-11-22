@@ -460,3 +460,23 @@ test('a quote mark behind a leading space is escaped without a stray backslash',
   assert.equal(richTextToMarkdown('<blockquote><p> &gt; x</p></blockquote>', deps()), '> \\> x')
   assertReadsAs(richTextToMarkdown('<p> &gt; x</p>', deps()), '> x', 'space')
 })
+
+test('an ordered list keeps a numeric start and drops any other', () => {
+  assert.equal(richTextToMarkdown('<ol start="3"><li>Entry</li></ol>', deps()), '3. Entry')
+  assert.equal(richTextToMarkdown('<ol start=" 07 "><li>Entry</li></ol>', deps()), '7. Entry')
+  assert.equal(richTextToMarkdown('<ol start="&lt;b&gt;Injected&lt;/b&gt;"><li>Entry</li></ol>', deps()), '1. Entry')
+  assert.equal(richTextToMarkdown('<ol start="-1"><li>Entry</li></ol>', deps()), '1. Entry')
+  assert.equal(richTextToMarkdown('<ol start="1. # h"><li>Entry</li></ol>', deps()), '1. Entry')
+  assert.equal(richTextToMarkdown('<ol start="12345678901"><li>Entry</li></ol>', deps()), '1. Entry')
+})
+
+test('a pipe in an image alt or a link target cannot split a table row', () => {
+  const table = cell => `<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>${cell}</td><td>x</td></tr></tbody></table>`
+  const cellBreaks = html => richTextToMarkdown(table(html), deps()).split('\n')[2].replace(/\\\|/g, '').split('|').length - 1
+  assert.equal(cellBreaks('<img src="https://e.org/a.png" alt="front | back">'), 3)
+  assert.equal(cellBreaks('<a href="https://e.org/a|b">l</a>'), 3)
+  assert.equal(
+    richTextToMarkdown('<p><img src="https://e.org/a|b.png" alt="front | back"> <a href="https://e.org/a|b">l</a></p>', deps()),
+    '![front \\| back](<https://e.org/a%7Cb.png>) [l](<https://e.org/a%7Cb>)'
+  )
+})

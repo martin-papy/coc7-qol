@@ -60,10 +60,23 @@ function weaponSkill (system) {
   return text(system.skill?.main?.name)
 }
 
-function joinBands (system, field) {
+/** CoC7 stores `"0"` in the range bands a weapon does not use: such a band is not listed. */
+const isUnusedRange = value => isBlank(value) || Number(text(value).trim()) === 0
+
+/**
+ * The bands a weapon uses, in order. The normal band is always there, because a melee weapon has
+ * a damage and no range; the long and extreme bands only when they have a range.
+ */
+function usedBands (system) {
   return RANGE_BANDS
-    .map(band => system.range?.[band]?.[field])
-    .filter(value => !isBlank(value))
+    .map(name => ({ name, ...system.range?.[name] }))
+    .filter(band => band.name === 'normal' || !isUnusedRange(band.value))
+}
+
+function joinBands (system, field) {
+  return usedBands(system)
+    .map(band => band[field])
+    .filter(value => !(field === 'value' ? isUnusedRange(value) : isBlank(value)))
     .map(text)
     .join(' / ')
 }

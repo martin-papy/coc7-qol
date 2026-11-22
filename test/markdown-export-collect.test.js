@@ -149,6 +149,32 @@ test('a melee weapon has no ammo, and joins several range bands', () => {
   })
 })
 
+const liveWeapon = (name, skillName, skillValue, ranges) => ({
+  type: 'weapon',
+  name,
+  system: {
+    skillMain: skillItem(skillName, skillValue),
+    range: ranges,
+    usesPerRound: { normal: 1, max: null },
+    properties: { rngd: false }
+  }
+})
+
+test('range bands CoC7 stores as "0" are left out of the range cell', () => {
+  const punch = liveWeapon('Punch', 'Fighting (Brawl)', 31, { normal: band('1D3', '0'), long: band('', '0'), extreme: band('', '0') })
+  const revolver32 = liveWeapon('.32 Revolver', 'Firearms (Handgun)', 34, { normal: band('1D8', '15'), long: band('', '0'), extreme: band('', '0') })
+  const dynamite = liveWeapon('Dynamite Stick', 'Throw', 20, { normal: band('4D10', '@STR/5'), long: band('', '0'), extreme: band('', '0') })
+  const data = collectSheetData(fakeActor({ items: [punch, revolver32, dynamite] }), OPTIONS)
+  assert.deepEqual(data.weapons.map(w => [w.range, w.damage]), [['', '1D3'], ['15', '1D8'], ['@STR/5', '4D10']])
+})
+
+test('a zero range band is blank in any spelling, and its damage is left out too', () => {
+  const ranges = { normal: band('1D6', '10'), long: band('1D4', ' 0.0 '), extreme: band('1D2', 0) }
+  const data = collectSheetData(fakeActor({ items: [liveWeapon('Bow', 'Archery', 30, ranges)] }), OPTIONS)
+  assert.equal(data.weapons[0].range, '10')
+  assert.equal(data.weapons[0].damage, '1D6')
+})
+
 test('a weapon whose linked skill is gone falls back to the stored skill name', () => {
   const data = collectSheetData(fakeActor({ items: [revolver(undefined)] }), OPTIONS)
   assert.equal(data.weapons[0].skill, 'Handgun')

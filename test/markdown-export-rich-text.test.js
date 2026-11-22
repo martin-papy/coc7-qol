@@ -368,17 +368,95 @@ test('a list in a quote leaves no comment line and no empty quote line', () => {
 })
 
 test('marker characters in attributes or resolved names are dropped', () => {
-  const forged = '0'
+  const forged = '\uE0010\uE002'
   const href = richTextToMarkdown(`<p><code>&lt;img src=x&gt;</code> <a href="https://x/${forged}">l</a></p>`, deps())
   assert.equal(href, '&lt;img src=x> [l](<https://x/0>)')
   const alt = richTextToMarkdown(`<p><code>k</code> <img src="https://x/a.png" alt="${forged}"> <img src="rel.png" alt="${forged}"></p>`, deps())
   assert.equal(alt, 'k ![0](<https://x/a.png>) 0')
-  const named = richTextToMarkdown('<p><code>k</code> @UUID[Actor.a] end</p>', deps({ resolveName: () => `${forged} xy` }))
+  const named = richTextToMarkdown('<p><code>k</code> @UUID[Actor.a] end</p>', deps({ resolveName: () => `${forged} x\uE000y` }))
   assert.equal(named, 'k 0 xy end')
   // Link destinations (`(<url>)`) may hold `<`; nothing else may.
   for (const md of [href, alt, named]) assertNoRawHtml(md.replace(/\(<[^>]*>\)/g, ''))
 })
 
 test('marker characters in user text are dropped', () => {
-  assert.equal(richTextToMarkdown('<p> 0  and <code>k</code></p>', deps()), '0 and k')
+  assert.equal(richTextToMarkdown('<p>\uE001 0 \uE002 and <code>k</code></p>', deps()), '0 and k')
+})
+
+/** Rendered back, the note is one paragraph (or cell, heading, item) holding exactly the typed text. */
+function assertReadsAs (md, typed, context) {
+  const html = renderBack(md)
+  assert.doesNotMatch(html.innerHTML, /<(?:ul|ol|blockquote|h[1-6]|hr|pre|code)\b/, `${context}: ${md}`)
+  assert.equal(html.textContent.trim(), typed, `${context}: ${md}`)
+}
+
+const LEADING_BREAK_PROBES = [
+  ['<p><br>- x</p>', '\\- x', '- x'],
+  ['<p><br>&gt; x</p>', '\\> x', '> x'],
+  ['<p><br>---</p>', '\\---', '---'],
+  ['<p><span></span><br>1. x</p>', '1\\. x', '1. x'],
+  ['<p><br><br>- x</p>', '\\- x', '- x'],
+  ['<blockquote><p><br>- x</p></blockquote>', '> \\- x', null],
+  ['<ul><li><br>- x</li></ul>', '- \\- x', null]
+]
+
+const LEADING_SPACE_PROBES = [
+  ['<p>&nbsp;# x</p>', '\\# x', '# x'],
+  ['<p>&nbsp;- x</p>', '\\- x', '- x'],
+  ['<p>&nbsp;1. x</p>', '1\\. x', '1. x'],
+  ['<p>&nbsp;+ x</p>', '\\+ x', '+ x'],
+  ['<p><span>&nbsp;</span>- x</p>', '\\- x', '- x'],
+  ['<p>\u3000# x</p>', '\\# x', '# x'],
+  ['<p>\u2003- x</p>', '\\- x', '- x'],
+  ['<p>\u202f&gt; x</p>', '\\> x', '> x'],
+  ['<p>\u205f1) x</p>', '1\\) x', '1) x'],
+  ['<p>\ufeff- x</p>', '\\- x', '- x'],
+  ['<p>&nbsp;===</p>', '\\===', '==='],
+  ['<blockquote><p>&nbsp;- x</p></blockquote>', '> \\- x', null],
+  ['<ul><li>&nbsp;# x</li></ul>', '- \u00a0\\# x', null]
+]
+
+for (const [html, expected, typed] of [...LEADING_BREAK_PROBES, ...LEADING_SPACE_PROBES]) {
+  test(`no structure from ${JSON.stringify(html)}`, () => {
+    const md = richTextToMarkdown(html, deps())
+    assert.equal(md, expected)
+    if (typed !== null) assertReadsAs(md, typed, html)
+  })
+}
+
+test('a quote or list item whose text starts with a break or a space holds the typed text only', () => {
+  const quote = renderBack(richTextToMarkdown('<blockquote><p><br>- x</p></blockquote>', deps()))
+  assert.equal(quote.querySelectorAll('blockquote').length, 1)
+  assert.equal(quote.querySelectorAll('ul, ol').length, 0)
+  assert.equal(quote.textContent.trim(), '- x')
+  for (const html of ['<ul><li><br>- x</li></ul>', '<ul><li>&nbsp;# x</li></ul>']) {
+    const list = renderBack(richTextToMarkdown(html, deps()))
+    assert.equal(list.querySelectorAll('li').length, 1, html)
+    assert.equal(list.querySelectorAll('h1, h2, h3, h4, h5, h6, ul ul').length, 0, html)
+  }
+})
+
+test('a leading break in a table cell or a heading leaves no structure and no stray break', () => {
+  const cell = richTextToMarkdown('<table><tbody><tr><td>H</td></tr><tr><td><br>- x</td></tr></tbody></table>', deps())
+  assert.match(cell, tableRow(['\\- x']))
+  const heading = richTextToMarkdown('<h2><br>- x</h2>', deps())
+  assert.match(heading, /^#####\s+\\- x$/)
+  for (const md of [cell, heading]) assert.doesNotMatch(md, /\\\n/)
+})
+
+test('a trailing break leaves no dangling hard break', () => {
+  assert.equal(richTextToMarkdown('<p>a<br></p>', deps()), 'a')
+  assert.equal(richTextToMarkdown('<p>a<br><br></p><p>b</p>', deps()), 'a\n\nb')
+})
+
+test('a non-breaking space in the middle of a line is kept', () => {
+  assert.equal(richTextToMarkdown('<p>a&nbsp;b</p>', deps()), 'a\u00a0b')
+  assert.equal(richTextToMarkdown('<p>10&nbsp;- 2</p>', deps()), '10\u00a0- 2')
+})
+
+test('a quote mark behind a leading space is escaped without a stray backslash', () => {
+  assert.equal(richTextToMarkdown('<p> &gt; x</p>', deps()), '\\> x')
+  assert.equal(richTextToMarkdown('<p>&nbsp;&gt; x</p>', deps()), '\\> x')
+  assert.equal(richTextToMarkdown('<blockquote><p> &gt; x</p></blockquote>', deps()), '> \\> x')
+  assertReadsAs(richTextToMarkdown('<p> &gt; x</p>', deps()), '> x', 'space')
 })

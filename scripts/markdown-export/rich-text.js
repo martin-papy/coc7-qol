@@ -22,6 +22,10 @@ const BREAK_RUN = new RegExp(`\\s*${BREAK}[\\s${BREAK}]*`)
 // A converter comment (`<!-- -->`, written after every list), alone on its line or behind quote marks.
 const COMMENT_LINE = /^[\s>]*<!--.*-->\s*$/
 const QUOTE_ONLY_LINE = /^\s*>[\s>]*$/
+// What would be structure at the start of a line, behind any leading whitespace (U+00A0, U+3000
+// and the other Unicode spaces included): a heading, quote, list or setext/thematic-break line.
+const LINE_START_MARKER = /^(\s*)(#{1,6}(?=\s|$)|[>+\-=])/
+const LINE_START_ORDINAL = /^(\s*\d{1,9})([.)])/
 
 const escapeHtml = text => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
@@ -50,16 +54,22 @@ function rewriteFoundrySyntax (text, resolveName) {
  * shows them, so no line starts inside a text node. A typed backslash is doubled, so it cannot
  * cancel the converter's own escapes (``\` `` would leave a live backtick). The converter decodes
  * `&lt;`, `&gt;` and `&amp;` once and writes the result as it is, so a literal `<` or entity is
- * escaped one level deeper. Last, the line starts the converter misses: `#` behind a space (it
- * escapes `#` only at the very start) and `1)` (it escapes only `1.`).
+ * escaped one level deeper.
+ *
+ * Last, every text node is treated as one that may start a line: the text after a `<br>` or an
+ * empty element, or the first text of a block. The converter escapes line starts only behind
+ * plain spaces, then trims other leading whitespace (a non-breaking space) away, which would
+ * leave the marker live; and it writes `\` before the spaces of ` > x`. So the marker is escaped
+ * here, behind whatever whitespace precedes it. `*`, `_`, `~` and backticks are left to the
+ * converter, which escapes them everywhere.
  */
 const escapeMarkup = text => text
   .replace(/[ \t\n\r\f]+/g, ' ')
   .replace(/\\/g, '\\\\')
   .replace(/&(?=(#?\w+);)/g, (match, name) => (/^(lt|gt|amp)$/.test(name) ? '&amp;amp;' : '&amp;'))
   .replace(/</g, '&amp;lt;')
-  .replace(/^( ?)#(?=#{0,5}(?: |$))/, '$1\\#')
-  .replace(/^( ?\d{1,9})\)/, '$1\\)')
+  .replace(LINE_START_MARKER, '$1\\$2')
+  .replace(LINE_START_ORDINAL, '$1\\$2')
 
 /** Rewrites Foundry syntax and escapes in text nodes only, so attribute values and markup stay untouched. */
 function rewriteTextNodes (node, resolveName) {
@@ -69,13 +79,17 @@ function rewriteTextNodes (node, resolveName) {
   }
 }
 
-/** A `<br>` becomes a hard break (a backslash at the end of the line), keeping the line's quote or list indent. */
+/**
+ * A `<br>` becomes a hard break (a backslash at the end of the line), keeping the line's quote or
+ * list indent. Every line that follows a break is defused, the first one included when the block
+ * starts with a break (the break itself, like one at the end, writes nothing).
+ */
 function hardBreaks (line) {
   if (!line.includes(BREAK)) return line
   const [, prefix, rest] = line.match(LINE_PREFIX)
   const continuation = prefix.replace(/(?:[-*+]|\d+\.)(?=\s)/, marker => ' '.repeat(marker.length))
-  const parts = rest.split(BREAK_RUN).filter(part => part !== '')
-  return prefix + parts.map((part, i) => (i === 0 ? part : defuseLineStart(part))).join(`\\\n${continuation}`)
+  const parts = rest.split(BREAK_RUN).map((part, i) => (i === 0 ? part : defuseLineStart(part)))
+  return prefix + parts.filter(part => part !== '').join(`\\\n${continuation}`)
 }
 
 /**

@@ -10,13 +10,13 @@ An investigator's sheet has an **Export to Markdown** entry in its header menu (
 - **Characteristics** in a table, with HP, MP, SAN, Luck, MOV, damage bonus, build and armor on the line below.
 - **Skills** in a table, sorted by name, with the regular, hard and extreme values.
 - **Weapons** in a table: skill and its value, damage, range, attacks, ammo and malfunction.
-- **Possessions** by name (items, books, spells, talents, armor, statuses), then the wealth the sheet shows, the assets details and the possessions notes.
+- **Possessions** by name (items, books, spells, talents, armor, statuses), an item with its quantity when it is not 1 (`3 x Flare`), then the wealth the sheet shows (spending level, cash, spent and assets), the assets details and the possessions notes.
 - **Background**: the single backstory or the titled biography sections, whichever the sheet shows (CoC7's one-block backstory setting decides).
 - **Encounters**: each sanity loss event with its loss, or "immune".
 
 Values are the ones the sheet shows: skill values after active effects, the occupation and archetype items' names, and the formatted wealth. A section with nothing in it is left out. Headings follow Foundry's language.
 
-Rich text is converted to Markdown. A document link becomes its label. Without a label, a `@UUID` link becomes the linked document's name, and another document link (`@Actor[…]`, `@Compendium[…]`) is left out. An inline roll becomes its label or formula. So nothing turns into an unresolved Obsidian link. Tables and line breaks are kept, headings are moved down below the note's own, and links stay links only for web and email addresses. An image stays only when it comes from a web address; one stored in Foundry is replaced by its description. Formatting Markdown has no equivalent for is reduced to its text.
+Rich text is converted to Markdown. A document link becomes its label. Without a label, a `@UUID` link becomes the linked document's name, and another document link (`@Actor[…]`, `@Compendium[…]`) is left out. An inline roll becomes its label or formula. So nothing turns into an unresolved Obsidian link. Tables and line breaks are kept, headings are moved down below the note's own, and links stay links only for web and email addresses. An image stays only when it comes from a web address; one stored in Foundry is replaced by its description. Formatting Markdown has no equivalent for is reduced to its text. Code formatting is not kept either: code is exported as plain text.
 
 ## Who sees it
 

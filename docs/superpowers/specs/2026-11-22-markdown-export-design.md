@@ -17,7 +17,7 @@ Martin runs his campaign notes in an Obsidian vault. An investigator's sheet liv
 - A user-editable template for the note's layout.
 - The portrait. The image lives in Foundry's data folder, not in the vault.
 - The Development tab and the Active Effects tab.
-- Item descriptions. Possessions are listed by name.
+- Item descriptions. Possessions are listed by name, an item with its quantity when it is not 1.
 - A setting to turn the feature off. A menu entry is unobtrusive.
 
 ## Anti-goals
@@ -100,6 +100,7 @@ exported: 2026-11-22
 ### Items
 
 - Camera
+- 3 x Flare
 - Notebook
 
 ### Books
@@ -116,6 +117,7 @@ exported: 2026-11-22
 
 - **Spending level:** $10
 - **Cash:** $150
+- **Spent:** $45
 - **Assets:** $3750
 
 Assets details, then the possessions notes, as paragraphs.
@@ -152,8 +154,8 @@ Text of the biography section.
 - Characteristics: the eight values in the order above. The line under the table adds MOV, DB and Build; Armor is added when it has a value.
 - Skills: every skill item the actor has, sorted by name with the locale's collation. Regular is `system.value` (the value after active effects, as the sheet shows it), Hard is `floor(value / 2)`, Extreme is `floor(value / 5)`.
 - Weapons: one row per weapon item. The Skill column shows the weapon's main skill (`weapon.system.skillMain`, present at 8.16 and 9.2) as name and current value. The investigator's Combat tab does not print this; the NPC sheet does, and it is what a reader of the note needs.
-- Possessions: items, books, spells, talents, armor and statuses, by name, each group under its own heading. The possessions notes come from `system.notes`.
-- Wealth: the values the sheet shows. Unless `system.flags.manualCredit` is on, those are computed and currency-formatted by `system.formattedMonetaryValue('spending' | 'cash' | 'assets')` (present at 8.16 and 9.2); the stored `system.monetary` strings are blank in that default case. With `manualCredit` on, the stored strings.
+- Possessions: items, books, spells, talents, armor and statuses, by name, each group under its own heading. An item (type `item`) whose quantity (`system.quantity`) is a number other than 1 is written as the sheet prints it, `3 x Flare`. The possessions notes come from `system.notes`.
+- Wealth: the values the sheet shows. Unless `system.flags.manualCredit` is on, those are computed and currency-formatted by `system.formattedMonetaryValue('spending' | 'cash' | 'assets')` (present at 8.16 and 9.2); the stored `system.monetary` strings are blank in that default case. With `manualCredit` on, the stored strings. Spent is typed by hand on the sheet and read from `system.monetary.spent` either way. The values are listed in the sheet's order (spending level, cash, spent, assets), each only when filled.
 - Background: CoC7 has a world setting `oneBlockBackstory`. When it is on, the sheet shows the single `system.backstory`; when off, the titled `system.biography` sections. Both are rich text (the default v3 sheet edits biography sections with a rich-text editor), so both go through the rich text clean-up and the converter below. A biography value written on the older v2 sheet is plain text with raw line breaks; its line breaks must survive as paragraphs. The export follows the setting, so it never prints text the sheet hides.
 - Encounters: `system.sanityLossEvents`, each as its type and total loss, as the Background tab lists them. An entry flagged `immunity` prints a localized "immune" in place of the loss.
 - Table cells have `|` escaped and line breaks turned into spaces.
@@ -167,7 +169,7 @@ Text of the biography section.
 
 - A document link `@UUID[...]{Label}` becomes `Label`. Without a label, the document's name when it can be resolved synchronously, otherwise nothing.
 - An inline roll (`[[/roll 1d6]]`, `[[1d6]]`, with or without a `{label}`) becomes its label, or its formula when it has none.
-- Any `[[` left in the result is escaped so Obsidian does not read it as a link. Text inside a code span or a code block is left as typed: Obsidian does not link there.
+- Any `[[` left in the result is escaped so Obsidian does not read it as a link. Code formatting is not kept: text inside a code span or a code block is exported as plain text, like any other text.
 
 ## Constraints
 
@@ -197,6 +199,6 @@ Martin decided: the Obsidian purpose, the GM-only rule for Keeper content, inves
 - The Weapons table has a Skill column, which the investigator's own Combat tab does not show.
 - Occupation, archetype, player and wealth print what the sheet displays, not the raw stored fields.
 - Document links become plain text, not `[[wikilinks]]`. Wikilinks would create unresolved links for every item or compendium entry mentioned; they can be revisited once the vault's naming is known.
-- Possessions are names only, with no descriptions, which also keeps unread book contents out.
+- Possessions are names only (with an item's quantity), with no descriptions, which also keeps unread book contents out.
 - The background follows the `oneBlockBackstory` setting instead of exporting both forms.
 - No setting to disable the feature and no success notification: the browser's download is the feedback.

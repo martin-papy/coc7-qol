@@ -168,5 +168,15 @@
   "COC7QOL.AIGenerator.Warning.AnySpecDropped": "Compétence « {name} » retirée — c'est un modèle de spécialisation sans nom, pas une compétence utilisable",
   "COC7QOL.AIGenerator.Warning.NativeLanguageNoSkill": "La langue maternelle « {language} » n'a pas de compétence correspondante — une entrée nommée « Language ({language}) » était attendue",
   "COC7QOL.AIGenerator.Warning.WeaponDropped": "Arme « {name} » : {error}",
-  "COC7QOL.AIGenerator.Error.NetworkError": "Impossible de joindre {provider} ({error}). Vérifiez votre connexion et l'URL de l'endpoint."
+  "COC7QOL.AIGenerator.Error.NetworkError": "Impossible de joindre {provider} ({error}). Vérifiez votre connexion et l'URL de l'endpoint.",
+  "COC7QOL.MarkdownExport.Button": "Exporter en Markdown",
+  "COC7QOL.MarkdownExport.Failed": "Impossible d'exporter {name} en Markdown : {error}",
+  "COC7QOL.MarkdownExport.Weapon": "Arme",
+  "COC7QOL.MarkdownExport.Attacks": "Attaques",
+  "COC7QOL.MarkdownExport.Ammo": "Munitions",
+  "COC7QOL.MarkdownExport.SpendingLevel": "Dépenses courantes",
+  "COC7QOL.MarkdownExport.Cash": "Espèces",
+  "COC7QOL.MarkdownExport.Spent": "Dépensé",
+  "COC7QOL.MarkdownExport.Assets": "Capital",
+  "COC7QOL.MarkdownExport.Immune": "immunisé"
 }

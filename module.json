@@ -1,7 +1,7 @@
 {
   "id": "coc7-qol",
   "title": "CoC7 QoL Improvements",
-  "description": "Quality of life improvements for the Call of Cthulhu 7th Edition system: roll visibility selector, bulk card closing, Group Luck, item image popouts, AI weapon and NPC generation, keeper-only highlights, grouped Rest and Trade targets, resizable NPC sheets, casting spells from the sheet, and strong-skill highlights.",
+  "description": "Quality of life improvements for the Call of Cthulhu 7th Edition system: roll visibility selector, bulk card closing, Group Luck, item image popouts, AI weapon and NPC generation, keeper-only highlights, grouped Rest and Trade targets, resizable NPC sheets, casting spells from the sheet, strong-skill highlights, and Markdown export of an investigator.",
   "version": "1.0.0",
   "authors": [
     {
@@ -89,6 +89,7 @@
     "scripts/npc-sheets/index.js",
     "scripts/spell-cast/index.js",
     "scripts/skill-highlight/index.js",
-    "scripts/settings-sections/index.js"
+    "scripts/settings-sections/index.js",
+    "scripts/markdown-export/index.js"
   ]
 }

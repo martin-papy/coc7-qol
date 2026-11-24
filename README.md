@@ -23,6 +23,7 @@ If there's a workflow that annoys you, a small thing that could be smoother, or 
 | [↔️ Resizable NPC Sheets](#-resizable-npc-sheets) | Drag NPC and Creature sheets to any size — they scroll inside, stay on screen, and list skills in columns | Everyone |
 | [🪄 Cast Spells from the Sheet](#-cast-spells-from-the-sheet) | Cast a spell in one click from its row on the actor sheet — no need to open the spell first | Everyone |
 | [💪 Strong Skills at a Glance](#-strong-skills-at-a-glance) | See what a character is good at without re-sorting — skills at 50% or more are highlighted | Everyone |
+| [📝 Export to Markdown](#-export-to-markdown) | Download an investigator's sheet as a note for an Obsidian vault | Everyone |
 
 ---
 
@@ -143,6 +144,16 @@ Keep your skills sorted by name and still see what a character is good at: every
 It is on by default. The Keeper can change the threshold or switch it off for the whole table under **Settings → Module Settings → CoC7 QoL Improvements**.
 
 [**Read more →**](docs/features/strong-skills.md)
+
+---
+
+## 📝 Export to Markdown
+
+The investigator sheet's header menu (the **⋮** in its title bar) has an **Export to Markdown** entry. It downloads the sheet as a note for an Obsidian vault: properties on top for Bases or Dataview, then characteristics, skills and weapons in tables, possessions, wealth, background and encounters.
+
+The entry is there for the investigator's owners and the Keeper. Keeper notes, in a folded callout, and unrevealed secret blocks are only in the Keeper's export. The note is a snapshot: it is not kept in sync with the sheet.
+
+[**Read more →**](docs/features/markdown-export.md)
 
 ---
 
